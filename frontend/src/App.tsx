@@ -336,6 +336,8 @@ function CalculatorPage({ calculation, result, options, summary, onSettings, onL
   const resultById = new Map(result?.legs.map((item) => [item.id, item]) ?? [])
   const scenarios = Array.from(new Set([...options.scenarios, calculation.settings.scenario]))
   const [expandedComponents, setExpandedComponents] = useState<Record<string, boolean>>({})
+  const totalFlightTime = result?.legs.reduce((total, leg) => total + leg.flight_time, 0) ?? 0
+  const totalFuelTons = result?.legs.reduce((total, leg) => total + leg.fuel_tons, 0) ?? 0
 
   const toggleComponent = (legId: string, component: CostComponentKey) => {
     const id = `${legId}-${component}`
@@ -459,6 +461,10 @@ function CalculatorPage({ calculation, result, options, summary, onSettings, onL
           <SummaryRow label="Итого М3" value={summary.m3} />
           <div className="summary-footer">
             <span>Плеч в расчете</span><b>{calculation.legs.length}</b>
+          </div>
+          <div className="summary-extra">
+            <div className="summary-extra-row"><span>Итоговый flight time</span><b>{quantity(totalFlightTime)} ч</b></div>
+            <div className="summary-extra-row"><span>Итоговый ГСМ, тонн</span><b>{quantity(totalFuelTons)} т</b></div>
           </div>
         </aside>
       </div>
