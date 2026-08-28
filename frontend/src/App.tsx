@@ -30,7 +30,10 @@ const pageMeta: Record<Page, { label: string; icon: string; subtitle: string }> 
   settings: { label: 'Параметры', icon: '⚙', subtitle: 'Пути и правила источников' },
 }
 
-const componentNames: Array<[string, string]> = [
+type CostComponentKey = 'fuel' | 'ground' | 'ano' | 'catering' | 'vat'
+type CalculatedLeg = CalculationResult['legs'][number]
+
+const componentNames: Array<[CostComponentKey, string]> = [
   ['fuel', 'ГСМ'],
   ['ground', 'Наземное обслуживание'],
   ['ano', 'АНО'],
@@ -40,6 +43,10 @@ const componentNames: Array<[string, string]> = [
 
 function money(value: number | undefined): string {
   return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(value ?? 0)
+}
+
+function quantity(value: number | undefined): string {
+  return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 3 }).format(value ?? 0)
 }
 
 function timeText(value: string | null): string {
@@ -328,6 +335,13 @@ interface CalculatorPageProps {
 function CalculatorPage({ calculation, result, options, summary, onSettings, onLegChange, onRemoveLeg, onAddLeg }: CalculatorPageProps) {
   const resultById = new Map(result?.legs.map((item) => [item.id, item]) ?? [])
   const scenarios = Array.from(new Set([...options.scenarios, calculation.settings.scenario]))
+  const [expandedComponents, setExpandedComponents] = useState<Record<string, boolean>>({})
+
+  const toggleComponent = (legId: string, component: CostComponentKey) => {
+    const id = `${legId}-${component}`
+    setExpandedComponents((current) => ({ ...current, [id]: !current[id] }))
+  }
+
   return (
     <section className="page-stack">
       <div className="control-card">
@@ -458,12 +472,24 @@ function CalculatorPage({ calculation, result, options, summary, onSettings, onL
 
       {calculation.settings.show_details && result && (
         <section className="details-section">
-          <div className="section-heading"><div><h2>Компоненты себестоимости</h2><p>Раскладка по каждому плечу. Ее можно скрыть переключателем выше.</p></div></div>
+          <div className="section-heading"><div><h2>Компоненты себестоимости</h2><p>Раскладка по каждому плечу. Откройте компонент, чтобы посмотреть уже учтённые составляющие.</p></div></div>
           <div className="detail-grid">
             {result.legs.map((leg) => (
               <article className="detail-card" key={leg.id}>
                 <div className="detail-heading"><b>{leg.route || 'Новое плечо'}</b><span>{leg.line_type}{leg.is_techstop ? ' · техстоп' : ''}</span></div>
-                {componentNames.map(([key, label]) => <div className="component-row" key={key}><span>{label}</span><b>{money(leg.components[key])} ₽</b></div>)}
+                {componentNames.map(([key, label]) => {
+                  const componentId = `${leg.id}-${key}`
+                  const isExpanded = Boolean(expandedComponents[componentId])
+                  return (
+                    <div className="component-block" key={key}>
+                      <button className={`component-row component-trigger ${isExpanded ? 'expanded' : ''}`} type="button" onClick={() => toggleComponent(leg.id, key)} aria-expanded={isExpanded}>
+                        <span className="component-label"><i className="component-chevron" aria-hidden="true">⌄</i>{label}</span>
+                        <b>{money(leg.components[key])} ₽</b>
+                      </button>
+                      {isExpanded && <ComponentBreakdown component={key} leg={leg} settings={calculation.settings} />}
+                    </div>
+                  )
+                })}
                 <div className="component-row margin-row"><span>М1 / М2 / М3</span><b>{money(leg.components.m1)} / {money(leg.components.m2)} / {money(leg.components.m3)} ₽</b></div>
               </article>
             ))}
@@ -471,6 +497,96 @@ function CalculatorPage({ calculation, result, options, summary, onSettings, onL
         </section>
       )}
     </section>
+  )
+}
+
+function BreakdownRow({ label, description, amount, muted = false }: { label: string; description: string; amount?: number; muted?: boolean }) {
+  return (
+    <div className={`breakdown-row ${muted ? 'muted' : ''}`}>
+      <div><b>{label}</b><span>{description}</span></div>
+      {amount === undefined ? <em>Не включено</em> : <strong>{money(amount)} ₽</strong>}
+    </div>
+  )
+}
+
+function ComponentBreakdown({ component, leg, settings }: { component: CostComponentKey; leg: CalculatedLeg; settings: CalculationRequest['settings'] }) {
+  if (component === 'fuel') {
+    return (
+      <div className="component-breakdown">
+        <p className="breakdown-context">Источник: <b>{settings.fuel_source}</b> · расход: <b>{quantity(leg.fuel_tons)} т</b></p>
+        <div className="breakdown-list">
+          {leg.details.fuel.length ? leg.details.fuel.map((item) => (
+            <BreakdownRow key={item.service} label={item.service} description={`${money(item.rate)} ₽ за т × ${quantity(item.volume)} т`} amount={item.amount} />
+          )) : <BreakdownRow label="Тариф ГСМ" description="Для аэропорта не найдена ставка из выбранного источника" muted />}
+        </div>
+      </div>
+    )
+  }
+
+  if (component === 'ground') {
+    return (
+      <div className="component-breakdown">
+        <p className="breakdown-context">Услуги, учтённые для плеча {leg.route || '—'}</p>
+        <div className="breakdown-list">
+          {leg.details.ground.length ? leg.details.ground.map((item, index) => (
+            <BreakdownRow key={`${item.service}-${index}`} label={item.service} description={`Ставка: ${money(item.rate)} ₽ · объём: ${quantity(item.volume)}`} amount={item.amount} />
+          )) : <BreakdownRow label="Наземные услуги" description="Для аэропорта не найдены применимые тарифы" muted />}
+        </div>
+      </div>
+    )
+  }
+
+  if (component === 'ano') {
+    const total = leg.components.ano ?? 0
+    const routePart = total > 0 ? leg.distance / 100 * 1666.6 : 0
+    const airportPart = Math.max(0, total - routePart)
+    return (
+      <div className="component-breakdown">
+        <p className="breakdown-context">Детализация текущей формулы АНО</p>
+        <div className="breakdown-list">
+          {total > 0 ? <>
+            <BreakdownRow label="АНО АД" description={`Ставка аэропорта с коэффициентом типа ВС ${leg.aircraft}`} amount={airportPart} />
+            <BreakdownRow label="Маршрутная часть" description={`${quantity(leg.distance)} км ÷ 100 × 1 666,6 ₽`} amount={routePart} />
+          </> : <BreakdownRow label="АНО" description="Для плеча отсутствует маршрут или ставка АНО АД" muted />}
+        </div>
+      </div>
+    )
+  }
+
+  if (component === 'catering') {
+    const total = leg.components.catering ?? 0
+    const base = Math.min(total, 9000)
+    const passengerExtra = Math.max(0, total - base)
+    return (
+      <div className="component-breakdown">
+        <p className="breakdown-context">Отдельный компонент бортпитания в текущем расчёте</p>
+        <div className="breakdown-list">
+          {total > 0 ? <BreakdownRow label="Базовая часть" description="6 комплектов × 1 500 ₽" amount={base} /> : <BreakdownRow label="Базовая часть" description="Маршрут не указан — компонент не применяется" muted />}
+          {settings.catering ? <BreakdownRow label="Доплата за пассажиров" description={`${leg.passengers} пассажиров × 500 ₽`} amount={passengerExtra} /> : <BreakdownRow label="Доплата за пассажиров" description="Переключатель доплаты выключен" muted />}
+        </div>
+      </div>
+    )
+  }
+
+  const total = leg.components.vat ?? 0
+  const taxBase = total > 0 ? total / 0.1 : 0
+  return (
+    <div className="component-breakdown">
+      {total > 0 ? <>
+        <p className="breakdown-context">НДС применяется к текущей базе для этого плеча</p>
+        <div className="breakdown-list">
+          <BreakdownRow label="ГСМ в базе НДС" description="Учтённый компонент ГСМ" amount={leg.components.fuel} />
+          <BreakdownRow label="Наземное обслуживание в базе" description="Учтённый компонент наземного обслуживания" amount={leg.components.ground} />
+          <BreakdownRow label="АНО в базе НДС" description="Учтённый компонент АНО" amount={leg.components.ano} />
+          <BreakdownRow label="Бортпитание в базе НДС" description="Учтённый компонент бортпитания" amount={leg.components.catering} />
+          <BreakdownRow label="Налоговая база" description="Сумма компонентов выше" amount={taxBase} />
+          <BreakdownRow label="Ставка НДС" description="10% от налоговой базы" amount={total} />
+        </div>
+      </> : <>
+        <p className="breakdown-context">НДС для этого плеча не применяется</p>
+        <div className="breakdown-list"><BreakdownRow label="Условие НДС" description="Условия текущего расчёта не выполнены" muted /></div>
+      </>}
+    </div>
   )
 }
 
