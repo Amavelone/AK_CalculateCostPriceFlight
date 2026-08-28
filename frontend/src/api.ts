@@ -1,4 +1,4 @@
-import type { CalculationOptions, CalculationRequest, CalculationResult, DraftResponse, SourceConfig, Tariff } from './types'
+import type { CalculationOptions, CalculationRequest, CalculationResult, DraftResponse, ExportFormat, SourceConfig, Tariff } from './types'
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(`/api${path}`, {
@@ -44,4 +44,20 @@ export const api = {
   addManualTariff: (payload: Omit<Tariff, 'id' | 'source' | 'source_file' | 'conflict'>) =>
     request<Tariff>('/tariffs/manual', { method: 'POST', body: JSON.stringify(payload) }),
   deleteManualTariff: (id: string) => request<void>(`/tariffs/manual/${id}`, { method: 'DELETE' }),
+  exportCalculation: async (format: ExportFormat, calculation: CalculationRequest): Promise<{ blob: Blob; filename: string }> => {
+    const response = await fetch(`/api/exports/${format}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(calculation),
+    })
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Не удалось сформировать выгрузку' }))
+      throw new Error(error.detail ?? 'Не удалось сформировать выгрузку')
+    }
+    const disposition = response.headers.get('Content-Disposition') ?? ''
+    const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1]
+    const fallback = `Расчет_себестоимости.${format}`
+    return { blob: await response.blob(), filename: encodedName ? decodeURIComponent(encodedName) : fallback }
+  },
 }

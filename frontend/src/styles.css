@@ -41,6 +41,7 @@ h3 { font-size: 15px; margin-bottom: 5px; }
 .page-stack { display: grid; gap: 18px; }
 .control-card, .legs-card, .summary-card, .detail-card, .source-card, .table-card, .settings-card, .information-card, .manual-form, .warning-card, .loading-card { background: #fff; border: 1px solid #e3ebf2; border-radius: 14px; box-shadow: 0 8px 30px rgba(55, 80, 105, .04); }
 .control-card { padding: 20px 22px; }
+.export-card { display: flex; align-items: center; gap: 13px; padding: 14px 16px; border: 1px solid #d8eaf8; border-radius: 13px; background: linear-gradient(90deg, #f8fcff, #f2f9ff); box-shadow: 0 7px 22px rgba(55, 112, 156, .04); }.export-icon { display: grid; place-items: center; flex: 0 0 auto; width: 35px; height: 35px; border-radius: 10px; color: #1b83d8; background: #e1f3ff; font-size: 20px; font-weight: 800; }.export-copy { min-width: 0; }.export-copy h2 { margin: 0 0 3px; color: #38536a; font-size: 13px; }.export-copy p { margin: 0; color: #7890a3; font-size: 11px; line-height: 1.4; }.export-actions { display: flex; gap: 8px; margin-left: auto; }.export-actions .button { min-width: 73px; }
 .section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
 .compact-heading { margin-bottom: 20px; }
 .switch-line { display: flex; align-items: center; gap: 9px; color: #637689; font-size: 12px; font-weight: 600; }

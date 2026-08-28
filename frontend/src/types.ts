@@ -1,4 +1,5 @@
 export type FuelSource = 'ЦРТ' | 'АК'
+export type ExportFormat = 'json' | 'xlsx'
 
 export interface LegInput {
   id: string
@@ -37,7 +38,7 @@ export interface CalculationResult {
     is_techstop: boolean
     components: Record<string, number>
     totals: Record<string, number>
-    details: { fuel: DetailRow[]; ground: DetailRow[] }
+    details: { fuel: DetailRow[]; ground: DetailRow[]; ano: DetailRow[]; catering: DetailRow[]; vat: DetailRow[] }
     warnings: string[]
   }>
   total: Record<string, number>
@@ -46,9 +47,11 @@ export interface CalculationResult {
 }
 
 export interface DetailRow {
+  airport?: string
   service: string
   rate: number
   volume: number
+  divisor?: number
   amount: number
 }
 

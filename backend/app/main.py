@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +13,7 @@ from .core.config import settings
 from .core.store import JsonStore, utc_now
 from .schemas import CalculationRequest, DraftPayload, ManualTariffInput, SourceConfigUpdate
 from .services.calculator import calculate
+from .services.exports import build_export_snapshot, export_filename, json_bytes, xlsx_bytes
 from .services.sources import (
     find_latest_file,
     mark_source_error,
@@ -134,6 +136,24 @@ def save_current_draft(payload: DraftPayload, request: Request, response: Respon
 @app.post("/api/calculations")
 def calculate_cost(payload: CalculationRequest) -> dict[str, Any]:
     return calculate(store.read(), payload)
+
+
+@app.post("/api/exports/{file_format}")
+def export_calculation(file_format: str, payload: CalculationRequest) -> Response:
+    """Download JSON or XLSX generated from the same completed calculation snapshot."""
+
+    if file_format not in {"json", "xlsx"}:
+        raise HTTPException(status_code=404, detail="Формат выгрузки не поддерживается")
+    result = calculate(store.read(), payload)
+    snapshot = build_export_snapshot(payload, result)
+    content = json_bytes(snapshot) if file_format == "json" else xlsx_bytes(snapshot)
+    media_type = "application/json; charset=utf-8" if file_format == "json" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    filename = export_filename(snapshot, file_format)
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
+    )
 
 
 @app.get("/api/sources")

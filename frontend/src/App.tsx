@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { api } from './api'
-import type { CalculationOptions, CalculationRequest, CalculationResult, LegInput, SourceConfig, Tariff } from './types'
+import type { CalculationOptions, CalculationRequest, CalculationResult, ExportFormat, LegInput, SourceConfig, Tariff } from './types'
 
 type Page = 'calculate' | 'sources' | 'tariffs' | 'settings'
 
@@ -78,6 +78,7 @@ function App() {
   const [isReady, setIsReady] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [busySource, setBusySource] = useState<string | null>(null)
+  const [exporting, setExporting] = useState<ExportFormat | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -156,6 +157,26 @@ function App() {
       ...current,
       legs: current.legs.map((leg) => (leg.id === id ? { ...leg, ...patch } : leg)),
     }))
+  }
+
+  const exportCalculation = async (format: ExportFormat) => {
+    setExporting(format)
+    setError(null)
+    try {
+      const file = await api.exportCalculation(format, calculation)
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(file.blob)
+      link.download = file.filename
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(link.href), 0)
+      setNotice(`Выгрузка «${file.filename}» готова`)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Не удалось сформировать выгрузку')
+    } finally {
+      setExporting(null)
+    }
   }
 
   const removeLeg = (id: string) => {
@@ -260,6 +281,8 @@ function App() {
         onLegChange={updateLeg}
         onRemoveLeg={removeLeg}
         onAddLeg={() => setCalculation((current) => ({ ...current, legs: [...current.legs, createLeg()] }))}
+        onExport={exportCalculation}
+        exporting={exporting}
       />
     ),
     sources: (
@@ -330,9 +353,11 @@ interface CalculatorPageProps {
   onLegChange: (id: string, patch: Partial<LegInput>) => void
   onRemoveLeg: (id: string) => void
   onAddLeg: () => void
+  onExport: (format: ExportFormat) => void
+  exporting: ExportFormat | null
 }
 
-function CalculatorPage({ calculation, result, options, summary, onSettings, onLegChange, onRemoveLeg, onAddLeg }: CalculatorPageProps) {
+function CalculatorPage({ calculation, result, options, summary, onSettings, onLegChange, onRemoveLeg, onAddLeg, onExport, exporting }: CalculatorPageProps) {
   const resultById = new Map(result?.legs.map((item) => [item.id, item]) ?? [])
   const scenarios = Array.from(new Set([...options.scenarios, calculation.settings.scenario]))
   const [expandedComponents, setExpandedComponents] = useState<Record<string, boolean>>({})
@@ -389,6 +414,18 @@ function CalculatorPage({ calculation, result, options, summary, onSettings, onL
           </div>
         </div>
       </div>
+
+      <section className="export-card">
+        <span className="export-icon" aria-hidden="true">⇩</span>
+        <div className="export-copy">
+          <h2>Экспорт результата</h2>
+          <p>Параметры, плечи, компоненты, детализация и общие итоги в одном снимке расчёта.</p>
+        </div>
+        <div className="export-actions">
+          <button className="button button-quiet" disabled={!result || exporting !== null} onClick={() => onExport('json')}>{exporting === 'json' ? 'Готовим…' : 'JSON'}</button>
+          <button className="button button-primary" disabled={!result || exporting !== null} onClick={() => onExport('xlsx')}>{exporting === 'xlsx' ? 'Готовим…' : 'Excel'}</button>
+        </div>
+      </section>
 
       <div className="calculator-layout">
         <section className="legs-card">
@@ -463,8 +500,8 @@ function CalculatorPage({ calculation, result, options, summary, onSettings, onL
             <span>Плеч в расчете</span><b>{calculation.legs.length}</b>
           </div>
           <div className="summary-extra">
-            <div className="summary-extra-row"><span>Итоговый flight time</span><b>{quantity(totalFlightTime)} ч</b></div>
-            <div className="summary-extra-row"><span>Итоговый ГСМ, тонн</span><b>{quantity(totalFuelTons)} т</b></div>
+            <div className="summary-extra-row"><span>Летное время</span><b>{quantity(totalFlightTime)} ч</b></div>
+            <div className="summary-extra-row"><span>ГСМ, тонн</span><b>{quantity(totalFuelTons)} т</b></div>
           </div>
         </aside>
       </div>
