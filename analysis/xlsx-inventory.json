@@ -1,0 +1,6392 @@
+{
+  "workbooks": [
+    {
+      "file": "C:\\Users\\soale\\Downloads\\7480_srv.xlsx",
+      "fileName": "7480_srv.xlsx",
+      "fileSizeBytes": 2803919,
+      "inventoriedAtUtc": "2026-08-27T09:50:18.904895+00:00",
+      "workbookProperties": {
+        "date1904": "0",
+        "calcMode": "",
+        "fullCalcOnLoad": "",
+        "forceFullCalc": ""
+      },
+      "packageContents": {
+        "worksheets": 1
+      },
+      "styleInventory": {
+        "fonts": 2,
+        "fills": 3,
+        "borders": 2,
+        "cellXfs": 6
+      },
+      "definedNames": [],
+      "connections": [],
+      "externalLinkParts": [],
+      "externalFormulaReferences": {},
+      "sheets": [
+        {
+          "name": "Sheet1",
+          "part": "xl/worksheets/sheet1.xml",
+          "dimension": "A1:R46837",
+          "cellCount": 843066,
+          "populatedRowCount": 46837,
+          "maxPopulatedRow": 46837,
+          "maxPopulatedColumn": 18,
+          "formulaCount": 0,
+          "formulaPatterns": [],
+          "formulaSamples": [],
+          "cachedFormulaErrors": {},
+          "cachedFormulaErrorSamples": [],
+          "nonFormulaValueSamples": [
+            {
+              "cell": "A1",
+              "value": "АП"
+            },
+            {
+              "cell": "B1",
+              "value": "Услуга"
+            },
+            {
+              "cell": "C1",
+              "value": "Орг-ция"
+            },
+            {
+              "cell": "D1",
+              "value": "Ставка"
+            },
+            {
+              "cell": "E1",
+              "value": "Ед.изм."
+            },
+            {
+              "cell": "F1",
+              "value": "Терминал"
+            },
+            {
+              "cell": "G1",
+              "value": "Код Т/С"
+            },
+            {
+              "cell": "H1",
+              "value": "В/С"
+            },
+            {
+              "cell": "I1",
+              "value": "Дата с"
+            },
+            {
+              "cell": "J1",
+              "value": "Дата по"
+            },
+            {
+              "cell": "K1",
+              "value": "Марка топлива"
+            },
+            {
+              "cell": "L1",
+              "value": "Код обработки"
+            },
+            {
+              "cell": "M1",
+              "value": "Приб./убыв."
+            },
+            {
+              "cell": "N1",
+              "value": "Вид груза"
+            },
+            {
+              "cell": "O1",
+              "value": "Наименование Орг"
+            },
+            {
+              "cell": "P1",
+              "value": "Операции"
+            },
+            {
+              "cell": "Q1",
+              "value": "Индекс"
+            },
+            {
+              "cell": "R1",
+              "value": "Примечание"
+            },
+            {
+              "cell": "A2",
+              "value": "AAQ"
+            },
+            {
+              "cell": "B2",
+              "value": "АНО АД"
+            },
+            {
+              "cell": "C2",
+              "value": "0483"
+            },
+            {
+              "cell": "D2",
+              "value": "274.90"
+            },
+            {
+              "cell": "E2",
+              "value": "РУБ-Т"
+            },
+            {
+              "cell": "F2",
+              "value": " "
+            },
+            {
+              "cell": "G2",
+              "value": " "
+            },
+            {
+              "cell": "H2",
+              "value": "   "
+            },
+            {
+              "cell": "I2",
+              "value": "46120"
+            },
+            {
+              "cell": "J2",
+              "value": "47214"
+            },
+            {
+              "cell": "K2",
+              "value": " "
+            },
+            {
+              "cell": "L2",
+              "value": " "
+            },
+            {
+              "cell": "M2",
+              "value": " "
+            },
+            {
+              "cell": "O2",
+              "value": "ФЕДЕРАЛЬНОЕ ГОСУДАРСТВЕННОЕ УНИТАРНОЕ ПРЕДПРИЯТИЕ ГОСКОРПОРАЦИЯ ПО ОРВД"
+            },
+            {
+              "cell": "P2",
+              "value": " "
+            },
+            {
+              "cell": "Q2",
+              "value": "0"
+            },
+            {
+              "cell": "A3",
+              "value": "AAQ"
+            },
+            {
+              "cell": "B3",
+              "value": "БУКСИРОВКА"
+            },
+            {
+              "cell": "C3",
+              "value": "0008"
+            },
+            {
+              "cell": "D3",
+              "value": "12926.00"
+            },
+            {
+              "cell": "E3",
+              "value": "РУБ-ЕД"
+            },
+            {
+              "cell": "F3",
+              "value": " "
+            },
+            {
+              "cell": "G3",
+              "value": "SCHOPF-160"
+            },
+            {
+              "cell": "H3",
+              "value": "   "
+            },
+            {
+              "cell": "I3",
+              "value": "45658"
+            },
+            {
+              "cell": "J3",
+              "value": "46752"
+            },
+            {
+              "cell": "K3",
+              "value": " "
+            },
+            {
+              "cell": "L3",
+              "value": " "
+            },
+            {
+              "cell": "M3",
+              "value": " "
+            },
+            {
+              "cell": "O3",
+              "value": "ОТКРЫТОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО «АЭРОПОРТ АНАПА»"
+            },
+            {
+              "cell": "P3",
+              "value": " "
+            },
+            {
+              "cell": "Q3",
+              "value": "0"
+            },
+            {
+              "cell": "A4",
+              "value": "AAQ"
+            },
+            {
+              "cell": "B4",
+              "value": "ВОДА"
+            },
+            {
+              "cell": "C4",
+              "value": "0008"
+            },
+            {
+              "cell": "D4",
+              "value": "5137.50"
+            },
+            {
+              "cell": "E4",
+              "value": "РУБ-ВС"
+            },
+            {
+              "cell": "F4",
+              "value": " "
+            },
+            {
+              "cell": "G4",
+              "value": " "
+            },
+            {
+              "cell": "H4",
+              "value": "100"
+            },
+            {
+              "cell": "I4",
+              "value": "45292"
+            },
+            {
+              "cell": "J4",
+              "value": "46752"
+            }
+          ],
+          "externalFormulaReferences": {},
+          "crossSheetReferences": {},
+          "tables": [],
+          "dataValidations": [],
+          "conditionalFormats": [],
+          "mergedRanges": [],
+          "hyperlinks": [],
+          "hasDrawing": false,
+          "hasLegacyDrawing": false,
+          "styleCount": 5,
+          "topStyles": [
+            [
+              "2",
+              562032
+            ],
+            [
+              "3",
+              93672
+            ],
+            [
+              "4",
+              93672
+            ],
+            [
+              "5",
+              93672
+            ],
+            [
+              "1",
+              18
+            ]
+          ],
+          "state": "visible",
+          "sheetId": "1"
+        }
+      ]
+    },
+    {
+      "file": "C:\\Users\\soale\\Downloads\\7480_nad.xlsx",
+      "fileName": "7480_nad.xlsx",
+      "fileSizeBytes": 294910,
+      "inventoriedAtUtc": "2026-08-27T09:50:19.662473+00:00",
+      "workbookProperties": {
+        "date1904": "0",
+        "calcMode": "",
+        "fullCalcOnLoad": "",
+        "forceFullCalc": ""
+      },
+      "packageContents": {
+        "worksheets": 1
+      },
+      "styleInventory": {
+        "fonts": 2,
+        "fills": 3,
+        "borders": 2,
+        "cellXfs": 6
+      },
+      "definedNames": [],
+      "connections": [],
+      "externalLinkParts": [],
+      "externalFormulaReferences": {},
+      "sheets": [
+        {
+          "name": "Sheet1",
+          "part": "xl/worksheets/sheet1.xml",
+          "dimension": "A1:R4447",
+          "cellCount": 80046,
+          "populatedRowCount": 4447,
+          "maxPopulatedRow": 4447,
+          "maxPopulatedColumn": 18,
+          "formulaCount": 0,
+          "formulaPatterns": [],
+          "formulaSamples": [],
+          "cachedFormulaErrors": {},
+          "cachedFormulaErrorSamples": [],
+          "nonFormulaValueSamples": [
+            {
+              "cell": "A1",
+              "value": "АП"
+            },
+            {
+              "cell": "B1",
+              "value": "Услуга"
+            },
+            {
+              "cell": "C1",
+              "value": "Орг-ция"
+            },
+            {
+              "cell": "D1",
+              "value": "Тип"
+            },
+            {
+              "cell": "E1",
+              "value": "Надбавка/скидка"
+            },
+            {
+              "cell": "F1",
+              "value": "Терминал"
+            },
+            {
+              "cell": "G1",
+              "value": "Код Т/С"
+            },
+            {
+              "cell": "H1",
+              "value": "В/С"
+            },
+            {
+              "cell": "I1",
+              "value": "Дата с"
+            },
+            {
+              "cell": "J1",
+              "value": "Дата по"
+            },
+            {
+              "cell": "K1",
+              "value": "Марка топлива"
+            },
+            {
+              "cell": "L1",
+              "value": "Код обработки"
+            },
+            {
+              "cell": "M1",
+              "value": "Приб./убыв."
+            },
+            {
+              "cell": "N1",
+              "value": "Вид груза"
+            },
+            {
+              "cell": "O1",
+              "value": "Наименование Орг"
+            },
+            {
+              "cell": "P1",
+              "value": "Операции"
+            },
+            {
+              "cell": "Q1",
+              "value": "Индекс"
+            },
+            {
+              "cell": "R1",
+              "value": "Примечание"
+            },
+            {
+              "cell": "A2",
+              "value": "ABA"
+            },
+            {
+              "cell": "B2",
+              "value": "АЭРОВОКЗАЛ"
+            },
+            {
+              "cell": "C2",
+              "value": "0194"
+            },
+            {
+              "cell": "D2",
+              "value": "К"
+            },
+            {
+              "cell": "E2",
+              "value": "0.7500000000"
+            },
+            {
+              "cell": "F2",
+              "value": " "
+            },
+            {
+              "cell": "G2",
+              "value": " "
+            },
+            {
+              "cell": "H2",
+              "value": "   "
+            },
+            {
+              "cell": "I2",
+              "value": "46143"
+            },
+            {
+              "cell": "K2",
+              "value": " "
+            },
+            {
+              "cell": "L2",
+              "value": " "
+            },
+            {
+              "cell": "M2",
+              "value": " "
+            },
+            {
+              "cell": "O2",
+              "value": "АО \"АЭРОПОРТ АБАКАН\""
+            },
+            {
+              "cell": "P2",
+              "value": " "
+            },
+            {
+              "cell": "Q2",
+              "value": "0"
+            },
+            {
+              "cell": "R2",
+              "value": "К ПЕРЕВОЗЧИКАМ,ВЫПОЛНЯЮЩИМ ПЯТЬ И БОЛЕЕ РЕГУЛЯРНЫХ РЕЙСОВ В НЕДЕЛЮ И ПРИОБРЕТАЮЩИМ БОРТОВОЕ ПИТАНИЕ "
+            },
+            {
+              "cell": "A3",
+              "value": "ABA"
+            },
+            {
+              "cell": "B3",
+              "value": "АЭРОВОКЗАЛ"
+            },
+            {
+              "cell": "C3",
+              "value": "0194"
+            },
+            {
+              "cell": "D3",
+              "value": "К"
+            },
+            {
+              "cell": "E3",
+              "value": "0.7500000000"
+            },
+            {
+              "cell": "F3",
+              "value": " "
+            },
+            {
+              "cell": "G3",
+              "value": " "
+            },
+            {
+              "cell": "H3",
+              "value": "   "
+            },
+            {
+              "cell": "I3",
+              "value": "46143"
+            },
+            {
+              "cell": "K3",
+              "value": " "
+            },
+            {
+              "cell": "L3",
+              "value": " "
+            },
+            {
+              "cell": "M3",
+              "value": " "
+            },
+            {
+              "cell": "O3",
+              "value": "АО \"АЭРОПОРТ АБАКАН\""
+            },
+            {
+              "cell": "P3",
+              "value": " "
+            },
+            {
+              "cell": "Q3",
+              "value": "0"
+            },
+            {
+              "cell": "R3",
+              "value": "К ПЕРЕВОЗЧИКАМ,ВЫПОЛНЯЮЩИМ РЕГУЛЯРНЫЕ И\\ИЛИ ЧАРТЕРНЫЕ НА РЕГУЛЯРНОЙ ОСНОВЕ РЕЙСЫ В\\ИЗ\\ЧЕРЕЗ АЭРОПОРТ"
+            },
+            {
+              "cell": "A4",
+              "value": "ABA"
+            },
+            {
+              "cell": "B4",
+              "value": "АЭРОВОКЗАЛ"
+            },
+            {
+              "cell": "C4",
+              "value": "0194"
+            },
+            {
+              "cell": "D4",
+              "value": "К"
+            },
+            {
+              "cell": "E4",
+              "value": "0.8000000000"
+            },
+            {
+              "cell": "F4",
+              "value": " "
+            },
+            {
+              "cell": "G4",
+              "value": " "
+            },
+            {
+              "cell": "H4",
+              "value": "   "
+            },
+            {
+              "cell": "I4",
+              "value": "46143"
+            },
+            {
+              "cell": "K4",
+              "value": " "
+            }
+          ],
+          "externalFormulaReferences": {},
+          "crossSheetReferences": {},
+          "tables": [],
+          "dataValidations": [],
+          "conditionalFormats": [],
+          "mergedRanges": [],
+          "hyperlinks": [],
+          "hasDrawing": false,
+          "hasLegacyDrawing": false,
+          "styleCount": 5,
+          "topStyles": [
+            [
+              "2",
+              53352
+            ],
+            [
+              "3",
+              8892
+            ],
+            [
+              "4",
+              8892
+            ],
+            [
+              "5",
+              8892
+            ],
+            [
+              "1",
+              18
+            ]
+          ],
+          "state": "visible",
+          "sheetId": "1"
+        }
+      ]
+    },
+    {
+      "file": "C:\\Users\\soale\\Downloads\\реестр.xlsx",
+      "fileName": "реестр.xlsx",
+      "fileSizeBytes": 25994,
+      "inventoriedAtUtc": "2026-08-27T09:50:19.694589+00:00",
+      "workbookProperties": {
+        "date1904": "0",
+        "calcMode": "",
+        "fullCalcOnLoad": "",
+        "forceFullCalc": ""
+      },
+      "packageContents": {
+        "drawings": 5,
+        "worksheets": 1
+      },
+      "styleInventory": {
+        "fonts": 4,
+        "fills": 3,
+        "borders": 2,
+        "cellXfs": 9
+      },
+      "definedNames": [],
+      "connections": [],
+      "externalLinkParts": [],
+      "externalFormulaReferences": {},
+      "sheets": [
+        {
+          "name": "Лист_1",
+          "part": "xl/worksheets/sheet1.xml",
+          "dimension": "I364",
+          "cellCount": 3220,
+          "populatedRowCount": 362,
+          "maxPopulatedRow": 364,
+          "maxPopulatedColumn": 9,
+          "formulaCount": 0,
+          "formulaPatterns": [],
+          "formulaSamples": [],
+          "cachedFormulaErrors": {},
+          "cachedFormulaErrorSamples": [],
+          "nonFormulaValueSamples": [
+            {
+              "cell": "A2",
+              "value": " \t\tПараметры: \t"
+            },
+            {
+              "cell": "C2",
+              "value": " \t\tПериод: 01.01.2026 - 31.12.2026 \t"
+            },
+            {
+              "cell": "C3",
+              "value": " \t\tТип объекта: Регистр сведений \t"
+            },
+            {
+              "cell": "C4",
+              "value": " \t\tИмя объекта: Цены номенклатуры поставщиков \t"
+            },
+            {
+              "cell": "C5",
+              "value": " \t\tИмя таблицы: Основные данные \t"
+            },
+            {
+              "cell": "C6",
+              "value": " \t\tВыводить количество подчиненных записей: Да \t"
+            },
+            {
+              "cell": "A7",
+              "value": " \t\tОтбор: \t"
+            },
+            {
+              "cell": "C7",
+              "value": " \t\tНоменклатура Равно \"Авиакеросин \" \t"
+            },
+            {
+              "cell": "A9",
+              "value": " \t\tПартнер \t"
+            },
+            {
+              "cell": "D9",
+              "value": " \t\tВид цены поставщика \t"
+            },
+            {
+              "cell": "F9",
+              "value": " \t\tНоменклатура \t"
+            },
+            {
+              "cell": "G9",
+              "value": " \t\tВалюта \t"
+            },
+            {
+              "cell": "H9",
+              "value": " \t\tПериод \t"
+            },
+            {
+              "cell": "I9",
+              "value": " \t\tЦена \t"
+            },
+            {
+              "cell": "A10",
+              "value": " \t\tАлроса МАП АК ПАО \t"
+            },
+            {
+              "cell": "D10",
+              "value": " \t\t-|MJZ|НДС сверху|RUB \t"
+            },
+            {
+              "cell": "F10",
+              "value": " \t\tАвиакеросин  \t"
+            },
+            {
+              "cell": "G10",
+              "value": " \t\tRUB \t"
+            },
+            {
+              "cell": "H10",
+              "value": " \t\t01.01.2026 0:00:00 \t"
+            },
+            {
+              "cell": "I10",
+              "value": "121950"
+            },
+            {
+              "cell": "A11",
+              "value": " \t\tРАТЕЛ АЭРОПОРТЫ ООО \t"
+            },
+            {
+              "cell": "D11",
+              "value": " \t\t-|=EL|НДС сверху|RUB \t"
+            },
+            {
+              "cell": "F11",
+              "value": " \t\tАвиакеросин  \t"
+            },
+            {
+              "cell": "G11",
+              "value": " \t\tRUB \t"
+            },
+            {
+              "cell": "H11",
+              "value": " \t\t01.01.2026 0:00:00 \t"
+            },
+            {
+              "cell": "I11",
+              "value": "131147.54"
+            },
+            {
+              "cell": "A12",
+              "value": " \t\tТЗК АЭРОФЬЮЭЛЗ ООО \t"
+            },
+            {
+              "cell": "D12",
+              "value": " \t\t-|VVO|НДС сверху|RUB \t"
+            },
+            {
+              "cell": "F12",
+              "value": " \t\tАвиакеросин  \t"
+            },
+            {
+              "cell": "G12",
+              "value": " \t\tRUB \t"
+            },
+            {
+              "cell": "H12",
+              "value": " \t\t01.01.2026 0:00:00 \t"
+            },
+            {
+              "cell": "I12",
+              "value": "99000"
+            },
+            {
+              "cell": "A13",
+              "value": " \t\tТЗК АЭРОФЬЮЭЛЗ ООО \t"
+            },
+            {
+              "cell": "D13",
+              "value": " \t\t-|KRO|НДС сверху|RUB \t"
+            },
+            {
+              "cell": "F13",
+              "value": " \t\tАвиакеросин  \t"
+            },
+            {
+              "cell": "G13",
+              "value": " \t\tRUB \t"
+            },
+            {
+              "cell": "H13",
+              "value": " \t\t01.01.2026 0:00:00 \t"
+            },
+            {
+              "cell": "I13",
+              "value": "87295.08"
+            },
+            {
+              "cell": "A14",
+              "value": " \t\tТЗК АЭРОФЬЮЭЛЗ ООО \t"
+            },
+            {
+              "cell": "D14",
+              "value": " \t\t-|NJC|НДС сверху|RUB \t"
+            },
+            {
+              "cell": "F14",
+              "value": " \t\tАвиакеросин  \t"
+            },
+            {
+              "cell": "G14",
+              "value": " \t\tRUB \t"
+            },
+            {
+              "cell": "H14",
+              "value": " \t\t01.01.2026 0:00:00 \t"
+            },
+            {
+              "cell": "I14",
+              "value": "85245.9"
+            },
+            {
+              "cell": "A15",
+              "value": " \t\tТЗК ЕНИСЕЙ ООО \t"
+            },
+            {
+              "cell": "D15",
+              "value": " \t\t-|KJA|НДС сверху|RUB \t"
+            },
+            {
+              "cell": "F15",
+              "value": " \t\tАвиакеросин  \t"
+            },
+            {
+              "cell": "G15",
+              "value": " \t\tRUB \t"
+            },
+            {
+              "cell": "H15",
+              "value": " \t\t01.01.2026 0:00:00 \t"
+            },
+            {
+              "cell": "I15",
+              "value": "87646"
+            },
+            {
+              "cell": "A16",
+              "value": " \t\tРН-Аэро ООО \t"
+            },
+            {
+              "cell": "D16",
+              "value": " \t\t-|KRR|НДС сверху|RUB \t"
+            },
+            {
+              "cell": "F16",
+              "value": " \t\tАвиакеросин  \t"
+            },
+            {
+              "cell": "G16",
+              "value": " \t\tRUB \t"
+            },
+            {
+              "cell": "H16",
+              "value": " \t\t01.01.2026 0:00:00 \t"
+            },
+            {
+              "cell": "I16",
+              "value": "93699.11"
+            },
+            {
+              "cell": "A17",
+              "value": " \t\tРН-Аэро ООО \t"
+            },
+            {
+              "cell": "D17",
+              "value": " \t\t-|AER|НДС сверху|RUB \t"
+            },
+            {
+              "cell": "F17",
+              "value": " \t\tАвиакеросин  \t"
+            },
+            {
+              "cell": "G17",
+              "value": " \t\tRUB \t"
+            }
+          ],
+          "externalFormulaReferences": {},
+          "crossSheetReferences": {},
+          "tables": [],
+          "dataValidations": [],
+          "conditionalFormats": [],
+          "mergedRanges": [
+            "A9:C9",
+            "D9:E9",
+            "A10:C10",
+            "D10:E10",
+            "A11:C11",
+            "D11:E11",
+            "A12:C12",
+            "D12:E12",
+            "A13:C13",
+            "D13:E13",
+            "A14:C14",
+            "D14:E14",
+            "A15:C15",
+            "D15:E15",
+            "A16:C16",
+            "D16:E16",
+            "A17:C17",
+            "D17:E17",
+            "A18:C18",
+            "D18:E18",
+            "A19:C19",
+            "D19:E19",
+            "A20:C20",
+            "D20:E20",
+            "A21:C21",
+            "D21:E21",
+            "A22:C22",
+            "D22:E22",
+            "A23:C23",
+            "D23:E23",
+            "A24:C24",
+            "D24:E24",
+            "A25:C25",
+            "D25:E25",
+            "A26:C26",
+            "D26:E26",
+            "A27:C27",
+            "D27:E27",
+            "A28:C28",
+            "D28:E28",
+            "A29:C29",
+            "D29:E29",
+            "A30:C30",
+            "D30:E30",
+            "A31:C31",
+            "D31:E31",
+            "A32:C32",
+            "D32:E32",
+            "A33:C33",
+            "D33:E33",
+            "A34:C34",
+            "D34:E34",
+            "A35:C35",
+            "D35:E35",
+            "A36:C36",
+            "D36:E36",
+            "A37:C37",
+            "D37:E37",
+            "A38:C38",
+            "D38:E38",
+            "A39:C39",
+            "D39:E39",
+            "A40:C40",
+            "D40:E40",
+            "A41:C41",
+            "D41:E41",
+            "A42:C42",
+            "D42:E42",
+            "A43:C43",
+            "D43:E43",
+            "A44:C44",
+            "D44:E44",
+            "A45:C45",
+            "D45:E45",
+            "A46:C46",
+            "D46:E46",
+            "A47:C47",
+            "D47:E47",
+            "A48:C48",
+            "D48:E48",
+            "A49:C49",
+            "D49:E49",
+            "A50:C50",
+            "D50:E50",
+            "A51:C51",
+            "D51:E51",
+            "A52:C52",
+            "D52:E52",
+            "A53:C53",
+            "D53:E53",
+            "A54:C54",
+            "D54:E54",
+            "A55:C55",
+            "D55:E55",
+            "A56:C56",
+            "D56:E56",
+            "A57:C57",
+            "D57:E57",
+            "A58:C58",
+            "D58:E58"
+          ],
+          "hyperlinks": [],
+          "hasDrawing": true,
+          "hasLegacyDrawing": true,
+          "styleCount": 7,
+          "topStyles": [
+            [
+              "4",
+              2832
+            ],
+            [
+              "5",
+              353
+            ],
+            [
+              "2",
+              16
+            ],
+            [
+              "3",
+              9
+            ],
+            [
+              "7",
+              8
+            ],
+            [
+              "6",
+              1
+            ],
+            [
+              "8",
+              1
+            ]
+          ],
+          "state": "visible",
+          "sheetId": "1"
+        }
+      ]
+    },
+    {
+      "file": "C:\\Users\\soale\\Downloads\\Расчет себестоимости рейсов (1).xlsx",
+      "fileName": "Расчет себестоимости рейсов (1).xlsx",
+      "fileSizeBytes": 472294,
+      "inventoriedAtUtc": "2026-08-27T09:50:20.377572+00:00",
+      "workbookProperties": {
+        "date1904": "0",
+        "calcMode": "",
+        "fullCalcOnLoad": "",
+        "forceFullCalc": ""
+      },
+      "packageContents": {
+        "worksheets": 11,
+        "externalLinks": 1,
+        "connectionsParts": 1,
+        "tables": 9,
+        "queryTables": 3
+      },
+      "styleInventory": {
+        "fonts": 27,
+        "fills": 14,
+        "borders": 33,
+        "cellXfs": 786
+      },
+      "definedNames": [
+        {
+          "name": "_xlnm._FilterDatabase",
+          "localSheetId": "2",
+          "hidden": "1",
+          "formula": "ИШР!$A$1:$P$649"
+        },
+        {
+          "name": "_xlnm._FilterDatabase",
+          "localSheetId": "1",
+          "hidden": "1",
+          "formula": "Справочники!$A$2:$B$60"
+        },
+        {
+          "name": "ExternalData_1",
+          "localSheetId": "10",
+          "hidden": "1",
+          "formula": "'Выгрузка 1С'!$A$1:$F$356"
+        },
+        {
+          "name": "ExternalData_1",
+          "localSheetId": "9",
+          "hidden": "1",
+          "formula": "'Реестр керосин'!$A$1:$B$58"
+        },
+        {
+          "name": "ExternalData_1",
+          "localSheetId": "4",
+          "hidden": "1",
+          "formula": "ЦРТ!$A$1:$K$4078"
+        },
+        {
+          "name": "ExternalData_1",
+          "localSheetId": "6",
+          "hidden": "1",
+          "formula": "ЦРТ_МВЛ!#REF!"
+        },
+        {
+          "name": "ExternalData_3",
+          "localSheetId": "5",
+          "hidden": "1",
+          "formula": "'ЦРТ+'!$A$1:$K$11"
+        },
+        {
+          "name": "lst_ВерсияЛЧ",
+          "localSheetId": "",
+          "hidden": "0",
+          "formula": "ИсточникСписка[Значение]"
+        },
+        {
+          "name": "lst_РассчетГСМ",
+          "localSheetId": "",
+          "hidden": "0",
+          "formula": "[1]!ИсточникСпискаГСМ[Значение]"
+        },
+        {
+          "name": "lst_СценарийГСМ",
+          "localSheetId": "",
+          "hidden": "0",
+          "formula": "ИсточникСпискаГСМ[Значение]"
+        },
+        {
+          "name": "lst_Техстоп",
+          "localSheetId": "",
+          "hidden": "0",
+          "formula": "ИсточникТехстоп[Значение]"
+        },
+        {
+          "name": "ПлечоТС",
+          "localSheetId": "",
+          "hidden": "0",
+          "formula": "Справочники!$F$6"
+        }
+      ],
+      "connections": [
+        {
+          "id": "1",
+          "name": "Запрос — fnGetCurrencyRate",
+          "type": "5",
+          "description": "Соединение с запросом \"fnGetCurrencyRate\" в книге.",
+          "connection": "",
+          "refreshedVersion": "0"
+        },
+        {
+          "id": "2",
+          "name": "Запрос — Выгрузка 1С",
+          "type": "5",
+          "description": "Соединение с запросом \"Выгрузка 1С\" в книге.",
+          "connection": "",
+          "refreshedVersion": "8"
+        },
+        {
+          "id": "3",
+          "name": "Запрос — Запрос1",
+          "type": "5",
+          "description": "Соединение с запросом \"Запрос1\" в книге.",
+          "connection": "",
+          "refreshedVersion": "8"
+        },
+        {
+          "id": "4",
+          "name": "Запрос — Реестр",
+          "type": "5",
+          "description": "Соединение с запросом \"Реестр\" в книге.",
+          "connection": "",
+          "refreshedVersion": "8"
+        },
+        {
+          "id": "5",
+          "name": "Запрос — ЦРТ_Check",
+          "type": "5",
+          "description": "Соединение с запросом \"ЦРТ_Check\" в книге.",
+          "connection": "",
+          "refreshedVersion": "8"
+        },
+        {
+          "id": "6",
+          "name": "Запрос — ЦРТ_pls",
+          "type": "5",
+          "description": "Соединение с запросом \"ЦРТ_pls\" в книге.",
+          "connection": "",
+          "refreshedVersion": "0"
+        }
+      ],
+      "externalLinkParts": [
+        {
+          "part": "xl/externalLinks/externalLink1.xml",
+          "target": "file:///C:\\Users\\av.petrov\\Desktop\\Экономика\\С%20новыми%20датами\\Расчет%20себестоимости%20рейсов%20п2.xlsx",
+          "sheets": [
+            "РАСЧЕТ",
+            "Справочники",
+            "ИШР",
+            "ЦРТ старый",
+            "Признак МВЛ",
+            "ЦРТ",
+            "ЦРТ_МВЛ",
+            "НО",
+            "Расчет себестоимости рейсов п2"
+          ]
+        }
+      ],
+      "externalFormulaReferences": {},
+      "sheets": [
+        {
+          "name": "РАСЧЕТ",
+          "part": "xl/worksheets/sheet1.xml",
+          "dimension": "A1:AA34",
+          "cellCount": 217,
+          "populatedRowCount": 34,
+          "maxPopulatedRow": 34,
+          "maxPopulatedColumn": 27,
+          "formulaCount": 90,
+          "formulaPatterns": [
+            {
+              "count": 10,
+              "sampleCells": [
+                "B2",
+                "C2",
+                "B3",
+                "C3",
+                "B4",
+                "C4"
+              ],
+              "pattern": "=CONCATENATE(R[0]C[17],\"-\",R[0]C[18])"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "J2",
+                "J3",
+                "J4",
+                "J5",
+                "J6"
+              ],
+              "pattern": "=IF(R[0]C[-7]=\"-\",0,IF(R2C27=\"Включено\",R[0]C[12]*500,0)+6*1500)"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "D2",
+                "D3",
+                "D4",
+                "D5",
+                "D6"
+              ],
+              "pattern": "=IFERROR(IF(R[0]C[19]=\"ВВЛ\", IF(OR(R[0]C[16]=\"DME\", R[0]C[16]=\"SVO\", R[0]C[16]=\"VKO\", R[0]C[17]=\"DME\",  R[0]C[17]=\"SVO\",  R[0]C[17]=\"VKO\"), 0.1, 0), 0),0)"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "Q2",
+                "Q3",
+                "Q4",
+                "Q5",
+                "Q6"
+              ],
+              "pattern": "=IFERROR(SUM(R[0]C[-10]:R[0]C[-7])+R[0]C[-6]+R[0]C[-3],0)"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "K2",
+                "K3",
+                "K4",
+                "K5",
+                "K6"
+              ],
+              "pattern": "=IFERROR(SUM(R[0]C[-4]:R[0]C[-1])*R[0]C[-7],0)"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "O2",
+                "O3",
+                "O4",
+                "O5",
+                "O6"
+              ],
+              "pattern": "=IFERROR(SUM(R[0]C[-8]:R[0]C[-5])+R[0]C[-4]+R[0]C[-3],0)"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "P2",
+                "P3",
+                "P4",
+                "P5",
+                "P6"
+              ],
+              "pattern": "=IFERROR(SUM(R[0]C[-9]:R[0]C[-6])+R[0]C[-5]+R[0]C[-3],0)"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "L2",
+                "L3",
+                "L4",
+                "L5",
+                "L6"
+              ],
+              "pattern": "=IFERROR(SUMIFS(Справочники!R2C14:R5C14,Справочники!R2C12:R5C12,R2C24,Справочники!R2C13:R5C13,R[0]C19)*R[0]C5*1000,0)"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "M2",
+                "M3",
+                "M4",
+                "M5",
+                "M6"
+              ],
+              "pattern": "=IFERROR(SUMIFS(Справочники!R2C15:R5C15,Справочники!R2C12:R5C12,R2C24,Справочники!R2C13:R5C13,R[0]C19)*R[0]C5*1000,0)"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "N2",
+                "N3",
+                "N4",
+                "N5",
+                "N6"
+              ],
+              "pattern": "=IFERROR(SUMIFS(Справочники!R2C16:R5C16,Справочники!R2C12:R5C12,R2C24,Справочники!R2C13:R5C13,R[0]C19)*R[0]C5*1000,0)"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "E2",
+                "E3",
+                "E4",
+                "E5",
+                "E6"
+              ],
+              "pattern": "=IFERROR(VLOOKUP(R[0]C[-2],ИШР!A:P,16,0),0)"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "I2",
+                "I3",
+                "I4",
+                "I5",
+                "I6"
+              ],
+              "pattern": "=IFERROR(VLOOKUP(R[0]C[11]&\"-АНО АД\",ЦРТ_Check[#All],4,0)*VLOOKUP(R[0]C[10],Справочники!F:G,2,0)+VLOOKUP(R[0]C[-6],ИШР!A:D,4,0)/100*1666.6,0)"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "F2",
+                "F3",
+                "F4",
+                "F5",
+                "F6"
+              ],
+              "pattern": "=R[0]C[-1]*2.7"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "E7",
+                "F7",
+                "O7",
+                "P7",
+                "Q7"
+              ],
+              "pattern": "=SUM(R[-5]C[0]:R[-1]C[0])"
+            },
+            {
+              "count": 3,
+              "sampleCells": [
+                "W2",
+                "W3",
+                "W4"
+              ],
+              "pattern": "=IFERROR(IF(OR(VLOOKUP(R[0]C[-3],'Признак МВЛ'!A:B,2),VLOOKUP(R[0]C[-2],'Признак МВЛ'!A:B,2)),\"МВЛ\",\"ВВЛ\"),0)"
+            },
+            {
+              "count": 2,
+              "sampleCells": [
+                "W5",
+                "W6"
+              ],
+              "pattern": "=IFERROR(IF(OR(VLOOKUP(R[0]C[-3],'Признак МВЛ'!A:B,2),VLOOKUP(R[0]C[-2],'Признак МВЛ'!A:B,2)),\"МВЛ\",\"ВВЛ\"),\"\")"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "G3"
+              ],
+              "pattern": "=IF(\n    R2C25=\"АК\",\n    IFERROR(\n        VLOOKUP(R[0]C[13],РеестрКер[],2,0),0)*R[0]C[-1],\n    IF(R[0]C[-6]=ПлечоТС,\n        SUM(НО!R30C7:R31C7),\n        SUM(НО!R3C15:R4C15)))"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "G4"
+              ],
+              "pattern": "=IF(\n    R2C25=\"АК\",\n    IFERROR(\n        VLOOKUP(R[0]C[13],РеестрКер[],2,0),0)*R[0]C[-1],\n    IF(R[0]C[-6]=ПлечоТС,\n        SUM(НО!R30C7:R31C7),\n        SUM(НО!R3C23:R4C23)))"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "G5"
+              ],
+              "pattern": "=IF(\n    R2C25=\"АК\",\n    IFERROR(\n        VLOOKUP(R[0]C[13],РеестрКер[],2,0),0)*R[0]C[-1],\n    IF(R[0]C[-6]=ПлечоТС,\n        SUM(НО!R30C7:R31C7),\n        SUM(НО!R3C31:R4C31)))"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "G6"
+              ],
+              "pattern": "=IF(\n    R2C25=\"АК\",\n    IFERROR(\n        VLOOKUP(R[0]C[13],РеестрКер[],2,0),0)*R[0]C[-1],\n    IF(R[0]C[-6]=ПлечоТС,\n        SUM(НО!R30C7:R31C7),\n        SUM(НО!R3C39:R4C39)))"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "G2"
+              ],
+              "pattern": "=IF(\n    R2C25=\"АК\",\n    IFERROR(\n        VLOOKUP(R[0]C[13],РеестрКер[],2,0),0)*R[0]C[-1],\n    IF(R[0]C[-6]=ПлечоТС,\n        SUM(НО!R30C7:R31C7),\n        SUM(НО!R3C7:R4C7)))"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "H3"
+              ],
+              "pattern": "=IF(R[0]C[-7]=ПлечоТС,НО!R39C7,НО!R25C15)"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "H4"
+              ],
+              "pattern": "=IF(R[0]C[-7]=ПлечоТС,НО!R39C7,НО!R25C23)"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "H5"
+              ],
+              "pattern": "=IF(R[0]C[-7]=ПлечоТС,НО!R39C7,НО!R25C31)"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "H6"
+              ],
+              "pattern": "=IF(R[0]C[-7]=ПлечоТС,НО!R39C7,НО!R25C39)"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "H2"
+              ],
+              "pattern": "=IF(R[0]C[-7]=ПлечоТС,НО!R39C7,НО!R25C7)"
+            }
+          ],
+          "formulaSamples": [
+            {
+              "cell": "B2",
+              "formula": "=CONCATENATE(S2,\"-\",T2)",
+              "cachedValue": "738-OVB"
+            },
+            {
+              "cell": "C2",
+              "formula": "=CONCATENATE(T2,\"-\",U2)",
+              "cachedValue": "OVB-HMA"
+            },
+            {
+              "cell": "D2",
+              "formula": "=IFERROR(IF(W2=\"ВВЛ\", IF(OR(T2=\"DME\", T2=\"SVO\", T2=\"VKO\", U2=\"DME\",  U2=\"SVO\",  U2=\"VKO\"), 0.1, 0), 0),0)",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "E2",
+              "formula": "=IFERROR(VLOOKUP(C2,ИШР!A:P,16,0),0)",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "F2",
+              "formula": "=E2*2.7",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "G2",
+              "formula": "=IF(\n    $Y$2=\"АК\",\n    IFERROR(\n        VLOOKUP(T2,РеестрКер[],2,0),0)*F2,\n    IF(A2=ПлечоТС,\n        SUM(НО!$G$30:$G$31),\n        SUM(НО!$G$3:$G$4)))",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "H2",
+              "formula": "=IF(A2=ПлечоТС,НО!$G$39,НО!$G$25)",
+              "cachedValue": "307039.56"
+            },
+            {
+              "cell": "I2",
+              "formula": "=IFERROR(VLOOKUP(T2&\"-АНО АД\",ЦРТ_Check[#All],4,0)*VLOOKUP(S2,Справочники!F:G,2,0)+VLOOKUP(C2,ИШР!A:D,4,0)/100*1666.6,0)",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "J2",
+              "formula": "=IF(C2=\"-\",0,IF($AA$2=\"Включено\",V2*500,0)+6*1500)",
+              "cachedValue": "9000"
+            },
+            {
+              "cell": "K2",
+              "formula": "=IFERROR(SUM(G2:J2)*D2,0)",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "L2",
+              "formula": "=IFERROR(SUMIFS(Справочники!$N$2:$N$5,Справочники!$L$2:$L$5,$X$2,Справочники!$M$2:$M$5,$S2)*$E2*1000,0)",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "M2",
+              "formula": "=IFERROR(SUMIFS(Справочники!$O$2:$O$5,Справочники!$L$2:$L$5,$X$2,Справочники!$M$2:$M$5,$S2)*$E2*1000,0)",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "N2",
+              "formula": "=IFERROR(SUMIFS(Справочники!$P$2:$P$5,Справочники!$L$2:$L$5,$X$2,Справочники!$M$2:$M$5,$S2)*$E2*1000,0)",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "O2",
+              "formula": "=IFERROR(SUM(G2:J2)+K2+L2,0)",
+              "cachedValue": "316039.56"
+            },
+            {
+              "cell": "P2",
+              "formula": "=IFERROR(SUM(G2:J2)+K2+M2,0)",
+              "cachedValue": "316039.56"
+            },
+            {
+              "cell": "Q2",
+              "formula": "=IFERROR(SUM(G2:J2)+K2+N2,0)",
+              "cachedValue": "316039.56"
+            },
+            {
+              "cell": "W2",
+              "formula": "=IFERROR(IF(OR(VLOOKUP(T2,'Признак МВЛ'!A:B,2),VLOOKUP(U2,'Признак МВЛ'!A:B,2)),\"МВЛ\",\"ВВЛ\"),0)",
+              "cachedValue": "ВВЛ"
+            },
+            {
+              "cell": "B3",
+              "formula": "=CONCATENATE(S3,\"-\",T3)",
+              "cachedValue": "738-BAX"
+            },
+            {
+              "cell": "C3",
+              "formula": "=CONCATENATE(T3,\"-\",U3)",
+              "cachedValue": "BAX-HMA"
+            },
+            {
+              "cell": "D3",
+              "formula": "=IFERROR(IF(W3=\"ВВЛ\", IF(OR(T3=\"DME\", T3=\"SVO\", T3=\"VKO\", U3=\"DME\",  U3=\"SVO\",  U3=\"VKO\"), 0.1, 0), 0),0)",
+              "cachedValue": "0"
+            }
+          ],
+          "cachedFormulaErrors": {},
+          "cachedFormulaErrorSamples": [],
+          "nonFormulaValueSamples": [
+            {
+              "cell": "A1",
+              "value": "Номер плеча"
+            },
+            {
+              "cell": "B1",
+              "value": "Ключ"
+            },
+            {
+              "cell": "C1",
+              "value": "Маршрут"
+            },
+            {
+              "cell": "D1",
+              "value": "Ставка НДС"
+            },
+            {
+              "cell": "E1",
+              "value": "Flight Time"
+            },
+            {
+              "cell": "F1",
+              "value": "ГСМ тонн"
+            },
+            {
+              "cell": "G1",
+              "value": "ГСМ"
+            },
+            {
+              "cell": "H1",
+              "value": "Назменое обслуживание"
+            },
+            {
+              "cell": "I1",
+              "value": "Аэронавигационное обслуживание"
+            },
+            {
+              "cell": "J1",
+              "value": "Бортовое питание"
+            },
+            {
+              "cell": "K1",
+              "value": "НДС"
+            },
+            {
+              "cell": "L1",
+              "value": "М1"
+            },
+            {
+              "cell": "M1",
+              "value": "М2"
+            },
+            {
+              "cell": "N1",
+              "value": "М3"
+            },
+            {
+              "cell": "O1",
+              "value": "ИТОГО М1"
+            },
+            {
+              "cell": "P1",
+              "value": "ИТОГО М2"
+            },
+            {
+              "cell": "Q1",
+              "value": "ИТОГО М3"
+            },
+            {
+              "cell": "S1",
+              "value": "Тип ВС"
+            },
+            {
+              "cell": "T1",
+              "value": "Аэропорт вылета IATA"
+            },
+            {
+              "cell": "U1",
+              "value": "Аэропорт посадки IATA"
+            },
+            {
+              "cell": "V1",
+              "value": "Загрузка. Пасс"
+            },
+            {
+              "cell": "W1",
+              "value": "Вид линии"
+            },
+            {
+              "cell": "X1",
+              "value": "с/с ЛЧ"
+            },
+            {
+              "cell": "Y1",
+              "value": "Стоимость ГСМ"
+            },
+            {
+              "cell": "Z1",
+              "value": "Техстоп"
+            },
+            {
+              "cell": "AA1",
+              "value": "Бортпитание"
+            },
+            {
+              "cell": "A2",
+              "value": "1"
+            },
+            {
+              "cell": "S2",
+              "value": "738"
+            },
+            {
+              "cell": "T2",
+              "value": "OVB"
+            },
+            {
+              "cell": "U2",
+              "value": "HMA"
+            },
+            {
+              "cell": "V2",
+              "value": "0"
+            },
+            {
+              "cell": "X2",
+              "value": "ГБ 2026"
+            },
+            {
+              "cell": "Y2",
+              "value": "ЦРТ"
+            },
+            {
+              "cell": "Z2",
+              "value": "2. BAX-HMA"
+            },
+            {
+              "cell": "AA2",
+              "value": "Не включено"
+            },
+            {
+              "cell": "A3",
+              "value": "2"
+            },
+            {
+              "cell": "S3",
+              "value": "738"
+            },
+            {
+              "cell": "T3",
+              "value": "BAX"
+            },
+            {
+              "cell": "U3",
+              "value": "HMA"
+            },
+            {
+              "cell": "V3",
+              "value": "60"
+            },
+            {
+              "cell": "A4",
+              "value": "3"
+            },
+            {
+              "cell": "S4",
+              "value": "738"
+            },
+            {
+              "cell": "T4",
+              "value": "HMA"
+            },
+            {
+              "cell": "U4",
+              "value": "KJA"
+            },
+            {
+              "cell": "V4",
+              "value": "0"
+            },
+            {
+              "cell": "A5",
+              "value": "4"
+            },
+            {
+              "cell": "S5",
+              "value": "738"
+            },
+            {
+              "cell": "T5",
+              "value": "KJA"
+            },
+            {
+              "cell": "U5",
+              "value": "LED"
+            },
+            {
+              "cell": "V5",
+              "value": "0"
+            },
+            {
+              "cell": "A6",
+              "value": "5"
+            },
+            {
+              "cell": "S6",
+              "value": "738"
+            },
+            {
+              "cell": "T6",
+              "value": "NSK"
+            },
+            {
+              "cell": "U6",
+              "value": "OVB"
+            },
+            {
+              "cell": "V6",
+              "value": "0"
+            },
+            {
+              "cell": "N7",
+              "value": "ИТОГ"
+            }
+          ],
+          "externalFormulaReferences": {},
+          "crossSheetReferences": {
+            "ИШР": 10,
+            "НО": 20,
+            "Справочники": 50,
+            "Признак МВЛ": 10
+          },
+          "tables": [],
+          "dataValidations": [
+            {
+              "sqref": "X2",
+              "type": "list",
+              "operator": "",
+              "formula1": "lst_ВерсияЛЧ",
+              "formula2": "",
+              "allowBlank": "1"
+            },
+            {
+              "sqref": "Y2",
+              "type": "list",
+              "operator": "",
+              "formula1": "lst_СценарийГСМ",
+              "formula2": "",
+              "allowBlank": "1"
+            },
+            {
+              "sqref": "Z2 Z4",
+              "type": "list",
+              "operator": "",
+              "formula1": "lst_Техстоп",
+              "formula2": "",
+              "allowBlank": "1"
+            }
+          ],
+          "conditionalFormats": [
+            {
+              "sqref": "A2:Q2",
+              "rules": [
+                "expression"
+              ]
+            },
+            {
+              "sqref": "A3:Q3",
+              "rules": [
+                "expression"
+              ]
+            },
+            {
+              "sqref": "A4:Q4",
+              "rules": [
+                "expression"
+              ]
+            },
+            {
+              "sqref": "A5:Q5",
+              "rules": [
+                "expression"
+              ]
+            },
+            {
+              "sqref": "A6:Q6",
+              "rules": [
+                "expression"
+              ]
+            },
+            {
+              "sqref": "E2:J6",
+              "rules": [
+                "cellIs"
+              ]
+            }
+          ],
+          "mergedRanges": [
+            "O10:Q10"
+          ],
+          "hyperlinks": [],
+          "hasDrawing": false,
+          "hasLegacyDrawing": false,
+          "styleCount": 22,
+          "topStyles": [
+            [
+              "665",
+              65
+            ],
+            [
+              "240",
+              22
+            ],
+            [
+              "663",
+              20
+            ],
+            [
+              "664",
+              19
+            ],
+            [
+              "702",
+              12
+            ],
+            [
+              "749",
+              11
+            ],
+            [
+              "721",
+              9
+            ],
+            [
+              "324",
+              8
+            ],
+            [
+              "239",
+              8
+            ],
+            [
+              "666",
+              5
+            ]
+          ],
+          "state": "visible",
+          "sheetId": "1"
+        },
+        {
+          "name": "Справочники",
+          "part": "xl/worksheets/sheet2.xml",
+          "dimension": "A1:U62",
+          "cellCount": 301,
+          "populatedRowCount": 62,
+          "maxPopulatedRow": 62,
+          "maxPopulatedColumn": 21,
+          "formulaCount": 7,
+          "formulaPatterns": [
+            {
+              "count": 5,
+              "sampleCells": [
+                "T3",
+                "T4",
+                "T5",
+                "T6",
+                "T7"
+              ],
+              "pattern": "=ROW(РАСЧЕТ!R[-1]C[-1])-1& \". \" &РАСЧЕТ!R[-1]C[0]&\"-\"&РАСЧЕТ!R[-1]C[1]"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "F7"
+              ],
+              "pattern": "=LEFT(РАСЧЕТ!R[-4]C[20],1)"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "F6"
+              ],
+              "pattern": "=LEFT(РАСЧЕТ!R[-4]C[20],1)*1"
+            }
+          ],
+          "formulaSamples": [
+            {
+              "cell": "T3",
+              "formula": "=ROW(РАСЧЕТ!S2)-1& \". \" &РАСЧЕТ!T2&\"-\"&РАСЧЕТ!U2",
+              "cachedValue": "1. OVB-HMA"
+            },
+            {
+              "cell": "T4",
+              "formula": "=ROW(РАСЧЕТ!S3)-1& \". \" &РАСЧЕТ!T3&\"-\"&РАСЧЕТ!U3",
+              "cachedValue": "2. BAX-HMA"
+            },
+            {
+              "cell": "T5",
+              "formula": "=ROW(РАСЧЕТ!S4)-1& \". \" &РАСЧЕТ!T4&\"-\"&РАСЧЕТ!U4",
+              "cachedValue": "3. HMA-KJA"
+            },
+            {
+              "cell": "F6",
+              "formula": "=LEFT(РАСЧЕТ!Z2,1)*1",
+              "cachedValue": "2"
+            },
+            {
+              "cell": "T6",
+              "formula": "=ROW(РАСЧЕТ!S5)-1& \". \" &РАСЧЕТ!T5&\"-\"&РАСЧЕТ!U5",
+              "cachedValue": "4. KJA-LED"
+            },
+            {
+              "cell": "F7",
+              "formula": "=LEFT(РАСЧЕТ!Z3,1)",
+              "cachedValue": ""
+            },
+            {
+              "cell": "T7",
+              "formula": "=ROW(РАСЧЕТ!S6)-1& \". \" &РАСЧЕТ!T6&\"-\"&РАСЧЕТ!U6",
+              "cachedValue": "5. NSK-OVB"
+            }
+          ],
+          "cachedFormulaErrors": {},
+          "cachedFormulaErrorSamples": [],
+          "nonFormulaValueSamples": [
+            {
+              "cell": "A1",
+              "value": "ГСМ"
+            },
+            {
+              "cell": "F1",
+              "value": "ЛЧ"
+            },
+            {
+              "cell": "G1",
+              "value": "МВМ"
+            },
+            {
+              "cell": "H1",
+              "value": "М1"
+            },
+            {
+              "cell": "I1",
+              "value": "М2"
+            },
+            {
+              "cell": "J1",
+              "value": "М3"
+            },
+            {
+              "cell": "L1",
+              "value": "Версия ЛЧ"
+            },
+            {
+              "cell": "M1",
+              "value": "Тип ВС"
+            },
+            {
+              "cell": "N1",
+              "value": "М1"
+            },
+            {
+              "cell": "O1",
+              "value": "М2"
+            },
+            {
+              "cell": "P1",
+              "value": "М3"
+            },
+            {
+              "cell": "R1",
+              "value": "Значение"
+            },
+            {
+              "cell": "S1",
+              "value": "Значение"
+            },
+            {
+              "cell": "T1",
+              "value": "Значение"
+            },
+            {
+              "cell": "U1",
+              "value": "Значение"
+            },
+            {
+              "cell": "A2",
+              "value": "IATA"
+            },
+            {
+              "cell": "B2",
+              "value": "ГСМ тонна"
+            },
+            {
+              "cell": "F2",
+              "value": "738"
+            },
+            {
+              "cell": "G2",
+              "value": "79.015000000000001"
+            },
+            {
+              "cell": "H2",
+              "value": "165.72645799349999"
+            },
+            {
+              "cell": "I2",
+              "value": "341.48117875600002"
+            },
+            {
+              "cell": "J2",
+              "value": "391.28263647699998"
+            },
+            {
+              "cell": "L2",
+              "value": "ГБ 2026"
+            },
+            {
+              "cell": "M2",
+              "value": "738"
+            },
+            {
+              "cell": "N2",
+              "value": "165.72645799349999"
+            },
+            {
+              "cell": "O2",
+              "value": "341.48117875600002"
+            },
+            {
+              "cell": "P2",
+              "value": "391.28263647699998"
+            },
+            {
+              "cell": "R2",
+              "value": "ГБ 2026"
+            },
+            {
+              "cell": "S2",
+              "value": "ЦРТ"
+            },
+            {
+              "cell": "T2",
+              "value": "0. Без Техстопа"
+            },
+            {
+              "cell": "U2",
+              "value": "Включено"
+            },
+            {
+              "cell": "A3",
+              "value": "=EL"
+            },
+            {
+              "cell": "B3",
+              "value": "206557.37704918033"
+            },
+            {
+              "cell": "F3",
+              "value": "733"
+            },
+            {
+              "cell": "G3",
+              "value": "62.822000000000003"
+            },
+            {
+              "cell": "H3",
+              "value": "78.482188555464703"
+            },
+            {
+              "cell": "I3",
+              "value": "220.44681488224401"
+            },
+            {
+              "cell": "J3",
+              "value": "272.17480053077003"
+            },
+            {
+              "cell": "L3",
+              "value": "ГБ 2026"
+            },
+            {
+              "cell": "M3",
+              "value": "733"
+            },
+            {
+              "cell": "N3",
+              "value": "78.482188555464703"
+            },
+            {
+              "cell": "O3",
+              "value": "220.44681488224401"
+            },
+            {
+              "cell": "P3",
+              "value": "272.17480053077003"
+            },
+            {
+              "cell": "R3",
+              "value": "Оперативная 2026"
+            },
+            {
+              "cell": "S3",
+              "value": "АК"
+            },
+            {
+              "cell": "U3",
+              "value": "Не включено"
+            },
+            {
+              "cell": "A4",
+              "value": "ABA"
+            },
+            {
+              "cell": "B4",
+              "value": "137750"
+            },
+            {
+              "cell": "L4",
+              "value": "Оперативная 2026"
+            },
+            {
+              "cell": "M4",
+              "value": "738"
+            },
+            {
+              "cell": "N4",
+              "value": "161.6316247"
+            },
+            {
+              "cell": "O4",
+              "value": "325.85859859999999"
+            },
+            {
+              "cell": "P4",
+              "value": "376.93725490000003"
+            },
+            {
+              "cell": "A5",
+              "value": "AER"
+            },
+            {
+              "cell": "B5",
+              "value": "107510"
+            },
+            {
+              "cell": "F5",
+              "value": "Плечо ТС"
+            },
+            {
+              "cell": "L5",
+              "value": "Оперативная 2026"
+            },
+            {
+              "cell": "M5",
+              "value": "733"
+            },
+            {
+              "cell": "N5",
+              "value": "78.482188559999997"
+            },
+            {
+              "cell": "O5",
+              "value": "220.44681489999999"
+            }
+          ],
+          "externalFormulaReferences": {},
+          "crossSheetReferences": {
+            "РАСЧЕТ": 17
+          },
+          "tables": [
+            {
+              "name": "ИсточникСписка",
+              "displayName": "ИсточникСписка",
+              "ref": "R1:R3",
+              "totalsRowShown": "0",
+              "columns": [
+                "Значение"
+              ]
+            },
+            {
+              "name": "СценарийРасчетаЛЧ",
+              "displayName": "СценарийРасчетаЛЧ",
+              "ref": "L1:P5",
+              "totalsRowShown": "0",
+              "columns": [
+                "Версия ЛЧ",
+                "Тип ВС",
+                "М1",
+                "М2",
+                "М3"
+              ]
+            },
+            {
+              "name": "ИсточникСпискаГСМ",
+              "displayName": "ИсточникСпискаГСМ",
+              "ref": "S1:S3",
+              "totalsRowShown": "0",
+              "columns": [
+                "Значение"
+              ]
+            },
+            {
+              "name": "ИсточникТехстоп",
+              "displayName": "ИсточникТехстоп",
+              "ref": "T1:T7",
+              "totalsRowShown": "0",
+              "columns": [
+                "Значение"
+              ]
+            },
+            {
+              "name": "ИсточникПитание",
+              "displayName": "ИсточникПитание",
+              "ref": "U1:U3",
+              "totalsRowShown": "0",
+              "columns": [
+                "Значение"
+              ]
+            }
+          ],
+          "dataValidations": [],
+          "conditionalFormats": [],
+          "mergedRanges": [
+            "A1:B1"
+          ],
+          "hyperlinks": [],
+          "hasDrawing": false,
+          "hasLegacyDrawing": false,
+          "styleCount": 27,
+          "topStyles": [
+            [
+              "620",
+              33
+            ],
+            [
+              "702",
+              32
+            ],
+            [
+              "5",
+              29
+            ],
+            [
+              "8",
+              29
+            ],
+            [
+              "1",
+              26
+            ],
+            [
+              "712",
+              25
+            ],
+            [
+              "744",
+              25
+            ],
+            [
+              "234",
+              17
+            ],
+            [
+              "714",
+              15
+            ],
+            [
+              "237",
+              12
+            ]
+          ],
+          "state": "visible",
+          "sheetId": "2"
+        },
+        {
+          "name": "ИШР",
+          "part": "xl/worksheets/sheet3.xml",
+          "dimension": "A1:P649",
+          "cellCount": 7656,
+          "populatedRowCount": 649,
+          "maxPopulatedRow": 649,
+          "maxPopulatedColumn": 16,
+          "formulaCount": 2154,
+          "formulaPatterns": [
+            {
+              "count": 648,
+              "sampleCells": [
+                "P2",
+                "P3",
+                "P4",
+                "P5",
+                "P6",
+                "P7"
+              ],
+              "pattern": "=R[0]C[-2]+R[0]C[-1]/60"
+            },
+            {
+              "count": 503,
+              "sampleCells": [
+                "N2",
+                "N3",
+                "N4",
+                "N5",
+                "N6",
+                "N7"
+              ],
+              "pattern": "=HOUR(R[0]C[-9])"
+            },
+            {
+              "count": 503,
+              "sampleCells": [
+                "O2",
+                "O3",
+                "O4",
+                "O5",
+                "O6",
+                "O7"
+              ],
+              "pattern": "=MINUTE(R[0]C[-10])"
+            },
+            {
+              "count": 500,
+              "sampleCells": [
+                "A2",
+                "A3",
+                "A4",
+                "A5",
+                "A6",
+                "A7"
+              ],
+              "pattern": "=CONCATENATE(R[0]C[1],\"-\",R[0]C[2])"
+            }
+          ],
+          "formulaSamples": [
+            {
+              "cell": "A2",
+              "formula": "=CONCATENATE(B2,\"-\",C2)",
+              "cachedValue": "=EL-OVB"
+            },
+            {
+              "cell": "N2",
+              "formula": "=HOUR(E2)",
+              "cachedValue": "4"
+            },
+            {
+              "cell": "O2",
+              "formula": "=MINUTE(E2)",
+              "cachedValue": "20"
+            },
+            {
+              "cell": "P2",
+              "formula": "=N2+O2/60",
+              "cachedValue": "4.333333333333333"
+            },
+            {
+              "cell": "A3",
+              "formula": "=CONCATENATE(B3,\"-\",C3)",
+              "cachedValue": "ABA-AER"
+            },
+            {
+              "cell": "N3",
+              "formula": "=HOUR(E3)",
+              "cachedValue": "5"
+            },
+            {
+              "cell": "O3",
+              "formula": "=MINUTE(E3)",
+              "cachedValue": "32"
+            },
+            {
+              "cell": "P3",
+              "formula": "=N3+O3/60",
+              "cachedValue": "5.5333333333333332"
+            },
+            {
+              "cell": "A4",
+              "formula": "=CONCATENATE(B4,\"-\",C4)",
+              "cachedValue": "ABA-KJA"
+            },
+            {
+              "cell": "N4",
+              "formula": "=HOUR(E4)",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "O4",
+              "formula": "=MINUTE(E4)",
+              "cachedValue": "41"
+            },
+            {
+              "cell": "P4",
+              "formula": "=N4+O4/60",
+              "cachedValue": "0.68333333333333335"
+            },
+            {
+              "cell": "A5",
+              "formula": "=CONCATENATE(B5,\"-\",C5)",
+              "cachedValue": "AER-ABA"
+            },
+            {
+              "cell": "N5",
+              "formula": "=HOUR(E5)",
+              "cachedValue": "4"
+            },
+            {
+              "cell": "O5",
+              "formula": "=MINUTE(E5)",
+              "cachedValue": "51"
+            },
+            {
+              "cell": "P5",
+              "formula": "=N5+O5/60",
+              "cachedValue": "4.8499999999999996"
+            },
+            {
+              "cell": "A6",
+              "formula": "=CONCATENATE(B6,\"-\",C6)",
+              "cachedValue": "AER-CEK"
+            },
+            {
+              "cell": "N6",
+              "formula": "=HOUR(E6)",
+              "cachedValue": "3"
+            },
+            {
+              "cell": "O6",
+              "formula": "=MINUTE(E6)",
+              "cachedValue": "6"
+            },
+            {
+              "cell": "P6",
+              "formula": "=N6+O6/60",
+              "cachedValue": "3.1"
+            }
+          ],
+          "cachedFormulaErrors": {},
+          "cachedFormulaErrorSamples": [],
+          "nonFormulaValueSamples": [
+            {
+              "cell": "A1",
+              "value": "Маршрут"
+            },
+            {
+              "cell": "B1",
+              "value": "IATA"
+            },
+            {
+              "cell": "C1",
+              "value": "IATA"
+            },
+            {
+              "cell": "D1",
+              "value": "Расстояние, км"
+            },
+            {
+              "cell": "E1",
+              "value": "Время полета"
+            },
+            {
+              "cell": "F1",
+              "value": "Рейсовое топливо, кг"
+            },
+            {
+              "cell": "G1",
+              "value": "Расстояние до запасного, км"
+            },
+            {
+              "cell": "H1",
+              "value": "Запасной а/п код ICAO"
+            },
+            {
+              "cell": "I1",
+              "value": "Топливо до запасного, кг"
+            },
+            {
+              "cell": "J1",
+              "value": "Потребное топливо на полет, кг"
+            },
+            {
+              "cell": "K1",
+              "value": "Коммер-ческая загрузка, кг"
+            },
+            {
+              "cell": "L1",
+              "value": "Дозаправка"
+            },
+            {
+              "cell": "M1",
+              "value": "Тип ВС"
+            },
+            {
+              "cell": "N1",
+              "value": "часы"
+            },
+            {
+              "cell": "O1",
+              "value": "Минуты"
+            },
+            {
+              "cell": "P1",
+              "value": "Налет"
+            },
+            {
+              "cell": "B2",
+              "value": "=EL"
+            },
+            {
+              "cell": "C2",
+              "value": "OVB"
+            },
+            {
+              "cell": "D2",
+              "value": "3126"
+            },
+            {
+              "cell": "E2",
+              "value": "0.18055555555555555"
+            },
+            {
+              "cell": "F2",
+              "value": "10864"
+            },
+            {
+              "cell": "L2",
+              "value": "9308"
+            },
+            {
+              "cell": "B3",
+              "value": "ABA"
+            },
+            {
+              "cell": "C3",
+              "value": "AER"
+            },
+            {
+              "cell": "D3",
+              "value": "4163"
+            },
+            {
+              "cell": "E3",
+              "value": "0.23055555555555554"
+            },
+            {
+              "cell": "F3",
+              "value": "14048"
+            },
+            {
+              "cell": "L3",
+              "value": "14062"
+            },
+            {
+              "cell": "B4",
+              "value": "ABA"
+            },
+            {
+              "cell": "C4",
+              "value": "KJA"
+            },
+            {
+              "cell": "D4",
+              "value": "338"
+            },
+            {
+              "cell": "E4",
+              "value": "2.8472222222222222E-2"
+            },
+            {
+              "cell": "F4",
+              "value": "1959"
+            },
+            {
+              "cell": "L4",
+              "value": "2100"
+            },
+            {
+              "cell": "B5",
+              "value": "AER"
+            },
+            {
+              "cell": "C5",
+              "value": "ABA"
+            },
+            {
+              "cell": "D5",
+              "value": "4113"
+            },
+            {
+              "cell": "E5",
+              "value": "0.20208333333333331"
+            },
+            {
+              "cell": "F5",
+              "value": "12357"
+            },
+            {
+              "cell": "L5",
+              "value": "12797"
+            },
+            {
+              "cell": "B6",
+              "value": "AER"
+            },
+            {
+              "cell": "C6",
+              "value": "CEK"
+            },
+            {
+              "cell": "D6",
+              "value": "2550"
+            },
+            {
+              "cell": "E6",
+              "value": "0.12916666666666668"
+            },
+            {
+              "cell": "F6",
+              "value": "7953"
+            },
+            {
+              "cell": "L6",
+              "value": "8200"
+            },
+            {
+              "cell": "M6",
+              "value": "738"
+            },
+            {
+              "cell": "B7",
+              "value": "AER"
+            },
+            {
+              "cell": "C7",
+              "value": "DME"
+            },
+            {
+              "cell": "D7",
+              "value": "2813"
+            },
+            {
+              "cell": "E7",
+              "value": "0.14861111111111111"
+            },
+            {
+              "cell": "F7",
+              "value": "9659"
+            },
+            {
+              "cell": "L7",
+              "value": "9880"
+            },
+            {
+              "cell": "M7",
+              "value": "738"
+            },
+            {
+              "cell": "B8",
+              "value": "AER"
+            },
+            {
+              "cell": "C8",
+              "value": "GOJ"
+            },
+            {
+              "cell": "D8",
+              "value": "2489"
+            },
+            {
+              "cell": "E8",
+              "value": "0.13819444444444443"
+            },
+            {
+              "cell": "F8",
+              "value": "7470"
+            },
+            {
+              "cell": "L8",
+              "value": "8075"
+            }
+          ],
+          "externalFormulaReferences": {},
+          "crossSheetReferences": {},
+          "tables": [],
+          "dataValidations": [],
+          "conditionalFormats": [],
+          "mergedRanges": [],
+          "hyperlinks": [],
+          "hasDrawing": false,
+          "hasLegacyDrawing": false,
+          "styleCount": 652,
+          "topStyles": [
+            [
+              "242",
+              1256
+            ],
+            [
+              "322",
+              686
+            ],
+            [
+              "14",
+              568
+            ],
+            [
+              "82",
+              331
+            ],
+            [
+              "233",
+              282
+            ],
+            [
+              "327",
+              264
+            ],
+            [
+              "1",
+              224
+            ],
+            [
+              "84",
+              188
+            ],
+            [
+              "316",
+              160
+            ],
+            [
+              "505",
+              125
+            ]
+          ],
+          "state": "visible",
+          "sheetId": "3"
+        },
+        {
+          "name": "Признак МВЛ",
+          "part": "xl/worksheets/sheet4.xml",
+          "dimension": "A1:J82",
+          "cellCount": 183,
+          "populatedRowCount": 82,
+          "maxPopulatedRow": 82,
+          "maxPopulatedColumn": 10,
+          "formulaCount": 0,
+          "formulaPatterns": [],
+          "formulaSamples": [],
+          "cachedFormulaErrors": {},
+          "cachedFormulaErrorSamples": [],
+          "nonFormulaValueSamples": [
+            {
+              "cell": "A1",
+              "value": "Аэропорт"
+            },
+            {
+              "cell": "B1",
+              "value": "Признак МВЛ"
+            },
+            {
+              "cell": "C1",
+              "value": "Валюта"
+            },
+            {
+              "cell": "I1",
+              "value": "Валюта"
+            },
+            {
+              "cell": "J1",
+              "value": "Курс к рублю"
+            },
+            {
+              "cell": "A2",
+              "value": "AAQ"
+            },
+            {
+              "cell": "B2",
+              "value": "0"
+            },
+            {
+              "cell": "I2",
+              "value": "Лира"
+            },
+            {
+              "cell": "J2",
+              "value": "1.65"
+            },
+            {
+              "cell": "A3",
+              "value": "ABA"
+            },
+            {
+              "cell": "B3",
+              "value": "0"
+            },
+            {
+              "cell": "I3",
+              "value": "Юань"
+            },
+            {
+              "cell": "J3",
+              "value": "11.5"
+            },
+            {
+              "cell": "A4",
+              "value": "AER"
+            },
+            {
+              "cell": "B4",
+              "value": "0"
+            },
+            {
+              "cell": "I4",
+              "value": "ЕФунт"
+            },
+            {
+              "cell": "J4",
+              "value": "1.52"
+            },
+            {
+              "cell": "A5",
+              "value": "ARH"
+            },
+            {
+              "cell": "B5",
+              "value": "0"
+            },
+            {
+              "cell": "I5",
+              "value": "USD"
+            },
+            {
+              "cell": "J5",
+              "value": "78"
+            },
+            {
+              "cell": "A6",
+              "value": "AYT"
+            },
+            {
+              "cell": "B6",
+              "value": "1"
+            },
+            {
+              "cell": "C6",
+              "value": "USD"
+            },
+            {
+              "cell": "A7",
+              "value": "BAX"
+            },
+            {
+              "cell": "B7",
+              "value": "0"
+            },
+            {
+              "cell": "A8",
+              "value": "BQS"
+            },
+            {
+              "cell": "B8",
+              "value": "0"
+            },
+            {
+              "cell": "A9",
+              "value": "BTK"
+            },
+            {
+              "cell": "B9",
+              "value": "0"
+            },
+            {
+              "cell": "A10",
+              "value": "BVJ"
+            },
+            {
+              "cell": "B10",
+              "value": "0"
+            },
+            {
+              "cell": "A11",
+              "value": "CEK"
+            },
+            {
+              "cell": "B11",
+              "value": "0"
+            },
+            {
+              "cell": "A12",
+              "value": "DAT"
+            },
+            {
+              "cell": "B12",
+              "value": "1"
+            },
+            {
+              "cell": "C12",
+              "value": "USD"
+            },
+            {
+              "cell": "A13",
+              "value": "DME"
+            },
+            {
+              "cell": "B13",
+              "value": "0"
+            },
+            {
+              "cell": "A14",
+              "value": "DWC"
+            },
+            {
+              "cell": "B14",
+              "value": "1"
+            },
+            {
+              "cell": "A15",
+              "value": "EGO"
+            },
+            {
+              "cell": "B15",
+              "value": "0"
+            },
+            {
+              "cell": "A16",
+              "value": "GDZ"
+            },
+            {
+              "cell": "B16",
+              "value": "0"
+            },
+            {
+              "cell": "A17",
+              "value": "GOJ"
+            },
+            {
+              "cell": "B17",
+              "value": "0"
+            },
+            {
+              "cell": "A18",
+              "value": "GSV"
+            },
+            {
+              "cell": "B18",
+              "value": "0"
+            },
+            {
+              "cell": "A19",
+              "value": "GYD"
+            },
+            {
+              "cell": "B19",
+              "value": "1"
+            },
+            {
+              "cell": "C19",
+              "value": "USD"
+            },
+            {
+              "cell": "A20",
+              "value": "HMA"
+            },
+            {
+              "cell": "B20",
+              "value": "0"
+            },
+            {
+              "cell": "A21",
+              "value": "HRG"
+            },
+            {
+              "cell": "B21",
+              "value": "1"
+            },
+            {
+              "cell": "C21",
+              "value": "USD"
+            },
+            {
+              "cell": "A22",
+              "value": "HTA"
+            },
+            {
+              "cell": "B22",
+              "value": "0"
+            },
+            {
+              "cell": "A23",
+              "value": "IAA"
+            }
+          ],
+          "externalFormulaReferences": {},
+          "crossSheetReferences": {},
+          "tables": [],
+          "dataValidations": [],
+          "conditionalFormats": [],
+          "mergedRanges": [],
+          "hyperlinks": [],
+          "hasDrawing": false,
+          "hasLegacyDrawing": false,
+          "styleCount": 8,
+          "topStyles": [
+            [
+              "656",
+              80
+            ],
+            [
+              "655",
+              78
+            ],
+            [
+              "324",
+              20
+            ],
+            [
+              "659",
+              1
+            ],
+            [
+              "657",
+              1
+            ],
+            [
+              "658",
+              1
+            ],
+            [
+              "784",
+              1
+            ],
+            [
+              "785",
+              1
+            ]
+          ],
+          "state": "visible",
+          "sheetId": "17"
+        },
+        {
+          "name": "ЦРТ",
+          "part": "xl/worksheets/sheet5.xml",
+          "dimension": "A1:K4078",
+          "cellCount": 44858,
+          "populatedRowCount": 4078,
+          "maxPopulatedRow": 4078,
+          "maxPopulatedColumn": 11,
+          "formulaCount": 0,
+          "formulaPatterns": [],
+          "formulaSamples": [],
+          "cachedFormulaErrors": {},
+          "cachedFormulaErrorSamples": [],
+          "nonFormulaValueSamples": [
+            {
+              "cell": "A1",
+              "value": "Сцепка"
+            },
+            {
+              "cell": "B1",
+              "value": "АП"
+            },
+            {
+              "cell": "C1",
+              "value": "Услуга"
+            },
+            {
+              "cell": "D1",
+              "value": "Ставка"
+            },
+            {
+              "cell": "E1",
+              "value": "Ед.изм."
+            },
+            {
+              "cell": "F1",
+              "value": "Терминал"
+            },
+            {
+              "cell": "G1",
+              "value": "Код Т/С"
+            },
+            {
+              "cell": "H1",
+              "value": "В/С"
+            },
+            {
+              "cell": "I1",
+              "value": "Дата с"
+            },
+            {
+              "cell": "J1",
+              "value": "Дата по"
+            },
+            {
+              "cell": "K1",
+              "value": "Наименование Орг"
+            },
+            {
+              "cell": "A2",
+              "value": "AAQ-АНО АД"
+            },
+            {
+              "cell": "B2",
+              "value": "AAQ"
+            },
+            {
+              "cell": "C2",
+              "value": "АНО АД"
+            },
+            {
+              "cell": "D2",
+              "value": "274.89999999999998"
+            },
+            {
+              "cell": "E2",
+              "value": "РУБ-Т"
+            },
+            {
+              "cell": "G2",
+              "value": " "
+            },
+            {
+              "cell": "I2",
+              "value": "46120"
+            },
+            {
+              "cell": "J2",
+              "value": "47214"
+            },
+            {
+              "cell": "K2",
+              "value": "ФЕДЕРАЛЬНОЕ ГОСУДАРСТВЕННОЕ УНИТАРНОЕ ПРЕДПРИЯТИЕ ГОСКОРПОРАЦИЯ ПО ОРВД"
+            },
+            {
+              "cell": "A3",
+              "value": "AAQ-БУКСИРОВКА"
+            },
+            {
+              "cell": "B3",
+              "value": "AAQ"
+            },
+            {
+              "cell": "C3",
+              "value": "БУКСИРОВКА"
+            },
+            {
+              "cell": "D3",
+              "value": "12926"
+            },
+            {
+              "cell": "E3",
+              "value": "РУБ-ЕД"
+            },
+            {
+              "cell": "G3",
+              "value": "SCHOPF-160"
+            },
+            {
+              "cell": "I3",
+              "value": "45658"
+            },
+            {
+              "cell": "J3",
+              "value": "46752"
+            },
+            {
+              "cell": "K3",
+              "value": "ОТКРЫТОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО «АЭРОПОРТ АНАПА»"
+            },
+            {
+              "cell": "A4",
+              "value": "AAQ-ВОДА"
+            },
+            {
+              "cell": "B4",
+              "value": "AAQ"
+            },
+            {
+              "cell": "C4",
+              "value": "ВОДА"
+            },
+            {
+              "cell": "D4",
+              "value": "6735"
+            },
+            {
+              "cell": "E4",
+              "value": "РУБ-ВС"
+            },
+            {
+              "cell": "G4",
+              "value": " "
+            },
+            {
+              "cell": "H4",
+              "value": "733"
+            },
+            {
+              "cell": "I4",
+              "value": "45658"
+            },
+            {
+              "cell": "J4",
+              "value": "46752"
+            },
+            {
+              "cell": "K4",
+              "value": "ОТКРЫТОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО «АЭРОПОРТ АНАПА»"
+            },
+            {
+              "cell": "A5",
+              "value": "AAQ-ВОДА"
+            },
+            {
+              "cell": "B5",
+              "value": "AAQ"
+            },
+            {
+              "cell": "C5",
+              "value": "ВОДА"
+            },
+            {
+              "cell": "D5",
+              "value": "8991"
+            },
+            {
+              "cell": "E5",
+              "value": "РУБ-ВС"
+            },
+            {
+              "cell": "G5",
+              "value": " "
+            },
+            {
+              "cell": "H5",
+              "value": "737"
+            },
+            {
+              "cell": "I5",
+              "value": "45658"
+            },
+            {
+              "cell": "J5",
+              "value": "46752"
+            },
+            {
+              "cell": "K5",
+              "value": "ОТКРЫТОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО «АЭРОПОРТ АНАПА»"
+            },
+            {
+              "cell": "A6",
+              "value": "AAQ-ВОДА"
+            },
+            {
+              "cell": "B6",
+              "value": "AAQ"
+            },
+            {
+              "cell": "C6",
+              "value": "ВОДА"
+            },
+            {
+              "cell": "D6",
+              "value": "8991"
+            },
+            {
+              "cell": "E6",
+              "value": "РУБ-ВС"
+            },
+            {
+              "cell": "G6",
+              "value": " "
+            },
+            {
+              "cell": "H6",
+              "value": "738"
+            },
+            {
+              "cell": "I6",
+              "value": "45658"
+            },
+            {
+              "cell": "J6",
+              "value": "46752"
+            },
+            {
+              "cell": "K6",
+              "value": "ОТКРЫТОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО «АЭРОПОРТ АНАПА»"
+            },
+            {
+              "cell": "A7",
+              "value": "AAQ-ЗАПРАВКА ВС"
+            }
+          ],
+          "externalFormulaReferences": {},
+          "crossSheetReferences": {},
+          "tables": [
+            {
+              "name": "ЦРТ_Check",
+              "displayName": "ЦРТ_Check",
+              "ref": "A1:K4078",
+              "totalsRowShown": "0",
+              "columns": [
+                "Сцепка",
+                "АП",
+                "Услуга",
+                "Ставка",
+                "Ед.изм.",
+                "Терминал",
+                "Код Т/С",
+                "В/С",
+                "Дата с",
+                "Дата по",
+                "Наименование Орг"
+              ]
+            }
+          ],
+          "dataValidations": [],
+          "conditionalFormats": [],
+          "mergedRanges": [],
+          "hyperlinks": [],
+          "hasDrawing": false,
+          "hasLegacyDrawing": false,
+          "styleCount": 3,
+          "topStyles": [
+            [
+              "628",
+              32616
+            ],
+            [
+              "324",
+              11472
+            ],
+            [
+              "702",
+              759
+            ]
+          ],
+          "state": "visible",
+          "sheetId": "15"
+        },
+        {
+          "name": "ЦРТ+",
+          "part": "xl/worksheets/sheet6.xml",
+          "dimension": "A1:K11",
+          "cellCount": 73,
+          "populatedRowCount": 11,
+          "maxPopulatedRow": 11,
+          "maxPopulatedColumn": 11,
+          "formulaCount": 10,
+          "formulaPatterns": [
+            {
+              "count": 10,
+              "sampleCells": [
+                "A2",
+                "A3",
+                "A4",
+                "A5",
+                "A6",
+                "A7"
+              ],
+              "pattern": "=ЦРТ_pls[[#This Row],[АП]]&\"-\"&ЦРТ_pls[[#This Row],[Услуга]]"
+            }
+          ],
+          "formulaSamples": [
+            {
+              "cell": "A2",
+              "formula": "=ЦРТ_pls[[#This Row],[АП]]&\"-\"&ЦРТ_pls[[#This Row],[Услуга]]",
+              "cachedValue": "=EL-ЗАПРАВКА ВС"
+            },
+            {
+              "cell": "A3",
+              "formula": "=ЦРТ_pls[[#This Row],[АП]]&\"-\"&ЦРТ_pls[[#This Row],[Услуга]]",
+              "cachedValue": "=EL-КЕРОСИН"
+            },
+            {
+              "cell": "A4",
+              "formula": "=ЦРТ_pls[[#This Row],[АП]]&\"-\"&ЦРТ_pls[[#This Row],[Услуга]]",
+              "cachedValue": "OVB-ВЗЛЕТ-ПОСАДКА"
+            },
+            {
+              "cell": "A5",
+              "formula": "=ЦРТ_pls[[#This Row],[АП]]&\"-\"&ЦРТ_pls[[#This Row],[Услуга]]",
+              "cachedValue": "OVB-ТРАНСПБЕЗОП"
+            },
+            {
+              "cell": "A6",
+              "formula": "=ЦРТ_pls[[#This Row],[АП]]&\"-\"&ЦРТ_pls[[#This Row],[Услуга]]",
+              "cachedValue": "BVJ-ЗАПРАВКА ВС"
+            },
+            {
+              "cell": "A7",
+              "formula": "=ЦРТ_pls[[#This Row],[АП]]&\"-\"&ЦРТ_pls[[#This Row],[Услуга]]",
+              "cachedValue": "BVJ-ВЗЛЕТ-ПОСАДКА"
+            },
+            {
+              "cell": "A8",
+              "formula": "=ЦРТ_pls[[#This Row],[АП]]&\"-\"&ЦРТ_pls[[#This Row],[Услуга]]",
+              "cachedValue": "BVJ-ТРАНСПБЕЗОП"
+            },
+            {
+              "cell": "A9",
+              "formula": "=ЦРТ_pls[[#This Row],[АП]]&\"-\"&ЦРТ_pls[[#This Row],[Услуга]]",
+              "cachedValue": "BVJ-АНО АД"
+            },
+            {
+              "cell": "A10",
+              "formula": "=ЦРТ_pls[[#This Row],[АП]]&\"-\"&ЦРТ_pls[[#This Row],[Услуга]]",
+              "cachedValue": "BVJ-АЭРОВОКЗАЛ"
+            },
+            {
+              "cell": "A11",
+              "formula": "=ЦРТ_pls[[#This Row],[АП]]&\"-\"&ЦРТ_pls[[#This Row],[Услуга]]",
+              "cachedValue": "BVJ-ПАССАЖИР"
+            }
+          ],
+          "cachedFormulaErrors": {},
+          "cachedFormulaErrorSamples": [],
+          "nonFormulaValueSamples": [
+            {
+              "cell": "A1",
+              "value": "Сцепка"
+            },
+            {
+              "cell": "B1",
+              "value": "АП"
+            },
+            {
+              "cell": "C1",
+              "value": "Услуга"
+            },
+            {
+              "cell": "D1",
+              "value": "Ставка"
+            },
+            {
+              "cell": "E1",
+              "value": "Ед.изм."
+            },
+            {
+              "cell": "F1",
+              "value": "Терминал"
+            },
+            {
+              "cell": "G1",
+              "value": "Код Т/С"
+            },
+            {
+              "cell": "H1",
+              "value": "В/С"
+            },
+            {
+              "cell": "I1",
+              "value": "Дата с"
+            },
+            {
+              "cell": "J1",
+              "value": "Дата по"
+            },
+            {
+              "cell": "K1",
+              "value": "Наименование Орг"
+            },
+            {
+              "cell": "B2",
+              "value": "=EL"
+            },
+            {
+              "cell": "C2",
+              "value": "ЗАПРАВКА ВС"
+            },
+            {
+              "cell": "D2",
+              "value": "2028"
+            },
+            {
+              "cell": "E2",
+              "value": "РУБ-Т"
+            },
+            {
+              "cell": "B3",
+              "value": "=EL"
+            },
+            {
+              "cell": "C3",
+              "value": "КЕРОСИН"
+            },
+            {
+              "cell": "D3",
+              "value": "131147.5"
+            },
+            {
+              "cell": "E3",
+              "value": "РУБ-Т"
+            },
+            {
+              "cell": "B4",
+              "value": "OVB"
+            },
+            {
+              "cell": "C4",
+              "value": "ВЗЛЕТ-ПОСАДКА"
+            },
+            {
+              "cell": "D4",
+              "value": "477"
+            },
+            {
+              "cell": "E4",
+              "value": "РУБ-Т"
+            },
+            {
+              "cell": "B5",
+              "value": "OVB"
+            },
+            {
+              "cell": "C5",
+              "value": "ТРАНСПБЕЗОП"
+            },
+            {
+              "cell": "D5",
+              "value": "527"
+            },
+            {
+              "cell": "E5",
+              "value": "РУБ-Т"
+            },
+            {
+              "cell": "B6",
+              "value": "BVJ"
+            },
+            {
+              "cell": "C6",
+              "value": "ЗАПРАВКА ВС"
+            },
+            {
+              "cell": "D6",
+              "value": "38900"
+            },
+            {
+              "cell": "E6",
+              "value": "РУБ-Т"
+            },
+            {
+              "cell": "B7",
+              "value": "BVJ"
+            },
+            {
+              "cell": "C7",
+              "value": "ВЗЛЕТ-ПОСАДКА"
+            },
+            {
+              "cell": "D7",
+              "value": "38400"
+            },
+            {
+              "cell": "B8",
+              "value": "BVJ"
+            },
+            {
+              "cell": "C8",
+              "value": "ТРАНСПБЕЗОП"
+            },
+            {
+              "cell": "D8",
+              "value": "11200"
+            },
+            {
+              "cell": "B9",
+              "value": "BVJ"
+            },
+            {
+              "cell": "C9",
+              "value": "АНО АД"
+            },
+            {
+              "cell": "D9",
+              "value": "203.6"
+            },
+            {
+              "cell": "B10",
+              "value": "BVJ"
+            },
+            {
+              "cell": "C10",
+              "value": "АЭРОВОКЗАЛ"
+            },
+            {
+              "cell": "D10",
+              "value": "380"
+            },
+            {
+              "cell": "B11",
+              "value": "BVJ"
+            },
+            {
+              "cell": "C11",
+              "value": "ПАССАЖИР"
+            },
+            {
+              "cell": "D11",
+              "value": "664"
+            }
+          ],
+          "externalFormulaReferences": {},
+          "crossSheetReferences": {},
+          "tables": [
+            {
+              "name": "ЦРТ_pls",
+              "displayName": "ЦРТ_pls",
+              "ref": "A1:K11",
+              "totalsRowShown": "0",
+              "columns": [
+                "Сцепка",
+                "АП",
+                "Услуга",
+                "Ставка",
+                "Ед.изм.",
+                "Терминал",
+                "Код Т/С",
+                "В/С",
+                "Дата с",
+                "Дата по",
+                "Наименование Орг"
+              ]
+            }
+          ],
+          "dataValidations": [],
+          "conditionalFormats": [],
+          "mergedRanges": [],
+          "hyperlinks": [],
+          "hasDrawing": false,
+          "hasLegacyDrawing": false,
+          "styleCount": 3,
+          "topStyles": [
+            [
+              "628",
+              38
+            ],
+            [
+              "702",
+              14
+            ],
+            [
+              "742",
+              2
+            ]
+          ],
+          "state": "visible",
+          "sheetId": "25"
+        },
+        {
+          "name": "ЦРТ_МВЛ",
+          "part": "xl/worksheets/sheet7.xml",
+          "dimension": "A1:Z121",
+          "cellCount": 987,
+          "populatedRowCount": 121,
+          "maxPopulatedRow": 121,
+          "maxPopulatedColumn": 26,
+          "formulaCount": 600,
+          "formulaPatterns": [
+            {
+              "count": 120,
+              "sampleCells": [
+                "A2",
+                "A3",
+                "A4",
+                "A5",
+                "A6",
+                "A7"
+              ],
+              "pattern": "=CONCATENATE(R[0]C[1],\"-\",R[0]C[2])"
+            },
+            {
+              "count": 120,
+              "sampleCells": [
+                "E2",
+                "E3",
+                "E4",
+                "E5",
+                "E6",
+                "E7"
+              ],
+              "pattern": "=MID(VLOOKUP(R[0]C[-2],#REF!,3),4,LEN(VLOOKUP(R[0]C[-2],#REF!,3)))"
+            },
+            {
+              "count": 120,
+              "sampleCells": [
+                "P2",
+                "P3",
+                "P4",
+                "P5",
+                "P6",
+                "P7"
+              ],
+              "pattern": "=R[0]C[-1]*R[0]C[-2]"
+            },
+            {
+              "count": 120,
+              "sampleCells": [
+                "D2",
+                "D3",
+                "D4",
+                "D5",
+                "D6",
+                "D7"
+              ],
+              "pattern": "=VLOOKUP(ЦРТ_МВЛ!R[0]C[-2],'Признак МВЛ'!A:C,3)"
+            },
+            {
+              "count": 120,
+              "sampleCells": [
+                "F2",
+                "F3",
+                "F4",
+                "F5",
+                "F6",
+                "F7"
+              ],
+              "pattern": "=_xlfn.CONCAT(R[0]C[-2],R[0]C[-1])"
+            }
+          ],
+          "formulaSamples": [
+            {
+              "cell": "A2",
+              "formula": "=CONCATENATE(B2,\"-\",C2)",
+              "cachedValue": "AYT-КЕРОСИН"
+            },
+            {
+              "cell": "D2",
+              "formula": "=VLOOKUP(ЦРТ_МВЛ!B2,'Признак МВЛ'!A:C,3)",
+              "cachedValue": "USD"
+            },
+            {
+              "cell": "E2",
+              "formula": "=MID(VLOOKUP(C2,#REF!,3),4,LEN(VLOOKUP(C2,#REF!,3)))",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "F2",
+              "formula": "=_xlfn.CONCAT(D2,E2)",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "P2",
+              "formula": "=O2*N2",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "A3",
+              "formula": "=CONCATENATE(B3,\"-\",C3)",
+              "cachedValue": "AYT-ЗАПРАВКА ВС"
+            },
+            {
+              "cell": "D3",
+              "formula": "=VLOOKUP(ЦРТ_МВЛ!B3,'Признак МВЛ'!A:C,3)",
+              "cachedValue": "USD"
+            },
+            {
+              "cell": "E3",
+              "formula": "=MID(VLOOKUP(C3,#REF!,3),4,LEN(VLOOKUP(C3,#REF!,3)))",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "F3",
+              "formula": "=_xlfn.CONCAT(D3,E3)",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "P3",
+              "formula": "=O3*N3",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "A4",
+              "formula": "=CONCATENATE(B4,\"-\",C4)",
+              "cachedValue": "AYT-АНО АД"
+            },
+            {
+              "cell": "D4",
+              "formula": "=VLOOKUP(ЦРТ_МВЛ!B4,'Признак МВЛ'!A:C,3)",
+              "cachedValue": "USD"
+            },
+            {
+              "cell": "E4",
+              "formula": "=MID(VLOOKUP(C4,#REF!,3),4,LEN(VLOOKUP(C4,#REF!,3)))",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "F4",
+              "formula": "=_xlfn.CONCAT(D4,E4)",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "P4",
+              "formula": "=O4*N4",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "A5",
+              "formula": "=CONCATENATE(B5,\"-\",C5)",
+              "cachedValue": "AYT-ВЗЛЕТ-ПОСАДКА"
+            },
+            {
+              "cell": "D5",
+              "formula": "=VLOOKUP(ЦРТ_МВЛ!B5,'Признак МВЛ'!A:C,3)",
+              "cachedValue": "USD"
+            },
+            {
+              "cell": "E5",
+              "formula": "=MID(VLOOKUP(C5,#REF!,3),4,LEN(VLOOKUP(C5,#REF!,3)))",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "F5",
+              "formula": "=_xlfn.CONCAT(D5,E5)",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "P5",
+              "formula": "=O5*N5",
+              "cachedValue": "0"
+            }
+          ],
+          "cachedFormulaErrors": {
+            "#REF!": 240
+          },
+          "cachedFormulaErrorSamples": [
+            {
+              "cell": "E2",
+              "formula": "=MID(VLOOKUP(C2,#REF!,3),4,LEN(VLOOKUP(C2,#REF!,3)))",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "F2",
+              "formula": "=_xlfn.CONCAT(D2,E2)",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "E3",
+              "formula": "=MID(VLOOKUP(C3,#REF!,3),4,LEN(VLOOKUP(C3,#REF!,3)))",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "F3",
+              "formula": "=_xlfn.CONCAT(D3,E3)",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "E4",
+              "formula": "=MID(VLOOKUP(C4,#REF!,3),4,LEN(VLOOKUP(C4,#REF!,3)))",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "F4",
+              "formula": "=_xlfn.CONCAT(D4,E4)",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "E5",
+              "formula": "=MID(VLOOKUP(C5,#REF!,3),4,LEN(VLOOKUP(C5,#REF!,3)))",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "F5",
+              "formula": "=_xlfn.CONCAT(D5,E5)",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "E6",
+              "formula": "=MID(VLOOKUP(C6,#REF!,3),4,LEN(VLOOKUP(C6,#REF!,3)))",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "F6",
+              "formula": "=_xlfn.CONCAT(D6,E6)",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "E7",
+              "formula": "=MID(VLOOKUP(C7,#REF!,3),4,LEN(VLOOKUP(C7,#REF!,3)))",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "F7",
+              "formula": "=_xlfn.CONCAT(D7,E7)",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "E8",
+              "formula": "=MID(VLOOKUP(C8,#REF!,3),4,LEN(VLOOKUP(C8,#REF!,3)))",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "F8",
+              "formula": "=_xlfn.CONCAT(D8,E8)",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "E9",
+              "formula": "=MID(VLOOKUP(C9,#REF!,3),4,LEN(VLOOKUP(C9,#REF!,3)))",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "F9",
+              "formula": "=_xlfn.CONCAT(D9,E9)",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "E10",
+              "formula": "=MID(VLOOKUP(C10,#REF!,3),4,LEN(VLOOKUP(C10,#REF!,3)))",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "F10",
+              "formula": "=_xlfn.CONCAT(D10,E10)",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "E11",
+              "formula": "=MID(VLOOKUP(C11,#REF!,3),4,LEN(VLOOKUP(C11,#REF!,3)))",
+              "cachedValue": "#REF!"
+            },
+            {
+              "cell": "F11",
+              "formula": "=_xlfn.CONCAT(D11,E11)",
+              "cachedValue": "#REF!"
+            }
+          ],
+          "nonFormulaValueSamples": [
+            {
+              "cell": "A1",
+              "value": "Сцепка"
+            },
+            {
+              "cell": "B1",
+              "value": "АП"
+            },
+            {
+              "cell": "C1",
+              "value": "Услуга"
+            },
+            {
+              "cell": "D1",
+              "value": "Валюта"
+            },
+            {
+              "cell": "E1",
+              "value": "Изм."
+            },
+            {
+              "cell": "F1",
+              "value": "Ед. Изм"
+            },
+            {
+              "cell": "G1",
+              "value": "Терминал"
+            },
+            {
+              "cell": "H1",
+              "value": "Код Т/С"
+            },
+            {
+              "cell": "I1",
+              "value": "В/С"
+            },
+            {
+              "cell": "J1",
+              "value": "Дата с"
+            },
+            {
+              "cell": "K1",
+              "value": "Дата по"
+            },
+            {
+              "cell": "L1",
+              "value": "Наименование Орг"
+            },
+            {
+              "cell": "M1",
+              "value": "Наименование Орг"
+            },
+            {
+              "cell": "N1",
+              "value": "Ставка"
+            },
+            {
+              "cell": "O1",
+              "value": "Курс валюты"
+            },
+            {
+              "cell": "P1",
+              "value": "Стоимость в рублях"
+            },
+            {
+              "cell": "B2",
+              "value": "AYT"
+            },
+            {
+              "cell": "C2",
+              "value": "КЕРОСИН"
+            },
+            {
+              "cell": "O2",
+              "value": "78"
+            },
+            {
+              "cell": "B3",
+              "value": "AYT"
+            },
+            {
+              "cell": "C3",
+              "value": "ЗАПРАВКА ВС"
+            },
+            {
+              "cell": "O3",
+              "value": "78"
+            },
+            {
+              "cell": "B4",
+              "value": "AYT"
+            },
+            {
+              "cell": "C4",
+              "value": "АНО АД"
+            },
+            {
+              "cell": "O4",
+              "value": "78"
+            },
+            {
+              "cell": "B5",
+              "value": "AYT"
+            },
+            {
+              "cell": "C5",
+              "value": "ВЗЛЕТ-ПОСАДКА"
+            },
+            {
+              "cell": "O5",
+              "value": "78"
+            },
+            {
+              "cell": "B6",
+              "value": "AYT"
+            },
+            {
+              "cell": "C6",
+              "value": "ТРАНСПБЕЗОП"
+            },
+            {
+              "cell": "O6",
+              "value": "78"
+            },
+            {
+              "cell": "B7",
+              "value": "AYT"
+            },
+            {
+              "cell": "C7",
+              "value": "ПАССАЖИР"
+            },
+            {
+              "cell": "O7",
+              "value": "78"
+            },
+            {
+              "cell": "B8",
+              "value": "AYT"
+            },
+            {
+              "cell": "C8",
+              "value": "ПАССАЖИР(М)"
+            },
+            {
+              "cell": "O8",
+              "value": "78"
+            },
+            {
+              "cell": "X8",
+              "value": "Аэропорты"
+            },
+            {
+              "cell": "Y8",
+              "value": "Услуга"
+            },
+            {
+              "cell": "B9",
+              "value": "AYT"
+            },
+            {
+              "cell": "C9",
+              "value": "АЭРОВОКЗАЛ"
+            },
+            {
+              "cell": "O9",
+              "value": "78"
+            },
+            {
+              "cell": "X9",
+              "value": "AYT"
+            },
+            {
+              "cell": "Z9",
+              "value": "+ цена"
+            },
+            {
+              "cell": "B10",
+              "value": "AYT"
+            },
+            {
+              "cell": "C10",
+              "value": "АЭРОВОКЗАЛ(М)"
+            },
+            {
+              "cell": "O10",
+              "value": "78"
+            },
+            {
+              "cell": "X10",
+              "value": "TYN"
+            },
+            {
+              "cell": "Z10",
+              "value": "+ курс валют"
+            },
+            {
+              "cell": "B11",
+              "value": "AYT"
+            },
+            {
+              "cell": "C11",
+              "value": "АЭРОВОКЗАЛ"
+            },
+            {
+              "cell": "O11",
+              "value": "78"
+            },
+            {
+              "cell": "X11",
+              "value": "SYX"
+            },
+            {
+              "cell": "Z11",
+              "value": "= Стоимость в рублях"
+            },
+            {
+              "cell": "B12",
+              "value": "AYT"
+            },
+            {
+              "cell": "C12",
+              "value": "АЭРОВОКЗАЛ(М)"
+            },
+            {
+              "cell": "O12",
+              "value": "78"
+            },
+            {
+              "cell": "X12",
+              "value": "SSH"
+            },
+            {
+              "cell": "B13",
+              "value": "AYT"
+            },
+            {
+              "cell": "C13",
+              "value": "ПРИЕМ-ВЫПУСК"
+            }
+          ],
+          "externalFormulaReferences": {},
+          "crossSheetReferences": {
+            "ЦРТ_МВЛ": 120,
+            "Признак МВЛ": 120,
+            "REF": 240
+          },
+          "tables": [],
+          "dataValidations": [],
+          "conditionalFormats": [],
+          "mergedRanges": [],
+          "hyperlinks": [],
+          "hasDrawing": false,
+          "hasLegacyDrawing": false,
+          "styleCount": 5,
+          "topStyles": [
+            [
+              "324",
+              955
+            ],
+            [
+              "625",
+              14
+            ],
+            [
+              "653",
+              3
+            ],
+            [
+              "626",
+              1
+            ],
+            [
+              "654",
+              1
+            ]
+          ],
+          "state": "visible",
+          "sheetId": "16"
+        },
+        {
+          "name": "НО",
+          "part": "xl/worksheets/sheet8.xml",
+          "dimension": "A1:AM39",
+          "cellCount": 900,
+          "populatedRowCount": 38,
+          "maxPopulatedRow": 39,
+          "maxPopulatedColumn": 39,
+          "formulaCount": 665,
+          "formulaPatterns": [
+            {
+              "count": 119,
+              "sampleCells": [
+                "D3",
+                "L3",
+                "T3",
+                "AB3",
+                "AJ3",
+                "D4"
+              ],
+              "pattern": "=CONCATENATE(R[0]C[-3],\"-\",R[0]C[-1])"
+            },
+            {
+              "count": 113,
+              "sampleCells": [
+                "F3",
+                "N3",
+                "V3",
+                "AD3",
+                "AL3",
+                "F4"
+              ],
+              "pattern": "=IFERROR(VLOOKUP(R[0]C[-2],ЦРТ!$A:$D,4,0),0)"
+            },
+            {
+              "count": 102,
+              "sampleCells": [
+                "G3",
+                "O3",
+                "W3",
+                "AE3",
+                "AM3",
+                "G4"
+              ],
+              "pattern": "=R[0]C[-2]*R[0]C[-1]"
+            },
+            {
+              "count": 22,
+              "sampleCells": [
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8"
+              ],
+              "pattern": "=РАСЧЕТ!R2C19"
+            },
+            {
+              "count": 22,
+              "sampleCells": [
+                "J3",
+                "J4",
+                "J5",
+                "J6",
+                "J7",
+                "J8"
+              ],
+              "pattern": "=РАСЧЕТ!R3C19"
+            },
+            {
+              "count": 22,
+              "sampleCells": [
+                "R3",
+                "R4",
+                "R5",
+                "R6",
+                "R7",
+                "R8"
+              ],
+              "pattern": "=РАСЧЕТ!R4C19"
+            },
+            {
+              "count": 22,
+              "sampleCells": [
+                "Z3",
+                "Z4",
+                "Z5",
+                "Z6",
+                "Z7",
+                "Z8"
+              ],
+              "pattern": "=РАСЧЕТ!R5C19"
+            },
+            {
+              "count": 22,
+              "sampleCells": [
+                "AH3",
+                "AH4",
+                "AH5",
+                "AH6",
+                "AH7",
+                "AH8"
+              ],
+              "pattern": "=РАСЧЕТ!R6C19"
+            },
+            {
+              "count": 18,
+              "sampleCells": [
+                "E5",
+                "M5",
+                "U5",
+                "AC5",
+                "AK5",
+                "E6"
+              ],
+              "pattern": "=VLOOKUP(R[0]C[-3],Справочники!$F:$G,2,0)"
+            },
+            {
+              "count": 18,
+              "sampleCells": [
+                "A3",
+                "A4",
+                "A5",
+                "A6",
+                "A7",
+                "A8"
+              ],
+              "pattern": "=РАСЧЕТ!R2C20"
+            },
+            {
+              "count": 18,
+              "sampleCells": [
+                "I3",
+                "I4",
+                "I5",
+                "I6",
+                "I7",
+                "I8"
+              ],
+              "pattern": "=РАСЧЕТ!R3C20"
+            },
+            {
+              "count": 18,
+              "sampleCells": [
+                "Q3",
+                "Q4",
+                "Q5",
+                "Q6",
+                "Q7",
+                "Q8"
+              ],
+              "pattern": "=РАСЧЕТ!R4C20"
+            },
+            {
+              "count": 18,
+              "sampleCells": [
+                "Y3",
+                "Y4",
+                "Y5",
+                "Y6",
+                "Y7",
+                "Y8"
+              ],
+              "pattern": "=РАСЧЕТ!R5C20"
+            },
+            {
+              "count": 18,
+              "sampleCells": [
+                "AG3",
+                "AG4",
+                "AG5",
+                "AG6",
+                "AG7",
+                "AG8"
+              ],
+              "pattern": "=РАСЧЕТ!R6C20"
+            },
+            {
+              "count": 17,
+              "sampleCells": [
+                "G16",
+                "O16",
+                "W16",
+                "AE16",
+                "AM16",
+                "G17"
+              ],
+              "pattern": "=R[0]C[-2]*R[0]C[-1]/2"
+            },
+            {
+              "count": 9,
+              "sampleCells": [
+                "B30",
+                "B31",
+                "B32",
+                "B33",
+                "B34",
+                "B35"
+              ],
+              "pattern": "=VLOOKUP(ПлечоТС,РАСЧЕТ!R1C1:R6C23,19,1)"
+            },
+            {
+              "count": 9,
+              "sampleCells": [
+                "A30",
+                "A31",
+                "A32",
+                "A33",
+                "A34",
+                "A35"
+              ],
+              "pattern": "=VLOOKUP(ПлечоТС,РАСЧЕТ!R1C1:R6C23,20,1)"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "F24",
+                "N24",
+                "V24",
+                "AD24",
+                "AL24"
+              ],
+              "pattern": "=IFERROR(INDEX(Прочее!R1C1:R27C46,27,MATCH(R[0]C[-5],Прочее!R1C2:R1C46,0)+1),0)"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "E17",
+                "M17",
+                "U17",
+                "AC17",
+                "AK17"
+              ],
+              "pattern": "=ROUNDUP(SUM(R[-7]C[0]:R[-4]C[0])/100,0)"
+            },
+            {
+              "count": 5,
+              "sampleCells": [
+                "G25",
+                "O25",
+                "W25",
+                "AE25",
+                "AM25"
+              ],
+              "pattern": "=SUM(R[-19]C[0]:R[-1]C[0])"
+            },
+            {
+              "count": 4,
+              "sampleCells": [
+                "A12",
+                "A13",
+                "A19",
+                "A23"
+              ],
+              "pattern": "=РАСЧЕТ!R2C21"
+            },
+            {
+              "count": 4,
+              "sampleCells": [
+                "I12",
+                "I13",
+                "I19",
+                "I23"
+              ],
+              "pattern": "=РАСЧЕТ!R3C21"
+            },
+            {
+              "count": 4,
+              "sampleCells": [
+                "Q12",
+                "Q13",
+                "Q19",
+                "Q23"
+              ],
+              "pattern": "=РАСЧЕТ!R4C21"
+            },
+            {
+              "count": 4,
+              "sampleCells": [
+                "Y12",
+                "Y13",
+                "Y19",
+                "Y23"
+              ],
+              "pattern": "=РАСЧЕТ!R5C21"
+            },
+            {
+              "count": 4,
+              "sampleCells": [
+                "AG12",
+                "AG13",
+                "AG19",
+                "AG23"
+              ],
+              "pattern": "=РАСЧЕТ!R6C21"
+            },
+            {
+              "count": 3,
+              "sampleCells": [
+                "E8",
+                "E10",
+                "E12"
+              ],
+              "pattern": "=IF(РАСЧЕТ!R2C23=\"ВВЛ\",РАСЧЕТ!R2C22,0)"
+            },
+            {
+              "count": 3,
+              "sampleCells": [
+                "E9",
+                "E11",
+                "E13"
+              ],
+              "pattern": "=IF(РАСЧЕТ!R2C23=\"МВЛ\",РАСЧЕТ!R2C22,0)"
+            },
+            {
+              "count": 3,
+              "sampleCells": [
+                "M8",
+                "M10",
+                "M12"
+              ],
+              "pattern": "=IF(РАСЧЕТ!R3C23=\"ВВЛ\",РАСЧЕТ!R3C22,0)"
+            },
+            {
+              "count": 3,
+              "sampleCells": [
+                "M9",
+                "M11",
+                "M13"
+              ],
+              "pattern": "=IF(РАСЧЕТ!R3C23=\"МВЛ\",РАСЧЕТ!R3C22,0)"
+            },
+            {
+              "count": 3,
+              "sampleCells": [
+                "U8",
+                "U10",
+                "U12"
+              ],
+              "pattern": "=IF(РАСЧЕТ!R4C23=\"ВВЛ\",РАСЧЕТ!R4C22,0)"
+            },
+            {
+              "count": 3,
+              "sampleCells": [
+                "U9",
+                "U11",
+                "U13"
+              ],
+              "pattern": "=IF(РАСЧЕТ!R4C23=\"МВЛ\",РАСЧЕТ!R4C22,0)"
+            },
+            {
+              "count": 3,
+              "sampleCells": [
+                "AC8",
+                "AC10",
+                "AC12"
+              ],
+              "pattern": "=IF(РАСЧЕТ!R5C23=\"ВВЛ\",РАСЧЕТ!R5C22,0)"
+            },
+            {
+              "count": 3,
+              "sampleCells": [
+                "AC9",
+                "AC11",
+                "AC13"
+              ],
+              "pattern": "=IF(РАСЧЕТ!R5C23=\"МВЛ\",РАСЧЕТ!R5C22,0)"
+            },
+            {
+              "count": 3,
+              "sampleCells": [
+                "AK8",
+                "AK10",
+                "AK12"
+              ],
+              "pattern": "=IF(РАСЧЕТ!R6C23=\"ВВЛ\",РАСЧЕТ!R6C22,0)"
+            },
+            {
+              "count": 3,
+              "sampleCells": [
+                "AK9",
+                "AK11",
+                "AK13"
+              ],
+              "pattern": "=IF(РАСЧЕТ!R6C23=\"МВЛ\",РАСЧЕТ!R6C22,0)"
+            },
+            {
+              "count": 2,
+              "sampleCells": [
+                "E30",
+                "E31"
+              ],
+              "pattern": "=VLOOKUP(ПлечоТС,РАСЧЕТ!R1C1:R6C17,6)"
+            },
+            {
+              "count": 2,
+              "sampleCells": [
+                "E3",
+                "E4"
+              ],
+              "pattern": "=РАСЧЕТ!R2C6"
+            },
+            {
+              "count": 2,
+              "sampleCells": [
+                "M3",
+                "M4"
+              ],
+              "pattern": "=РАСЧЕТ!R3C6"
+            },
+            {
+              "count": 2,
+              "sampleCells": [
+                "U3",
+                "U4"
+              ],
+              "pattern": "=РАСЧЕТ!R4C6"
+            },
+            {
+              "count": 2,
+              "sampleCells": [
+                "AC3",
+                "AC4"
+              ],
+              "pattern": "=РАСЧЕТ!R5C6"
+            }
+          ],
+          "formulaSamples": [
+            {
+              "cell": "A3",
+              "formula": "=РАСЧЕТ!$T$2",
+              "cachedValue": "OVB"
+            },
+            {
+              "cell": "B3",
+              "formula": "=РАСЧЕТ!$S$2",
+              "cachedValue": "738"
+            },
+            {
+              "cell": "D3",
+              "formula": "=CONCATENATE(A3,\"-\",C3)",
+              "cachedValue": "OVB-КЕРОСИН"
+            },
+            {
+              "cell": "E3",
+              "formula": "=РАСЧЕТ!$F$2",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "F3",
+              "formula": "=IFERROR(VLOOKUP(D3,ЦРТ!$A:$D,4,0),0)",
+              "cachedValue": "139900"
+            },
+            {
+              "cell": "G3",
+              "formula": "=E3*F3",
+              "cachedValue": "0"
+            },
+            {
+              "cell": "I3",
+              "formula": "=РАСЧЕТ!$T$3",
+              "cachedValue": "BAX"
+            },
+            {
+              "cell": "J3",
+              "formula": "=РАСЧЕТ!$S$3",
+              "cachedValue": "738"
+            },
+            {
+              "cell": "L3",
+              "formula": "=CONCATENATE(I3,\"-\",K3)",
+              "cachedValue": "BAX-КЕРОСИН"
+            },
+            {
+              "cell": "M3",
+              "formula": "=РАСЧЕТ!$F$3",
+              "cachedValue": "5.13"
+            },
+            {
+              "cell": "N3",
+              "formula": "=IFERROR(VLOOKUP(L3,ЦРТ!$A:$D,4,0),0)",
+              "cachedValue": "134000"
+            },
+            {
+              "cell": "O3",
+              "formula": "=M3*N3",
+              "cachedValue": "687420"
+            },
+            {
+              "cell": "Q3",
+              "formula": "=РАСЧЕТ!$T$4",
+              "cachedValue": "HMA"
+            },
+            {
+              "cell": "R3",
+              "formula": "=РАСЧЕТ!$S$4",
+              "cachedValue": "738"
+            },
+            {
+              "cell": "T3",
+              "formula": "=CONCATENATE(Q3,\"-\",S3)",
+              "cachedValue": "HMA-КЕРОСИН"
+            },
+            {
+              "cell": "U3",
+              "formula": "=РАСЧЕТ!$F$4",
+              "cachedValue": "5.2650000000000006"
+            },
+            {
+              "cell": "V3",
+              "formula": "=IFERROR(VLOOKUP(T3,ЦРТ!$A:$D,4,0),0)",
+              "cachedValue": "89846.64"
+            },
+            {
+              "cell": "W3",
+              "formula": "=U3*V3",
+              "cachedValue": "473042.55960000004"
+            },
+            {
+              "cell": "Y3",
+              "formula": "=РАСЧЕТ!$T$5",
+              "cachedValue": "KJA"
+            },
+            {
+              "cell": "Z3",
+              "formula": "=РАСЧЕТ!$S$5",
+              "cachedValue": "738"
+            }
+          ],
+          "cachedFormulaErrors": {},
+          "cachedFormulaErrorSamples": [],
+          "nonFormulaValueSamples": [
+            {
+              "cell": "A2",
+              "value": "АП"
+            },
+            {
+              "cell": "B2",
+              "value": "ТИП ВС"
+            },
+            {
+              "cell": "C2",
+              "value": "УСЛУГА"
+            },
+            {
+              "cell": "D2",
+              "value": "ключ"
+            },
+            {
+              "cell": "E2",
+              "value": "объем"
+            },
+            {
+              "cell": "F2",
+              "value": "цена"
+            },
+            {
+              "cell": "G2",
+              "value": "Сумма"
+            },
+            {
+              "cell": "I2",
+              "value": "АП"
+            },
+            {
+              "cell": "J2",
+              "value": "ТИП ВС"
+            },
+            {
+              "cell": "K2",
+              "value": "УСЛУГА"
+            },
+            {
+              "cell": "L2",
+              "value": "ключ"
+            },
+            {
+              "cell": "M2",
+              "value": "объем"
+            },
+            {
+              "cell": "N2",
+              "value": "цена"
+            },
+            {
+              "cell": "O2",
+              "value": "Сумма"
+            },
+            {
+              "cell": "Q2",
+              "value": "АП"
+            },
+            {
+              "cell": "R2",
+              "value": "ТИП ВС"
+            },
+            {
+              "cell": "S2",
+              "value": "УСЛУГА"
+            },
+            {
+              "cell": "T2",
+              "value": "ключ"
+            },
+            {
+              "cell": "U2",
+              "value": "объем"
+            },
+            {
+              "cell": "V2",
+              "value": "цена"
+            },
+            {
+              "cell": "W2",
+              "value": "Сумма"
+            },
+            {
+              "cell": "Y2",
+              "value": "АП"
+            },
+            {
+              "cell": "Z2",
+              "value": "ТИП ВС"
+            },
+            {
+              "cell": "AA2",
+              "value": "УСЛУГА"
+            },
+            {
+              "cell": "AB2",
+              "value": "ключ"
+            },
+            {
+              "cell": "AC2",
+              "value": "объем"
+            },
+            {
+              "cell": "AD2",
+              "value": "цена"
+            },
+            {
+              "cell": "AE2",
+              "value": "Сумма"
+            },
+            {
+              "cell": "AG2",
+              "value": "АП"
+            },
+            {
+              "cell": "AH2",
+              "value": "ТИП ВС"
+            },
+            {
+              "cell": "AI2",
+              "value": "УСЛУГА"
+            },
+            {
+              "cell": "AJ2",
+              "value": "ключ"
+            },
+            {
+              "cell": "AK2",
+              "value": "объем"
+            },
+            {
+              "cell": "AL2",
+              "value": "цена"
+            },
+            {
+              "cell": "AM2",
+              "value": "Сумма"
+            },
+            {
+              "cell": "C3",
+              "value": "КЕРОСИН"
+            },
+            {
+              "cell": "K3",
+              "value": "КЕРОСИН"
+            },
+            {
+              "cell": "S3",
+              "value": "КЕРОСИН"
+            },
+            {
+              "cell": "AA3",
+              "value": "КЕРОСИН"
+            },
+            {
+              "cell": "AI3",
+              "value": "КЕРОСИН"
+            },
+            {
+              "cell": "C4",
+              "value": "ЗАПРАВКА ВС"
+            },
+            {
+              "cell": "K4",
+              "value": "ЗАПРАВКА ВС"
+            },
+            {
+              "cell": "S4",
+              "value": "ЗАПРАВКА ВС"
+            },
+            {
+              "cell": "AA4",
+              "value": "ЗАПРАВКА ВС"
+            },
+            {
+              "cell": "AI4",
+              "value": "ЗАПРАВКА ВС"
+            },
+            {
+              "cell": "C5",
+              "value": "АНО АД"
+            },
+            {
+              "cell": "K5",
+              "value": "АНО АД"
+            },
+            {
+              "cell": "S5",
+              "value": "АНО АД"
+            },
+            {
+              "cell": "AA5",
+              "value": "АНО АД"
+            },
+            {
+              "cell": "AI5",
+              "value": "АНО АД"
+            },
+            {
+              "cell": "C6",
+              "value": "ВЗЛЕТ-ПОСАДКА"
+            },
+            {
+              "cell": "K6",
+              "value": "ВЗЛЕТ-ПОСАДКА"
+            },
+            {
+              "cell": "S6",
+              "value": "ВЗЛЕТ-ПОСАДКА"
+            },
+            {
+              "cell": "AA6",
+              "value": "ВЗЛЕТ-ПОСАДКА"
+            },
+            {
+              "cell": "AI6",
+              "value": "ВЗЛЕТ-ПОСАДКА"
+            },
+            {
+              "cell": "C7",
+              "value": "ТРАНСПБЕЗОП"
+            },
+            {
+              "cell": "K7",
+              "value": "ТРАНСПБЕЗОП"
+            },
+            {
+              "cell": "S7",
+              "value": "ТРАНСПБЕЗОП"
+            },
+            {
+              "cell": "AA7",
+              "value": "ТРАНСПБЕЗОП"
+            },
+            {
+              "cell": "AI7",
+              "value": "ТРАНСПБЕЗОП"
+            }
+          ],
+          "externalFormulaReferences": {},
+          "crossSheetReferences": {
+            "РАСЧЕТ": 310,
+            "ЦРТ": 113,
+            "Справочники": 18,
+            "Прочее": 10
+          },
+          "tables": [],
+          "dataValidations": [],
+          "conditionalFormats": [
+            {
+              "sqref": "E3:F24 M3:N24 U3:V24 AC3:AD24 AK3:AL24 E30:F37 E38",
+              "rules": [
+                "cellIs"
+              ]
+            }
+          ],
+          "mergedRanges": [],
+          "hyperlinks": [],
+          "hasDrawing": false,
+          "hasLegacyDrawing": false,
+          "styleCount": 54,
+          "topStyles": [
+            [
+              "633",
+              279
+            ],
+            [
+              "668",
+              85
+            ],
+            [
+              "642",
+              78
+            ],
+            [
+              "630",
+              74
+            ],
+            [
+              "641",
+              58
+            ],
+            [
+              "646",
+              30
+            ],
+            [
+              "635",
+              30
+            ],
+            [
+              "650",
+              29
+            ],
+            [
+              "669",
+              21
+            ],
+            [
+              "643",
+              20
+            ]
+          ],
+          "state": "visible",
+          "sheetId": "5"
+        },
+        {
+          "name": "Прочее",
+          "part": "xl/worksheets/sheet9.xml",
+          "dimension": "A1:AT27",
+          "cellCount": 1242,
+          "populatedRowCount": 27,
+          "maxPopulatedRow": 27,
+          "maxPopulatedColumn": 46,
+          "formulaCount": 80,
+          "formulaPatterns": [
+            {
+              "count": 45,
+              "sampleCells": [
+                "B27",
+                "C27",
+                "D27",
+                "E27",
+                "F27",
+                "G27"
+              ],
+              "pattern": "=SUM(R[-25]C[0]:R[-4]C[0])"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "Z25"
+              ],
+              "pattern": "=100*270"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "Q25"
+              ],
+              "pattern": "=143*194"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "Z9"
+              ],
+              "pattern": "=15*158.3"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "AM9"
+              ],
+              "pattern": "=15*175"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "AB25"
+              ],
+              "pattern": "=180*448"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "AS23"
+              ],
+              "pattern": "=180*86.28"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "J11"
+              ],
+              "pattern": "=2*960"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "R25"
+              ],
+              "pattern": "=220*127.68"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "U25"
+              ],
+              "pattern": "=47*419.38"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "W25"
+              ],
+              "pattern": "=50*194"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "U23"
+              ],
+              "pattern": "=50*43"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "J23"
+              ],
+              "pattern": "=50*44.9"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "L5"
+              ],
+              "pattern": "=6*1685"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "AN5"
+              ],
+              "pattern": "=6*184.8"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "Q5"
+              ],
+              "pattern": "=6*212.68"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "S5"
+              ],
+              "pattern": "=6*213"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "V5"
+              ],
+              "pattern": "=6*222"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "AR5"
+              ],
+              "pattern": "=6*259.35"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "C5"
+              ],
+              "pattern": "=6*261.5"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "P5"
+              ],
+              "pattern": "=6*264"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "M5"
+              ],
+              "pattern": "=6*265"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "AH5"
+              ],
+              "pattern": "=6*282.5"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "Y5"
+              ],
+              "pattern": "=6*320.74"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "AB5"
+              ],
+              "pattern": "=6*330"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "AL5"
+              ],
+              "pattern": "=6*335"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "AM5"
+              ],
+              "pattern": "=6*362"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "N5"
+              ],
+              "pattern": "=6*379"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "U5"
+              ],
+              "pattern": "=6*390"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "X5"
+              ],
+              "pattern": "=6*400"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "T5"
+              ],
+              "pattern": "=6*420"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "W5"
+              ],
+              "pattern": "=6*473"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "AD5"
+              ],
+              "pattern": "=6*500"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "Z5"
+              ],
+              "pattern": "=6*550"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "AJ5"
+              ],
+              "pattern": "=6*630"
+            },
+            {
+              "count": 1,
+              "sampleCells": [
+                "AG5"
+              ],
+              "pattern": "=6*786"
+            }
+          ],
+          "formulaSamples": [
+            {
+              "cell": "C5",
+              "formula": "=6*261.5",
+              "cachedValue": "1569"
+            },
+            {
+              "cell": "L5",
+              "formula": "=6*1685",
+              "cachedValue": "10110"
+            },
+            {
+              "cell": "M5",
+              "formula": "=6*265",
+              "cachedValue": "1590"
+            },
+            {
+              "cell": "N5",
+              "formula": "=6*379",
+              "cachedValue": "2274"
+            },
+            {
+              "cell": "P5",
+              "formula": "=6*264",
+              "cachedValue": "1584"
+            },
+            {
+              "cell": "Q5",
+              "formula": "=6*212.68",
+              "cachedValue": "1276.08"
+            },
+            {
+              "cell": "S5",
+              "formula": "=6*213",
+              "cachedValue": "1278"
+            },
+            {
+              "cell": "T5",
+              "formula": "=6*420",
+              "cachedValue": "2520"
+            },
+            {
+              "cell": "U5",
+              "formula": "=6*390",
+              "cachedValue": "2340"
+            },
+            {
+              "cell": "V5",
+              "formula": "=6*222",
+              "cachedValue": "1332"
+            },
+            {
+              "cell": "W5",
+              "formula": "=6*473",
+              "cachedValue": "2838"
+            },
+            {
+              "cell": "X5",
+              "formula": "=6*400",
+              "cachedValue": "2400"
+            },
+            {
+              "cell": "Y5",
+              "formula": "=6*320.74",
+              "cachedValue": "1924.44"
+            },
+            {
+              "cell": "Z5",
+              "formula": "=6*550",
+              "cachedValue": "3300"
+            },
+            {
+              "cell": "AB5",
+              "formula": "=6*330",
+              "cachedValue": "1980"
+            },
+            {
+              "cell": "AD5",
+              "formula": "=6*500",
+              "cachedValue": "3000"
+            },
+            {
+              "cell": "AG5",
+              "formula": "=6*786",
+              "cachedValue": "4716"
+            },
+            {
+              "cell": "AH5",
+              "formula": "=6*282.5",
+              "cachedValue": "1695"
+            },
+            {
+              "cell": "AJ5",
+              "formula": "=6*630",
+              "cachedValue": "3780"
+            },
+            {
+              "cell": "AL5",
+              "formula": "=6*335",
+              "cachedValue": "2010"
+            }
+          ],
+          "cachedFormulaErrors": {},
+          "cachedFormulaErrorSamples": [],
+          "nonFormulaValueSamples": [
+            {
+              "cell": "B1",
+              "value": "ABA"
+            },
+            {
+              "cell": "C1",
+              "value": "AER"
+            },
+            {
+              "cell": "D1",
+              "value": "BVJ"
+            },
+            {
+              "cell": "E1",
+              "value": "BAX"
+            },
+            {
+              "cell": "F1",
+              "value": "BQS"
+            },
+            {
+              "cell": "G1",
+              "value": "CEK"
+            },
+            {
+              "cell": "H1",
+              "value": "DME"
+            },
+            {
+              "cell": "I1",
+              "value": "GDZ"
+            },
+            {
+              "cell": "J1",
+              "value": "GOJ"
+            },
+            {
+              "cell": "K1",
+              "value": "HMA"
+            },
+            {
+              "cell": "L1",
+              "value": "IAA"
+            },
+            {
+              "cell": "M1",
+              "value": "IAR"
+            },
+            {
+              "cell": "N1",
+              "value": "IKT"
+            },
+            {
+              "cell": "O1",
+              "value": "KGD"
+            },
+            {
+              "cell": "P1",
+              "value": "KHV"
+            },
+            {
+              "cell": "Q1",
+              "value": "KJA"
+            },
+            {
+              "cell": "R1",
+              "value": "KRO"
+            },
+            {
+              "cell": "S1",
+              "value": "KRR"
+            },
+            {
+              "cell": "T1",
+              "value": "KUF"
+            },
+            {
+              "cell": "U1",
+              "value": "KZN"
+            },
+            {
+              "cell": "V1",
+              "value": "LED"
+            },
+            {
+              "cell": "W1",
+              "value": "NOZ"
+            },
+            {
+              "cell": "X1",
+              "value": "UFA"
+            },
+            {
+              "cell": "Y1",
+              "value": "MCX"
+            },
+            {
+              "cell": "Z1",
+              "value": "MRV"
+            },
+            {
+              "cell": "AA1",
+              "value": "MJZ"
+            },
+            {
+              "cell": "AB1",
+              "value": "MMK"
+            },
+            {
+              "cell": "AC1",
+              "value": "MQF"
+            },
+            {
+              "cell": "AD1",
+              "value": "NBC"
+            },
+            {
+              "cell": "AE1",
+              "value": "NJC"
+            },
+            {
+              "cell": "AF1",
+              "value": "NOJ"
+            },
+            {
+              "cell": "AG1",
+              "value": "NSK"
+            },
+            {
+              "cell": "AH1",
+              "value": "OGZ"
+            },
+            {
+              "cell": "AI1",
+              "value": "OMS"
+            },
+            {
+              "cell": "AJ1",
+              "value": "OVB"
+            },
+            {
+              "cell": "AK1",
+              "value": "PEE"
+            },
+            {
+              "cell": "AL1",
+              "value": "SGX"
+            },
+            {
+              "cell": "AM1",
+              "value": "STW"
+            },
+            {
+              "cell": "AN1",
+              "value": "SVO"
+            },
+            {
+              "cell": "AO1",
+              "value": "SVX"
+            },
+            {
+              "cell": "AP1",
+              "value": "TJM"
+            },
+            {
+              "cell": "AQ1",
+              "value": "TLK"
+            },
+            {
+              "cell": "AR1",
+              "value": "VOG"
+            },
+            {
+              "cell": "AS1",
+              "value": "VVO"
+            },
+            {
+              "cell": "AT1",
+              "value": "YKS"
+            },
+            {
+              "cell": "A2",
+              "value": "Представители вылет"
+            },
+            {
+              "cell": "B2",
+              "value": "3500"
+            },
+            {
+              "cell": "C2",
+              "value": "4500"
+            },
+            {
+              "cell": "E2",
+              "value": "3000"
+            },
+            {
+              "cell": "G2",
+              "value": "2800"
+            },
+            {
+              "cell": "H2",
+              "value": "2575"
+            },
+            {
+              "cell": "I2",
+              "value": "5000"
+            },
+            {
+              "cell": "J2",
+              "value": "3200"
+            },
+            {
+              "cell": "K2",
+              "value": "2700"
+            },
+            {
+              "cell": "N2",
+              "value": "2144.2800000000002"
+            },
+            {
+              "cell": "O2",
+              "value": "6500"
+            },
+            {
+              "cell": "P2",
+              "value": "2300"
+            },
+            {
+              "cell": "Q2",
+              "value": "2380"
+            },
+            {
+              "cell": "R2",
+              "value": "3000"
+            },
+            {
+              "cell": "S2",
+              "value": "1761.9"
+            }
+          ],
+          "externalFormulaReferences": {},
+          "crossSheetReferences": {},
+          "tables": [],
+          "dataValidations": [],
+          "conditionalFormats": [],
+          "mergedRanges": [],
+          "hyperlinks": [],
+          "hasDrawing": false,
+          "hasLegacyDrawing": false,
+          "styleCount": 21,
+          "topStyles": [
+            [
+              "773",
+              903
+            ],
+            [
+              "771",
+              45
+            ],
+            [
+              "756",
+              45
+            ],
+            [
+              "778",
+              44
+            ],
+            [
+              "760",
+              44
+            ],
+            [
+              "776",
+              39
+            ],
+            [
+              "768",
+              25
+            ],
+            [
+              "763",
+              25
+            ],
+            [
+              "774",
+              23
+            ],
+            [
+              "769",
+              19
+            ]
+          ],
+          "state": "visible",
+          "sheetId": "26"
+        },
+        {
+          "name": "Реестр керосин",
+          "part": "xl/worksheets/sheet10.xml",
+          "dimension": "A1:B58",
+          "cellCount": 116,
+          "populatedRowCount": 58,
+          "maxPopulatedRow": 58,
+          "maxPopulatedColumn": 2,
+          "formulaCount": 0,
+          "formulaPatterns": [],
+          "formulaSamples": [],
+          "cachedFormulaErrors": {},
+          "cachedFormulaErrorSamples": [],
+          "nonFormulaValueSamples": [
+            {
+              "cell": "A1",
+              "value": "Аэропорт"
+            },
+            {
+              "cell": "B1",
+              "value": "Цена"
+            },
+            {
+              "cell": "A2",
+              "value": "MJZ"
+            },
+            {
+              "cell": "B2",
+              "value": "171340"
+            },
+            {
+              "cell": "A3",
+              "value": "=EL"
+            },
+            {
+              "cell": "B3",
+              "value": "205000"
+            },
+            {
+              "cell": "A4",
+              "value": "VVO"
+            },
+            {
+              "cell": "B4",
+              "value": "130913.93"
+            },
+            {
+              "cell": "A5",
+              "value": "KRO"
+            },
+            {
+              "cell": "B5",
+              "value": "141970"
+            },
+            {
+              "cell": "A6",
+              "value": "NJC"
+            },
+            {
+              "cell": "B6",
+              "value": "123780"
+            },
+            {
+              "cell": "A7",
+              "value": "KJA"
+            },
+            {
+              "cell": "B7",
+              "value": "127403"
+            },
+            {
+              "cell": "A8",
+              "value": "KRR"
+            },
+            {
+              "cell": "B8",
+              "value": "103970"
+            },
+            {
+              "cell": "A9",
+              "value": "AER"
+            },
+            {
+              "cell": "B9",
+              "value": "107510"
+            },
+            {
+              "cell": "A10",
+              "value": "SVO"
+            },
+            {
+              "cell": "B10",
+              "value": "93290"
+            },
+            {
+              "cell": "A11",
+              "value": "VKO"
+            },
+            {
+              "cell": "B11",
+              "value": "98360.66"
+            },
+            {
+              "cell": "A12",
+              "value": "DME"
+            },
+            {
+              "cell": "B12",
+              "value": "131147.54"
+            },
+            {
+              "cell": "A13",
+              "value": "IAR"
+            },
+            {
+              "cell": "B13",
+              "value": "74950"
+            },
+            {
+              "cell": "A14",
+              "value": "TLK"
+            },
+            {
+              "cell": "B14",
+              "value": "95991.5"
+            },
+            {
+              "cell": "A15",
+              "value": "SBT"
+            },
+            {
+              "cell": "B15",
+              "value": "99384"
+            },
+            {
+              "cell": "A16",
+              "value": "LED"
+            },
+            {
+              "cell": "B16",
+              "value": "118740"
+            },
+            {
+              "cell": "A17",
+              "value": "OVB"
+            },
+            {
+              "cell": "B17",
+              "value": "124329.08"
+            },
+            {
+              "cell": "A18",
+              "value": "MCX"
+            },
+            {
+              "cell": "B18",
+              "value": "174700"
+            },
+            {
+              "cell": "A19",
+              "value": "SSH"
+            },
+            {
+              "cell": "B19",
+              "value": "153603.94500000001"
+            },
+            {
+              "cell": "A20",
+              "value": "KZN"
+            },
+            {
+              "cell": "B20",
+              "value": "113050"
+            },
+            {
+              "cell": "A21",
+              "value": "KVX"
+            },
+            {
+              "cell": "B21",
+              "value": "88770.49"
+            },
+            {
+              "cell": "A22",
+              "value": "BVJ"
+            },
+            {
+              "cell": "B22",
+              "value": "116478"
+            },
+            {
+              "cell": "A23",
+              "value": "MQF"
+            },
+            {
+              "cell": "B23",
+              "value": "107500"
+            },
+            {
+              "cell": "A24",
+              "value": "ABA"
+            },
+            {
+              "cell": "B24",
+              "value": "137750"
+            },
+            {
+              "cell": "A25",
+              "value": "MSQ"
+            },
+            {
+              "cell": "B25",
+              "value": "106195.31999999999"
+            },
+            {
+              "cell": "A26",
+              "value": "NSK"
+            },
+            {
+              "cell": "B26",
+              "value": "152239"
+            },
+            {
+              "cell": "A27",
+              "value": "BAX"
+            },
+            {
+              "cell": "B27",
+              "value": "93700"
+            },
+            {
+              "cell": "A28",
+              "value": "SVX"
+            },
+            {
+              "cell": "B28",
+              "value": "126680"
+            },
+            {
+              "cell": "A29",
+              "value": "ZIA"
+            },
+            {
+              "cell": "B29",
+              "value": "95081.97"
+            },
+            {
+              "cell": "A30",
+              "value": "IKT"
+            },
+            {
+              "cell": "B30",
+              "value": "90000"
+            }
+          ],
+          "externalFormulaReferences": {},
+          "crossSheetReferences": {},
+          "tables": [
+            {
+              "name": "РеестрКер",
+              "displayName": "РеестрКер",
+              "ref": "A1:B58",
+              "totalsRowShown": "0",
+              "columns": [
+                "Аэропорт",
+                "Цена"
+              ]
+            }
+          ],
+          "dataValidations": [],
+          "conditionalFormats": [],
+          "mergedRanges": [],
+          "hyperlinks": [],
+          "hasDrawing": false,
+          "hasLegacyDrawing": false,
+          "styleCount": 1,
+          "topStyles": [
+            [
+              "628",
+              57
+            ]
+          ],
+          "state": "visible",
+          "sheetId": "27"
+        },
+        {
+          "name": "Выгрузка 1С",
+          "part": "xl/worksheets/sheet11.xml",
+          "dimension": "A1:F356",
+          "cellCount": 2136,
+          "populatedRowCount": 356,
+          "maxPopulatedRow": 356,
+          "maxPopulatedColumn": 6,
+          "formulaCount": 0,
+          "formulaPatterns": [],
+          "formulaSamples": [],
+          "cachedFormulaErrors": {},
+          "cachedFormulaErrorSamples": [],
+          "nonFormulaValueSamples": [
+            {
+              "cell": "A1",
+              "value": "Партнер"
+            },
+            {
+              "cell": "B1",
+              "value": "Вид цены поставщика"
+            },
+            {
+              "cell": "C1",
+              "value": "Номенклатура"
+            },
+            {
+              "cell": "D1",
+              "value": "Валюта"
+            },
+            {
+              "cell": "E1",
+              "value": "Период"
+            },
+            {
+              "cell": "F1",
+              "value": "Цена"
+            },
+            {
+              "cell": "A2",
+              "value": "Алроса МАП АК ПАО"
+            },
+            {
+              "cell": "B2",
+              "value": "-|MJZ|НДС сверху|RUB"
+            },
+            {
+              "cell": "C2",
+              "value": "Авиакеросин "
+            },
+            {
+              "cell": "D2",
+              "value": "RUB"
+            },
+            {
+              "cell": "E2",
+              "value": "46023"
+            },
+            {
+              "cell": "F2",
+              "value": "121950"
+            },
+            {
+              "cell": "A3",
+              "value": "РАТЕЛ АЭРОПОРТЫ ООО"
+            },
+            {
+              "cell": "B3",
+              "value": "-|=EL|НДС сверху|RUB"
+            },
+            {
+              "cell": "C3",
+              "value": "Авиакеросин "
+            },
+            {
+              "cell": "D3",
+              "value": "RUB"
+            },
+            {
+              "cell": "E3",
+              "value": "46023"
+            },
+            {
+              "cell": "F3",
+              "value": "131147.54"
+            },
+            {
+              "cell": "A4",
+              "value": "ТЗК АЭРОФЬЮЭЛЗ ООО"
+            },
+            {
+              "cell": "B4",
+              "value": "-|VVO|НДС сверху|RUB"
+            },
+            {
+              "cell": "C4",
+              "value": "Авиакеросин "
+            },
+            {
+              "cell": "D4",
+              "value": "RUB"
+            },
+            {
+              "cell": "E4",
+              "value": "46023"
+            },
+            {
+              "cell": "F4",
+              "value": "99000"
+            },
+            {
+              "cell": "A5",
+              "value": "ТЗК АЭРОФЬЮЭЛЗ ООО"
+            },
+            {
+              "cell": "B5",
+              "value": "-|KRO|НДС сверху|RUB"
+            },
+            {
+              "cell": "C5",
+              "value": "Авиакеросин "
+            },
+            {
+              "cell": "D5",
+              "value": "RUB"
+            },
+            {
+              "cell": "E5",
+              "value": "46023"
+            },
+            {
+              "cell": "F5",
+              "value": "87295.08"
+            },
+            {
+              "cell": "A6",
+              "value": "ТЗК АЭРОФЬЮЭЛЗ ООО"
+            },
+            {
+              "cell": "B6",
+              "value": "-|NJC|НДС сверху|RUB"
+            },
+            {
+              "cell": "C6",
+              "value": "Авиакеросин "
+            },
+            {
+              "cell": "D6",
+              "value": "RUB"
+            },
+            {
+              "cell": "E6",
+              "value": "46023"
+            },
+            {
+              "cell": "F6",
+              "value": "85245.9"
+            },
+            {
+              "cell": "A7",
+              "value": "ТЗК ЕНИСЕЙ ООО"
+            },
+            {
+              "cell": "B7",
+              "value": "-|KJA|НДС сверху|RUB"
+            },
+            {
+              "cell": "C7",
+              "value": "Авиакеросин "
+            },
+            {
+              "cell": "D7",
+              "value": "RUB"
+            },
+            {
+              "cell": "E7",
+              "value": "46023"
+            },
+            {
+              "cell": "F7",
+              "value": "87646"
+            },
+            {
+              "cell": "A8",
+              "value": "РН-Аэро ООО"
+            },
+            {
+              "cell": "B8",
+              "value": "-|KRR|НДС сверху|RUB"
+            },
+            {
+              "cell": "C8",
+              "value": "Авиакеросин "
+            },
+            {
+              "cell": "D8",
+              "value": "RUB"
+            },
+            {
+              "cell": "E8",
+              "value": "46023"
+            },
+            {
+              "cell": "F8",
+              "value": "93699.11"
+            },
+            {
+              "cell": "A9",
+              "value": "РН-Аэро ООО"
+            },
+            {
+              "cell": "B9",
+              "value": "-|AER|НДС сверху|RUB"
+            },
+            {
+              "cell": "C9",
+              "value": "Авиакеросин "
+            },
+            {
+              "cell": "D9",
+              "value": "RUB"
+            },
+            {
+              "cell": "E9",
+              "value": "46023"
+            },
+            {
+              "cell": "F9",
+              "value": "91003"
+            },
+            {
+              "cell": "A10",
+              "value": "РН-Аэро ООО"
+            },
+            {
+              "cell": "B10",
+              "value": "-|SVO|НДС сверху|RUB"
+            },
+            {
+              "cell": "C10",
+              "value": "Авиакеросин "
+            },
+            {
+              "cell": "D10",
+              "value": "RUB"
+            },
+            {
+              "cell": "E10",
+              "value": "46023"
+            },
+            {
+              "cell": "F10",
+              "value": "85634"
+            }
+          ],
+          "externalFormulaReferences": {},
+          "crossSheetReferences": {},
+          "tables": [
+            {
+              "name": "Выгрузка_1С",
+              "displayName": "Выгрузка_1С",
+              "ref": "A1:F356",
+              "totalsRowShown": "0",
+              "columns": [
+                "Партнер",
+                "Вид цены поставщика",
+                "Номенклатура",
+                "Валюта",
+                "Период",
+                "Цена"
+              ]
+            }
+          ],
+          "dataValidations": [],
+          "conditionalFormats": [],
+          "mergedRanges": [],
+          "hyperlinks": [],
+          "hasDrawing": false,
+          "hasLegacyDrawing": false,
+          "styleCount": 3,
+          "topStyles": [
+            [
+              "628",
+              1420
+            ],
+            [
+              "779",
+              355
+            ],
+            [
+              "702",
+              355
+            ]
+          ],
+          "state": "visible",
+          "sheetId": "29"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,315 @@
+from __future__ import annotations
+
+import uuid
+from pathlib import Path
+from typing import Any
+
+from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+from .core.config import settings
+from .core.store import JsonStore, utc_now
+from .schemas import CalculationRequest, DraftPayload, ManualTariffInput, SourceConfigUpdate
+from .services.calculator import calculate
+from .services.sources import (
+    find_latest_file,
+    mark_source_error,
+    refresh_source,
+    save_uploaded_file,
+    source_by_id,
+    tariffs_for_view,
+    workbook_preview,
+)
+
+
+app = FastAPI(
+    title="Монитор расчета себестоимости",
+    version="0.1.0",
+    description="API модульного монитора себестоимости рейсов.",
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+store = JsonStore(settings)
+COOKIE_NAME = "cost_monitor_draft"
+
+
+def default_calculation() -> dict[str, Any]:
+    return {
+        "legs": [{"id": "leg-1", "departure": "", "arrival": "", "aircraft": "738", "passengers": 0}],
+        "settings": {
+            "scenario": "ГБ 2026",
+            "fuel_source": "ЦРТ",
+            "techstop_leg_id": None,
+            "catering": False,
+            "show_details": True,
+        },
+    }
+
+
+def draft_id(request: Request, response: Response) -> str:
+    value = request.cookies.get(COOKIE_NAME)
+    if value:
+        return value
+    value = uuid.uuid4().hex
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=value,
+        max_age=60 * 60 * 24 * 180,
+        httponly=True,
+        samesite="lax",
+        secure=False,  # Local development. Enable HTTPS + Secure in deployment.
+    )
+    return value
+
+
+def get_source_or_404(state: dict[str, Any], source_id: str) -> dict[str, Any]:
+    try:
+        return source_by_id(state, source_id)
+    except KeyError as error:
+        raise HTTPException(status_code=404, detail="Источник не найден") from error
+
+
+@app.get("/api/health")
+def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@app.get("/api/dashboard")
+def dashboard() -> dict[str, Any]:
+    state = store.read()
+    return {
+        "sources": state["source_configs"],
+        "stats": {
+            "tariffs": len(state["imported_tariffs"]),
+            "manual_tariffs": len(state["manual_tariffs"]),
+            "fuel_prices": len(state["fuel_prices"]),
+            "routes": len(state["routes"]),
+        },
+        "data_revision": state.get("data_revision", 0),
+        "data_updated_at": state.get("data_updated_at"),
+    }
+
+
+@app.get("/api/calculation-options")
+def calculation_options() -> dict[str, list[str]]:
+    """Expose the active workbook configuration to the interactive UI."""
+
+    state = store.read()
+    aircraft = {"733", "737", "738"}
+    aircraft.update(state.get("aircraft_multipliers", {}).keys())
+    for rates in state.get("scenario_rates", {}).values():
+        aircraft.update(rates.keys())
+    return {
+        "scenarios": list(state.get("scenario_rates", {}).keys()) or ["ГБ 2026"],
+        "aircraft": sorted(aircraft),
+    }
+
+
+@app.get("/api/drafts/current")
+def get_current_draft(request: Request, response: Response) -> dict[str, Any]:
+    key = draft_id(request, response)
+    state = store.read()
+    saved = state["drafts"].get(key)
+    return saved or {"calculation": default_calculation(), "updated_at": None}
+
+
+@app.put("/api/drafts/current")
+def save_current_draft(payload: DraftPayload, request: Request, response: Response) -> dict[str, Any]:
+    key = draft_id(request, response)
+
+    def operation(state: dict[str, Any]) -> dict[str, Any]:
+        draft = {"calculation": payload.calculation.model_dump(), "updated_at": utc_now()}
+        state["drafts"][key] = draft
+        return draft
+
+    return store.mutate(operation)
+
+
+@app.post("/api/calculations")
+def calculate_cost(payload: CalculationRequest) -> dict[str, Any]:
+    return calculate(store.read(), payload)
+
+
+@app.get("/api/sources")
+def list_sources() -> list[dict[str, Any]]:
+    return store.read()["source_configs"]
+
+
+@app.put("/api/sources/{source_id}")
+def update_source(source_id: str, payload: SourceConfigUpdate) -> dict[str, Any]:
+    def operation(state: dict[str, Any]) -> dict[str, Any]:
+        source = get_source_or_404(state, source_id)
+        source["directory"] = payload.directory.strip()
+        source["mask"] = payload.mask.strip()
+        source["last_status"] = "not_updated"
+        source["last_error"] = None
+        store.append_audit(state, "source_config_updated", source_id)
+        return source
+
+    return store.mutate(operation)
+
+
+@app.get("/api/sources/{source_id}/preview")
+def source_preview(source_id: str) -> dict[str, Any]:
+    state = store.read()
+    source = get_source_or_404(state, source_id)
+    return {"source": source, "preview": source.get("preview", [])}
+
+
+@app.get("/api/sources/{source_id}/raw-preview")
+def source_raw_preview(source_id: str, sheet: str | None = None) -> dict[str, Any]:
+    state = store.read()
+    source = get_source_or_404(state, source_id)
+    try:
+        file_path = find_latest_file(source)
+        return {"file": file_path.name, **workbook_preview(file_path, sheet_name=sheet)}
+    except Exception as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+
+
+@app.post("/api/sources/{source_id}/refresh")
+def refresh_one_source(source_id: str) -> dict[str, Any]:
+    def operation(state: dict[str, Any]) -> dict[str, Any]:
+        get_source_or_404(state, source_id)
+        try:
+            source = refresh_source(state, source_id, utc_now())
+            store.mark_calculation_data_changed(state)
+            store.append_audit(state, "source_refreshed", source_id)
+            return source
+        except Exception as error:
+            source = mark_source_error(state, source_id, str(error), utc_now())
+            store.append_audit(state, "source_refresh_failed", f"{source_id}: {error}")
+            return source
+
+    return store.mutate(operation)
+
+
+@app.post("/api/sources/refresh-all")
+def refresh_all_sources() -> dict[str, Any]:
+    def operation(state: dict[str, Any]) -> dict[str, Any]:
+        updated: list[dict[str, Any]] = []
+        changed = False
+        for config in state["source_configs"]:
+            source_id = config["id"]
+            try:
+                updated.append(refresh_source(state, source_id, utc_now()))
+                changed = True
+            except Exception as error:
+                updated.append(mark_source_error(state, source_id, str(error), utc_now()))
+                store.append_audit(state, "source_refresh_failed", f"{source_id}: {error}")
+        if changed:
+            store.mark_calculation_data_changed(state)
+        store.append_audit(state, "all_sources_refreshed", f"{len(updated)} источника(ов)")
+        return {"sources": updated}
+
+    return store.mutate(operation)
+
+
+@app.post("/api/sources/{source_id}/upload")
+async def upload_source_file(source_id: str, file: UploadFile = File(...)) -> dict[str, Any]:
+    def operation(state: dict[str, Any]) -> dict[str, Any]:
+        source = get_source_or_404(state, source_id)
+        target = save_uploaded_file(source, file.filename or "source.xlsx", file.file)
+        source.update(
+            {
+                "last_status": "uploaded",
+                "last_file": target.name,
+                "last_error": None,
+                "last_note": "Файл загружен. Запустите обновление для парсинга.",
+            }
+        )
+        store.append_audit(state, "source_uploaded", f"{source_id}: {target.name}")
+        return source
+
+    try:
+        return store.mutate(operation)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+
+@app.get("/api/tariffs")
+def list_tariffs(search: str = "") -> list[dict[str, Any]]:
+    tariffs = tariffs_for_view(store.read())
+    phrase = search.strip().upper()
+    if not phrase:
+        return tariffs
+    return [
+        tariff
+        for tariff in tariffs
+        if phrase in tariff["airport"].upper() or phrase in tariff["service"].upper()
+    ]
+
+
+@app.post("/api/tariffs/manual", status_code=201)
+def add_manual_tariff(payload: ManualTariffInput) -> dict[str, Any]:
+    def operation(state: dict[str, Any]) -> dict[str, Any]:
+        airport = payload.airport.upper()
+        service = payload.service.strip().upper()
+        key = f"{airport}-{service}"
+        existing = tariffs_for_view(state)
+        if any(f"{item['airport']}-{item['service']}" == key for item in existing):
+            raise ValueError("Такой ключ уже есть в справочнике. Ручное дополнение не является override.")
+        tariff = {
+            "id": f"manual-{uuid.uuid4().hex}",
+            "airport": airport,
+            "service": service,
+            "rate": payload.rate,
+            "unit": payload.unit.strip(),
+            "aircraft": payload.aircraft.strip().upper(),
+            "start_date": "",
+            "end_date": "",
+            "organization": "",
+            "note": payload.note.strip(),
+            "source": "manual",
+            "source_file": None,
+            "source_row": None,
+        }
+        state["manual_tariffs"].append(tariff)
+        store.mark_calculation_data_changed(state)
+        store.append_audit(state, "manual_tariff_added", key)
+        return tariff
+
+    try:
+        return store.mutate(operation)
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+
+
+@app.delete("/api/tariffs/manual/{tariff_id}", status_code=204)
+def delete_manual_tariff(tariff_id: str) -> Response:
+    def operation(state: dict[str, Any]) -> bool:
+        initial = len(state["manual_tariffs"])
+        state["manual_tariffs"] = [item for item in state["manual_tariffs"] if item["id"] != tariff_id]
+        if len(state["manual_tariffs"]) == initial:
+            return False
+        store.mark_calculation_data_changed(state)
+        store.append_audit(state, "manual_tariff_deleted", tariff_id)
+        return True
+
+    if not store.mutate(operation):
+        raise HTTPException(status_code=404, detail="Ручная запись не найдена")
+    return Response(status_code=204)
+
+
+@app.get("/api/routes")
+def list_routes(query: str = "") -> list[dict[str, Any]]:
+    routes = store.read()["routes"]
+    phrase = query.strip().upper()
+    filtered = [route for route in routes if not phrase or phrase in route["key"]]
+    return filtered[:50]
+
+
+@app.get("/api/audit")
+def audit_log() -> list[dict[str, Any]]:
+    return list(reversed(store.read().get("audit_log", [])))
+
+
+frontend_dist = settings.project_root / "frontend" / "dist"
+if frontend_dist.exists():
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
