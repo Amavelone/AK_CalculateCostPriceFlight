@@ -33,6 +33,10 @@ Frontend:
   imported-before-manual tariff view shared by calculation and source import.
 - `backend/app/modules/cost_monitor/store.py` — default state, миграция,
   атомарный JSON read/mutate, audit log и data revision этого feature.
+- `backend/app/modules/cost_monitor/configuration/` — module-owned typed
+  configuration definition: строгая schema, code-owned baseline, registered
+  variables, allowed primitives и semantic validation. Versioning, activation
+  lifecycle и trace остаются за пределами Iteration 3.
 
 ### Calculation and export
 
@@ -85,6 +89,8 @@ Frontend:
   atomic source activation, sticky-state regression, manual conflict и CBR fallback.
 - `backend/tests/test_exports.py` — shared JSON/XLSX snapshot packaging.
 - `backend/tests/test_store.py` — JSON persistence и legacy revision migration.
+- `backend/tests/test_configuration.py` — typed baseline, safety restrictions,
+  зарегистрированные capabilities и инъекция validated configuration в расчёт.
 - `backend/tests/test_excel_parity.py` и
   `backend/tests/fixtures/excel_cost_monitor_baseline.json` — Excel-owned
   пяти-плечевой golden master и calculation/export shape.
@@ -93,7 +99,7 @@ Frontend:
 - `ruff.toml` — минимальный backend lint gate.
 - Backend: `$env:PYTHONPATH=(Resolve-Path .\backend).Path; .\.venv\Scripts\python -m unittest discover -s .\backend\tests -v`.
 - Frontend: `cd frontend; pnpm build` (strict TypeScript + Vite production build).
-- Текущий полный набор: 29 backend tests; `\.venv\Scripts\ruff check backend`.
+- Текущий полный набор: 33 backend tests; `\.venv\Scripts\ruff check backend`.
 
 ## Documentation and analysis
 
@@ -101,8 +107,8 @@ Frontend:
 - `docs/AK_CalculateCostPriceFlight_Архитектурное_ТЗ_и_спецификация.md` —
   единственный канонический архитектурный документ: целевая модель,
   инварианты, roadmap и правила выполнения итераций.
-- `docs/COST_MONITOR_CONFIGURATION_INVENTORY.md` — Iteration 2 classification
-  текущих правил: `CODE_INVARIANT` / `CONFIGURABLE` / `DATA` / `LEGACY_PARITY`.
+- `docs/COST_MONITOR_CONFIGURATION_INVENTORY.md` — classification правил из
+  Iteration 2 и карта их реализации в typed configuration Iteration 3.
 - `ARCHITECTURE_AUDIT.md` — исторический аудит foundation-версии и исходные
   findings; не является текущим canonical architecture reference.
 - `PROJECT_CHANGELOG.md` — значимые технические изменения от этого аудита.

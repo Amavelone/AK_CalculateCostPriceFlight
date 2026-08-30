@@ -1306,13 +1306,19 @@ CODE_INVARIANT / CONFIGURABLE / DATA / LEGACY_PARITY
 Никакой configuration engine, baseline runtime config или admin UI на этом
 этапе не добавляются.
 
-## Этап 3 - Typed Configuration Model
+## Этап 3 - Typed Configuration Model: реализован в Iteration 3
 
 - module-owned schema;
 - baseline config;
 - registered variables;
 - allowed primitives;
 - validation.
+
+Реализован строгий code-owned definition и baseline, воспроизводящий текущие
+Python/Excel параметры. Calculation engine принимает validated configuration,
+но по умолчанию использует baseline. Произвольный код и строковый evaluator не
+добавлены. Configuration service, versions, activation, rollback и trace
+остаются scope Этапа 4.
 
 ## Этап 4 - Configuration Service + Versioning + Trace
 

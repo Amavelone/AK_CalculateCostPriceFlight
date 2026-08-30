@@ -2,14 +2,15 @@
 
 ## Статус и назначение
 
-**Iteration:** 2 — Configuration Inventory.
-**Статус:** classification only; runtime configuration engine, versions, admin UI
-и новый API в этой итерации не создаются.
+**Iteration:** 3 — Typed Configuration Model (classification создана в Iteration 2).
+**Статус:** безопасные параметры перенесены в module-owned typed definition и
+code-owned baseline. Runtime versioning, activation service, trace, admin UI и
+новый API в этой итерации не создаются.
 
-Документ фиксирует фактические правила foundation-версии. Категория определяет
-будущее место ответственности, а не разрешает немедленно изменить правило без
-deploy. До Iteration 3 все значения и алгоритмы продолжают работать ровно как
-сейчас и защищены Excel golden master.
+Документ фиксирует фактические правила foundation-версии и их текущее место
+ответственности. Typed baseline воспроизводит прежние Python/Excel значения и
+защищён Excel golden master. Его изменение пока требует deploy: lifecycle
+runtime-версий относится к Iteration 4.
 
 | Категория | Значение в этом проекте |
 |---|---|
@@ -28,25 +29,26 @@ deploy. До Iteration 3 все значения и алгоритмы прод�
 | CI-04 | Обычное плечо и техстоп — две отдельные capability-ветки; форма результата M1/M2/M3 | `calculate_ground()` | Новая ветка/сущность или иной тип результата требует изменения кода модуля. |
 | CI-05 | Типы canonical records, Pydantic response contract, диагностики и rounding contract | `records.py`, `schemas.py`, `calculation.py` | Гарантируют совместимость API/Excel; schema меняется только с deploy. |
 | CI-06 | Атомарный lifecycle `stage → validate → activate`; upload size/XLSX validation | `sources.py`, `source_files.py` | Надёжность и security boundary не должны отключаться runtime-настройкой. |
-| CI-07 | Whitelist будущих variables/functions, запрет `eval`/`exec`/arbitrary I/O | будущая configuration definition | Это обязательная security policy; в Iteration 2 ещё не реализуется как engine. |
+| CI-07 | Whitelist variables/functions, запрет `eval`/`exec`/arbitrary I/O | `configuration/variables.py`, `configuration/functions.py`, строгая schema | Это обязательная code-owned security policy; Iteration 3 не добавляет evaluator строковых формул. |
 
 ## Configurable parameters and bindings
 
-Эти строки **не переносятся сейчас**. В Iteration 3 им понадобится тип,
-границы допустимых значений, baseline version и validation.
+CF-01…CF-07 и безопасная часть CF-09 перенесены в typed baseline. Значения
+поступают в существующие calculation/source capabilities через проверенную
+модель; это ещё не independently persisted active runtime version.
 
 | ID | Параметр / binding | Сейчас | Будущий безопасный scope |
 |---|---|---|---|
-| CF-01 | Норма расхода топлива `2.7` т/ч | literal в `calculation.py` | Numeric parameter для существующего fuel primitive. |
-| CF-02 | Маршрутная ставка АНО `1666.6` на 100 км | literal в `calculation.py` | Numeric parameter для существующего ANO primitive. |
-| CF-03 | Базовое питание: количество `6` и ставка `1500` | literals в `calculation.py` | Два numeric parameter без изменения структуры catering. |
-| CF-04 | Доплата за пассажира `500` | literal в `calculation.py` | Numeric parameter существующей optional catering branch. |
-| CF-05 | НДС: ставка `0.1` и список DME/SVO/VKO | literals в `calculation.py` | Rate и airport set при сохранении существующего VAT condition. |
-| CF-06 | Числовые нормы НО: объёмы/делители, 90 минут телетрапа, транспортный порог 100, ставка пожарной машины `25132` | literals в `calculate_ground()` | Числовые параметры внутри уже зафиксированной normal/techstop matrix; состав услуг остаётся code invariant. |
-| CF-07 | Default scenario rates и aircraft multipliers до первого refresh | `_default_scenarios()`, `build_default_state()` | Baseline module data/config; source workbook по-прежнему может заменить значения. |
+| CF-01 | Норма расхода топлива `2.7` т/ч | `configuration.fuel`; используется `calculation.py` | Numeric parameter для существующего fuel primitive. |
+| CF-02 | Маршрутная ставка АНО `1666.6` на 100 км | `configuration.ano`; используется `calculation.py` | Numeric parameter для существующего ANO primitive. |
+| CF-03 | Базовое питание: количество `6` и ставка `1500` | `configuration.catering`; используется `calculation.py` | Два numeric parameter без изменения структуры catering. |
+| CF-04 | Доплата за пассажира `500` | `configuration.catering`; используется `calculation.py` | Numeric parameter существующей optional catering branch. |
+| CF-05 | НДС: ставка `0.1` и список DME/SVO/VKO | `configuration.vat`; используется `calculation.py` | Rate и airport set при сохранении существующего VAT condition. |
+| CF-06 | Числовые нормы НО: объёмы/делители, 90 минут телетрапа, транспортный порог 100, ставка пожарной машины `25132` | `configuration.ground`; используется `calculate_ground()` | Числовые параметры внутри уже зафиксированной normal/techstop matrix; состав услуг остаётся code invariant. |
+| CF-07 | Default scenario rates и aircraft multipliers до первого refresh | `configuration.initial_data`; используется `build_default_state()` | Baseline module data/config; source workbook по-прежнему может заменить значения. |
 | CF-08 | Источник топлива, сценарий, включение пассажирского питания, выбранный techstop | `CalculationRequest` | Это per-calculation input, не active runtime config; их shape — invariant, а допустимый выбор опирается на data. |
-| CF-09 | Source directory и file mask | `source_configs`, Settings UI | Уже изменяемая source configuration; parser identity и canonical meaning пока code-owned. |
-| CF-10 | Будущие active flags, priorities, effective dates и source mappings | отсутствуют | `DEFERRED` до typed configuration model; не добавлять структуру заранее. |
+| CF-09 | Source directory и file mask | Typed adapter identity/default mask — `configuration.source_bindings`; directory и фактический mask — `source_configs`/Settings UI | Parser identity и baseline mask типизированы; runtime path остаётся окружением/операционным state, physical mappings — adapter-owned. |
+| CF-10 | Будущие active flags, priorities, effective dates и source mappings | отсутствуют | `DEFERRED` до отдельного lifecycle/mapping scope; не добавлять структуру заранее. |
 
 ## Business data
 
@@ -76,10 +78,13 @@ deploy. До Iteration 3 все значения и алгоритмы прод�
 | LP-08 | Пустой workbook section очищает прошлые values; failed full refresh сохраняет active dataset | source lifecycle | Reliability invariant, введённый в Iteration 1; не возвращать старое sticky/partial behaviour. |
 | LP-09 | Worksheet names, column positions и `Прочее!27` bindings | monitor/SRV/fuel adapters | Physical Excel binding; позднее может стать validated source mapping, сейчас не менять без adapter scope. |
 
-## Decisions for later iterations
+## Iteration 3 result and deferred decisions
 
-- Iteration 3 создаёт **только** module-owned typed configuration definition и
-  baseline config для CF-01…CF-07/CF-09 там, где schema это безопасно допускает.
+- Iteration 3 создала **только** module-owned typed configuration definition и
+  code-owned baseline config для CF-01…CF-07/CF-09 там, где schema это безопасно
+  допускает. Baseline сохраняет текущие значения и Excel parity.
+- Runtime payload не принимает произвольные поля, пути или код; переменные и
+  primitives зарегистрированы явными whitelist, но expression evaluator не создан.
 - Не переносить CI-01…CI-07, LP-01…LP-09 или raw Excel/SQL column names в
   arbitrary config. Они остаются code/adapters/legacy contracts до отдельного
   решения.

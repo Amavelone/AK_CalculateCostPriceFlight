@@ -11,26 +11,11 @@ from pathlib import Path
 from typing import Any
 
 from ...core.config import Settings
+from .configuration import BASELINE_CONFIGURATION
 
 
 def utc_now() -> str:
     return datetime.now(UTC).isoformat()
-
-
-def _default_scenarios() -> dict[str, dict[str, list[float]]]:
-    # Настраиваемые начальные значения действуют до чтения книги конфигурации.
-    return {
-        "ГБ 2026": {
-            "733": [78.48, 220.45, 272.17],
-            "737": [120.0, 280.0, 340.0],
-            "738": [165.73, 341.48, 391.28],
-        },
-        "Оперативная 2026": {
-            "733": [78.48, 220.45, 272.17],
-            "737": [120.0, 280.0, 340.0],
-            "738": [165.73, 341.48, 391.28],
-        },
-    }
 
 
 def build_default_state(source_dir: Path) -> dict[str, Any]:
@@ -50,12 +35,12 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
         "data_updated_at": None,
         "source_configs": [
             {
-                "id": "srv",
-                "label": "Тарифы SRV",
-                "description": "Тарифы услуг аэропортов",
+                "id": binding.id,
+                "label": binding.label,
+                "description": binding.description,
                 "directory": shared_path,
-                "mask": "7480_srv*.xlsx",
-                "parser": "srv_tariffs",
+                "mask": binding.default_mask,
+                "parser": binding.parser,
                 "last_status": "not_updated",
                 "last_file": None,
                 "active_file": None,
@@ -65,41 +50,8 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
                 "rows_read": 0,
                 "rows_loaded": 0,
                 "preview": [],
-            },
-            {
-                "id": "fuel_registry",
-                "label": "Реестр керосина",
-                "description": "Выгрузка 1С цен поставщиков",
-                "directory": shared_path,
-                "mask": "реестр*.xlsx",
-                "parser": "fuel_registry",
-                "last_status": "not_updated",
-                "last_file": None,
-                "active_file": None,
-                "uploaded_file": None,
-                "last_updated": None,
-                "last_error": None,
-                "rows_read": 0,
-                "rows_loaded": 0,
-                "preview": [],
-            },
-            {
-                "id": "monitor_workbook",
-                "label": "Рабочая книга монитора",
-                "description": "Маршруты, признак МВЛ и исходные параметры",
-                "directory": shared_path,
-                "mask": "Расчет себестоимости рейсов*.xlsx",
-                "parser": "monitor_workbook",
-                "last_status": "not_updated",
-                "last_file": None,
-                "active_file": None,
-                "uploaded_file": None,
-                "last_updated": None,
-                "last_error": None,
-                "rows_read": 0,
-                "rows_loaded": 0,
-                "preview": [],
-            },
+            }
+            for binding in BASELINE_CONFIGURATION.source_bindings
         ],
         "imported_tariffs": [],
         "manual_tariffs": [],
@@ -107,8 +59,8 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
         "routes": [],
         "international_airports": {},
         "other_costs": {},
-        "scenario_rates": _default_scenarios(),
-        "aircraft_multipliers": {"733": 1.0, "737": 1.0, "738": 1.0},
+        "scenario_rates": BASELINE_CONFIGURATION.initial_data.model_dump(mode="json")["scenario_rates"],
+        "aircraft_multipliers": dict(BASELINE_CONFIGURATION.initial_data.aircraft_multipliers),
         "drafts": {},
         "audit_log": [],
     }

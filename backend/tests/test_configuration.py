@@ -1,0 +1,97 @@
+from __future__ import annotations
+
+import unittest
+
+from app.modules.cost_monitor.calculation import calculate
+from app.modules.cost_monitor.configuration import BASELINE_CONFIGURATION, validate_configuration
+from app.modules.cost_monitor.configuration.functions import ALLOWED_PRIMITIVE_NAMES
+from app.modules.cost_monitor.configuration.variables import REGISTERED_VARIABLE_NAMES
+from app.modules.cost_monitor.schemas import CalculationRequest
+from pydantic import ValidationError
+
+
+class ConfigurationTests(unittest.TestCase):
+    def test_baseline_contains_excel_owned_parameters(self) -> None:
+        configuration = BASELINE_CONFIGURATION
+
+        self.assertEqual(configuration.schema_version, "1.0")
+        self.assertEqual(configuration.fuel.consumption_tons_per_hour, 2.7)
+        self.assertEqual(configuration.ano.route_rate_per_100_km, 1666.6)
+        self.assertEqual(
+            configuration.catering.model_dump(),
+            {"base_units": 6, "base_unit_rate": 1500.0, "passenger_surcharge": 500.0},
+        )
+        self.assertEqual(configuration.vat.airports, ("DME", "SVO", "VKO"))
+        self.assertEqual(configuration.ground.fire_truck_rate, 25132)
+        self.assertEqual(
+            {binding.id: binding.default_mask for binding in configuration.source_bindings},
+            {
+                "srv": "7480_srv*.xlsx",
+                "fuel_registry": "реестр*.xlsx",
+                "monitor_workbook": "Расчет себестоимости рейсов*.xlsx",
+            },
+        )
+
+    def test_schema_rejects_unknown_or_unsafe_configuration(self) -> None:
+        unknown = BASELINE_CONFIGURATION.model_dump(mode="json")
+        unknown["formula"] = "__import__('os').system('unsafe')"
+        with self.assertRaises(ValidationError):
+            validate_configuration(unknown)
+
+        invalid_airport = BASELINE_CONFIGURATION.model_dump(mode="json")
+        invalid_airport["vat"]["airports"] = ["DME", "bad"]
+        with self.assertRaisesRegex(ValueError, "uppercase IATA"):
+            validate_configuration(invalid_airport)
+
+        unsafe_mask = BASELINE_CONFIGURATION.model_dump(mode="json")
+        unsafe_mask["source_bindings"][0]["default_mask"] = "../srv.xlsx"
+        with self.assertRaisesRegex(ValueError, "без пути"):
+            validate_configuration(unsafe_mask)
+
+        non_finite = BASELINE_CONFIGURATION.model_dump(mode="json")
+        non_finite["fuel"]["consumption_tons_per_hour"] = float("nan")
+        with self.assertRaises(ValidationError):
+            validate_configuration(non_finite)
+
+    def test_definition_registers_only_explicit_variables_and_primitives(self) -> None:
+        self.assertEqual(
+            REGISTERED_VARIABLE_NAMES,
+            {"flight_time", "distance", "passengers", "aircraft", "departure", "arrival", "line_type", "is_techstop"},
+        )
+        self.assertEqual(ALLOWED_PRIMITIVE_NAMES, {"add", "multiply", "divide", "ceil", "contains"})
+        self.assertNotIn("eval", ALLOWED_PRIMITIVE_NAMES)
+        self.assertNotIn("exec", ALLOWED_PRIMITIVE_NAMES)
+
+    def test_calculation_consumes_validated_configuration_without_changing_default(self) -> None:
+        state = {
+            "routes": [{"key": "AAA-BBB", "flight_time": 2, "distance": 100}],
+            "international_airports": {},
+            "imported_tariffs": [
+                {"airport": "AAA", "service": "КЕРОСИН", "rate": 100},
+                {"airport": "AAA", "service": "ЗАПРАВКА ВС", "rate": 20},
+                {"airport": "AAA", "service": "АНО АД", "rate": 1000},
+            ],
+            "manual_tariffs": [],
+            "fuel_prices": [],
+            "scenario_rates": {"ГБ 2026": {"738": [10, 20, 30]}},
+            "aircraft_multipliers": {"738": 1},
+        }
+        request = CalculationRequest.model_validate(
+            {
+                "legs": [{"id": "one", "departure": "AAA", "arrival": "BBB", "aircraft": "738", "passengers": 0}],
+                "settings": {"scenario": "ГБ 2026", "fuel_source": "ЦРТ", "catering": False},
+            }
+        )
+        custom_payload = BASELINE_CONFIGURATION.model_dump(mode="json")
+        custom_payload["fuel"]["consumption_tons_per_hour"] = 3.0
+        custom = validate_configuration(custom_payload)
+
+        baseline_result = calculate(state, request)
+        custom_result = calculate(state, request, custom)
+
+        self.assertEqual(baseline_result["legs"][0]["components"]["fuel"], 648.0)
+        self.assertEqual(custom_result["legs"][0]["components"]["fuel"], 720.0)
+
+
+if __name__ == "__main__":
+    unittest.main()

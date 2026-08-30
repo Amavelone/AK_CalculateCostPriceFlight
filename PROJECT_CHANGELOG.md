@@ -1,5 +1,37 @@
 # Project Changelog
 
+## 2026-08-30 — Iteration 3: typed Cost Monitor configuration model
+
+### Изменено
+
+- Добавлена module-owned `configuration/` со строгой Pydantic schema,
+  проверяемым baseline, зарегистрированными variables и whitelist primitives.
+- Calculation engine получает validated configuration; прежние значения fuel,
+  АНО, catering, VAT и НО вынесены без изменения формул или результата.
+- Default scenarios, aircraft multipliers и безопасные source identities/masks
+  теперь создаются из единого baseline.
+
+### Architecture
+
+- Configuration Definition отделена от будущего Runtime Configuration
+  lifecycle. Запрещены unknown fields, arbitrary paths и arbitrary code;
+  evaluator, versions, activation, rollback, trace и admin contour не создавались.
+- Physical Excel mappings, legacy first-match/rounding и source data остаются в
+  adapters/code и зафиксированы как `DEFERRED` либо legacy parity.
+
+### Проверка
+
+- Backend: 33 теста пройдены, включая typed configuration validation, API
+  contract и Excel-owned пяти-плечевой golden master.
+- Ruff: PASS.
+- Frontend: strict TypeScript и production build пройдены.
+
+### Git
+
+- Baseline revision: `6ab0e87` (Iteration 2, подтверждён на local и origin).
+- Commit: see git history.
+- Branch: `feature/module-architecture`.
+
 ## 2026-08-30 — Iteration 2: Cost Monitor configuration inventory
 
 ### Изменено

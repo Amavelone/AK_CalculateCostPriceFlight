@@ -6,6 +6,7 @@ from math import ceil
 from typing import Any
 
 from .catalog import normalize_key, tariffs_for_view
+from .configuration import BASELINE_CONFIGURATION, CostMonitorConfiguration
 from .records import FuelPriceRecord, RouteRecord, TariffRecord
 from .schemas import CalculationRequest, LegInput
 
@@ -59,7 +60,12 @@ class LegContext:
     is_techstop: bool
 
 
-def resolve_leg_context(state: dict[str, Any], leg: LegInput, request: CalculationRequest) -> tuple[LegContext, list[str]]:
+def resolve_leg_context(
+    state: dict[str, Any],
+    leg: LegInput,
+    request: CalculationRequest,
+    configuration: CostMonitorConfiguration,
+) -> tuple[LegContext, list[str]]:
     """Подготавливает lookup-контекст плеча, сохраняя Excel first-match маршрута."""
 
     departure = normalize_key(leg.departure)
@@ -88,7 +94,7 @@ def resolve_leg_context(state: dict[str, Any], leg: LegInput, request: Calculati
             flight_time=flight_time,
             distance=route.distance if route else 0.0,
             has_route=route is not None,
-            fuel_tons=flight_time * 2.7,
+            fuel_tons=flight_time * configuration.fuel.consumption_tons_per_hour,
             line_type="МВЛ" if international else "ВВЛ",
             is_techstop=request.settings.techstop_leg_id == leg.id,
         ),
@@ -133,6 +139,7 @@ def calculate_ground(
     tariff_index: dict[str, TariffRecord],
     line_type: str,
     is_techstop: bool,
+    configuration: CostMonitorConfiguration,
 ) -> tuple[float, list[dict[str, Any]]]:
     """Воспроизводит обычный и техстоповый блоки НО действующей книги.
 
@@ -152,15 +159,22 @@ def calculate_ground(
         ground += add_service(details, tariff_index, departure, "ТРАНСПБЕЗОП", aircraft_factor)
         ground += add_service(details, tariff_index, departure, "ПРИЕМ-ВЫПУСК", 1)
         ground += add_service(details, tariff_index, departure, "БУКСИРОВКА", 1)
-        ground += add_service(details, tariff_index, departure, "ТРАП", 2, divisor=2)
-        fire_truck = 25132 / 2
+        ground += add_service(
+            details,
+            tariff_index,
+            departure,
+            "ТРАП",
+            configuration.ground.stairs_units,
+            divisor=configuration.ground.split_divisor,
+        )
+        fire_truck = configuration.ground.fire_truck_rate / configuration.ground.split_divisor
         details.append(
             {
                 "airport": departure,
                 "service": "ПОЖАРНАЯ МАШИНА",
-                "rate": 25132,
+                "rate": configuration.ground.fire_truck_rate,
                 "volume": 1,
-                "divisor": 2,
+                "divisor": configuration.ground.split_divisor,
                 "amount": fire_truck,
             }
         )
@@ -185,10 +199,34 @@ def calculate_ground(
     ground += add_service(details, tariff_index, arrival, "АЭРОВОКЗАЛ(М)", terminal_m_arrival)
     ground += add_service(details, tariff_index, departure, "ПРИЕМ-ВЫПУСК", 1)
     ground += add_service(details, tariff_index, departure, "БУКСИРОВКА", 1)
-    ground += add_service(details, tariff_index, departure, "ТЕЛЕТРАП МИН", 90, divisor=2)
-    transport_volume = ceil((terminal_departure + terminal_m_departure + terminal_arrival + terminal_m_arrival) / 100)
-    ground += add_service(details, tariff_index, departure, "ТРАНСПОРТ", transport_volume, divisor=2)
-    ground += add_service(details, tariff_index, departure, "ТРАП", 2, divisor=2)
+    ground += add_service(
+        details,
+        tariff_index,
+        departure,
+        "ТЕЛЕТРАП МИН",
+        configuration.ground.telebridge_minutes,
+        divisor=configuration.ground.split_divisor,
+    )
+    transport_volume = ceil(
+        (terminal_departure + terminal_m_departure + terminal_arrival + terminal_m_arrival)
+        / configuration.ground.transport_passenger_block
+    )
+    ground += add_service(
+        details,
+        tariff_index,
+        departure,
+        "ТРАНСПОРТ",
+        transport_volume,
+        divisor=configuration.ground.split_divisor,
+    )
+    ground += add_service(
+        details,
+        tariff_index,
+        departure,
+        "ТРАП",
+        configuration.ground.stairs_units,
+        divisor=configuration.ground.split_divisor,
+    )
     ground += add_service(details, tariff_index, arrival, "УБОРКА", 1)
     ground += add_service(details, tariff_index, departure, "ВОДА", 1)
     ground += add_service(details, tariff_index, departure, "САНУЗЕЛ", 1)
@@ -209,8 +247,9 @@ def calculate_leg(
     leg: LegInput,
     request: CalculationRequest,
     tariff_index: dict[str, TariffRecord],
+    configuration: CostMonitorConfiguration,
 ) -> dict[str, Any]:
-    context, warnings = resolve_leg_context(state, leg, request)
+    context, warnings = resolve_leg_context(state, leg, request, configuration)
     departure = context.departure
     arrival = context.arrival
     route_key = context.route_key
@@ -264,7 +303,7 @@ def calculate_leg(
                 }
             )
 
-    ground, ground_detail = calculate_ground(state, leg, tariff_index, line_type, is_techstop)
+    ground, ground_detail = calculate_ground(state, leg, tariff_index, line_type, is_techstop, configuration)
 
     ano_tariff = first_rate(tariff_index, departure, "АНО АД")
     aircraft_multiplier = float(state.get("aircraft_multipliers", {}).get(leg.aircraft, 0.0))
@@ -272,7 +311,7 @@ def calculate_leg(
     ano_detail: list[dict[str, Any]] = []
     if ano_tariff and context.has_route:
         airport_ano = ano_tariff.rate * aircraft_multiplier
-        route_ano = distance / 100 * 1666.6
+        route_ano = distance / 100 * configuration.ano.route_rate_per_100_km
         ano = airport_ano + route_ano
         ano_detail = [
             {
@@ -286,7 +325,7 @@ def calculate_leg(
             {
                 "airport": route_key,
                 "service": "МАРШРУТНАЯ ЧАСТЬ АНО",
-                "rate": 1666.6,
+                "rate": configuration.ano.route_rate_per_100_km,
                 "volume": distance / 100,
                 "divisor": 1,
                 "amount": route_ano,
@@ -297,20 +336,31 @@ def calculate_leg(
     if leg.aircraft not in state.get("aircraft_multipliers", {}):
         warnings.append(f"Для типа ВС {leg.aircraft} отсутствует коэффициент из Справочников.")
 
-    catering = 0.0 if not route_key or route_key == "-" else 6 * 1500
+    catering = (
+        0.0
+        if not route_key or route_key == "-"
+        else configuration.catering.base_units * configuration.catering.base_unit_rate
+    )
     catering_detail: list[dict[str, Any]] = []
     if catering:
         catering_detail.append(
-            {"airport": departure, "service": "БАЗОВОЕ БОРТПИТАНИЕ", "rate": 1500, "volume": 6, "divisor": 1, "amount": catering}
+            {
+                "airport": departure,
+                "service": "БАЗОВОЕ БОРТПИТАНИЕ",
+                "rate": configuration.catering.base_unit_rate,
+                "volume": configuration.catering.base_units,
+                "divisor": 1,
+                "amount": catering,
+            }
         )
     if catering and request.settings.catering:
-        passenger_catering = leg.passengers * 500
+        passenger_catering = leg.passengers * configuration.catering.passenger_surcharge
         catering += passenger_catering
         catering_detail.append(
             {
                 "airport": departure,
                 "service": "ДОПЛАТА ЗА ПАССАЖИРОВ",
-                "rate": 500,
+                "rate": configuration.catering.passenger_surcharge,
                 "volume": leg.passengers,
                 "divisor": 1,
                 "amount": passenger_catering,
@@ -318,8 +368,10 @@ def calculate_leg(
         )
 
     vat_base = fuel + ground + ano + catering
-    vat_applies = line_type == "ВВЛ" and bool({departure, arrival}.intersection({"DME", "SVO", "VKO"}))
-    vat = vat_base * 0.1 if vat_applies else 0.0
+    vat_applies = line_type == "ВВЛ" and bool(
+        {departure, arrival}.intersection(configuration.vat.airports)
+    )
+    vat = vat_base * configuration.vat.rate if vat_applies else 0.0
     vat_detail: list[dict[str, Any]] = []
     if vat_applies:
         for service, amount in (
@@ -332,7 +384,14 @@ def calculate_leg(
         vat_detail.extend(
             [
                 {"airport": route_key, "service": "НАЛОГОВАЯ БАЗА", "rate": 1, "volume": vat_base, "divisor": 1, "amount": vat_base},
-                {"airport": route_key, "service": "НДС", "rate": 0.1, "volume": vat_base, "divisor": 1, "amount": vat},
+                {
+                    "airport": route_key,
+                    "service": "НДС",
+                    "rate": configuration.vat.rate,
+                    "volume": vat_base,
+                    "divisor": 1,
+                    "amount": vat,
+                },
             ]
         )
 
@@ -389,9 +448,13 @@ def calculate_leg(
     }
 
 
-def calculate(state: dict[str, Any], request: CalculationRequest) -> dict[str, Any]:
+def calculate(
+    state: dict[str, Any],
+    request: CalculationRequest,
+    configuration: CostMonitorConfiguration = BASELINE_CONFIGURATION,
+) -> dict[str, Any]:
     tariff_index = build_tariff_index(state)
-    legs = [calculate_leg(state, leg, request, tariff_index) for leg in request.legs]
+    legs = [calculate_leg(state, leg, request, tariff_index, configuration) for leg in request.legs]
     total = {
         level: round_currency(sum(item["_raw_totals"][level] for item in legs))
         for level in ("m1", "m2", "m3")
