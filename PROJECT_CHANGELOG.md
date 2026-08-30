@@ -1,5 +1,36 @@
 # Project Changelog
 
+## 2026-08-30 — Iteration 0: baseline and branch initialization
+
+### Изменено
+
+- Каноническая архитектурная спецификация добавлена в
+  `docs/AK_CalculateCostPriceFlight_Архитектурное_ТЗ_и_спецификация.md` без
+  изменения её содержимого.
+- `PROJECT_INDEX.md` теперь указывает на неё как на единственный основной
+  architecture reference; `ARCHITECTURE_AUDIT.md` сохранён как исторический
+  foundation-аудит.
+- Архитектурная инициатива переведена с legacy baseline-ветки
+  `codex/architecture-foundation` на `feature/module-architecture`.
+
+### Architecture
+
+- Production code, API, формулы, UX, источники данных и Excel golden fixture
+  не изменялись.
+- `codex/architecture-foundation` сохранена неизменной baseline-веткой.
+
+### Проверка
+
+- Backend: 26 тестов пройдены, включая Excel-owned пяти-плечевой golden master
+  и API contract tests.
+- Frontend: strict TypeScript и production build пройдены.
+- Ruff: NOT RUN — инструмент пока не настроен в репозитории.
+
+### Git
+
+- Commit: see git history.
+- Branch: `feature/module-architecture`.
+
 ## 2026-08-30 — Удалены неиспользуемые данные источника и UI-блок снимка
 
 ### Изменено

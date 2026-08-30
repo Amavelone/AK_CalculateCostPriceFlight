@@ -1,7 +1,9 @@
 # Project Index
 
-Карта отражает текущее состояние репозитория на 2026-08-30. Целевая структура и
-порядок миграции описаны в `ARCHITECTURE_AUDIT.md`.
+Карта отражает текущее состояние репозитория на 2026-08-30. Каноническая
+архитектурная модель, инварианты и порядок развития описаны в
+`docs/AK_CalculateCostPriceFlight_Архитектурное_ТЗ_и_спецификация.md`.
+`ARCHITECTURE_AUDIT.md` сохраняет исторический аудит foundation-версии.
 
 ## Entry Points
 
@@ -93,7 +95,11 @@ Frontend:
 ## Documentation and analysis
 
 - `README.md` — local setup, validation commands и runtime overview.
-- `ARCHITECTURE_AUDIT.md` — findings, target architecture и staged migration.
+- `docs/AK_CalculateCostPriceFlight_Архитектурное_ТЗ_и_спецификация.md` —
+  единственный канонический архитектурный документ: целевая модель,
+  инварианты, roadmap и правила выполнения итераций.
+- `ARCHITECTURE_AUDIT.md` — исторический аудит foundation-версии и исходные
+  findings; не является текущим canonical architecture reference.
 - `PROJECT_CHANGELOG.md` — значимые технические изменения от этого аудита.
 - `docs/cost-monitor-business-logic.md` — утверждённый calculation baseline.
 - `docs/cost-monitor-analysis.md` — reverse engineering исходного Excel.
@@ -128,4 +134,5 @@ Frontend:
   возможно незаметное изменение отображаемой суммы на пограничных значениях.
 - `JsonStore` безопасен только для одного процесса; shared deployment требует
   транзакционного persistence.
-- Текущая рабочая ветка — `codex/architecture-foundation`.
+- Активная ветка архитектурной инициативы — `feature/module-architecture`.
+  `codex/architecture-foundation` сохранена как baseline foundation-версии.
