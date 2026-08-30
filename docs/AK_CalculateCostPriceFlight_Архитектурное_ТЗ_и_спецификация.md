@@ -1337,7 +1337,7 @@ compare, preview, atomic activation и rollback доступны через modu
 Calculation и exports несут config version, data revision и structured business
 trace. SQL Server, authentication/RBAC и admin UI не добавлены.
 
-## Этап 5 - Admin Contour
+## Этап 5 - Admin Contour: read-only foundation реализован в Iteration 5
 
 Сначала read-only:
 
@@ -1347,6 +1347,14 @@ trace. SQL Server, authentication/RBAC и admin UI не добавлены.
 - validation status.
 
 Потом редактирование безопасных parameters/bindings.
+
+Реализован отдельный lazy-loaded frontend contour без изменения обычного Cost
+Monitor startup: active version/schema/validation/data revision, безопасные
+parameter groups, aircraft multipliers, scenarios, source bindings, immutable
+version history, compare и structured trace текущего in-memory расчёта доступны
+только для чтения. UI не вызывает draft/edit/activate/rollback endpoints.
+Authentication/RBAC, persisted calculation history и editing безопасных
+parameters/bindings остаются `DEFERRED`.
 
 ## Этап 6 - Formal Adapters / SQL Readiness
 

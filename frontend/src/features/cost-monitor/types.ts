@@ -1,5 +1,7 @@
 export type FuelSource = 'ЦРТ' | 'АК'
 export type ExportFormat = 'json' | 'xlsx'
+export type ConfigurationState = 'active' | 'inactive' | 'draft'
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue }
 
 export interface LegInput {
   id: string
@@ -48,6 +50,79 @@ export interface CalculationResult {
   total: Record<string, number>
   warnings: string[]
   data_snapshot: Record<string, number>
+  config_version: number
+  configuration_state: 'active' | 'draft'
+  trace: CalculationTrace
+}
+
+export interface CalculationTraceStep {
+  stage: 'input' | 'lookup' | 'parameters' | 'operation' | 'result'
+  component: string
+  operation: string | null
+  values: Record<string, JsonValue>
+}
+
+export interface CalculationTrace {
+  config_version: number
+  configuration_state: 'active' | 'draft'
+  data_revision: number
+  legs: Array<{ leg_id: string; steps: CalculationTraceStep[] }>
+}
+
+export interface CostMonitorConfiguration {
+  schema_version: '1.0'
+  fuel: { consumption_tons_per_hour: number }
+  ano: { route_rate_per_100_km: number }
+  catering: { base_units: number; base_unit_rate: number; passenger_surcharge: number }
+  vat: { rate: number; airports: string[] }
+  ground: {
+    split_divisor: number
+    stairs_units: number
+    telebridge_minutes: number
+    transport_passenger_block: number
+    fire_truck_rate: number
+  }
+  initial_data: {
+    aircraft_multipliers: Record<string, number>
+    scenario_rates: Record<string, Record<string, [number, number, number]>>
+  }
+  source_bindings: Array<{
+    id: 'srv' | 'fuel_registry' | 'monitor_workbook'
+    label: string
+    description: string
+    parser: 'srv_tariffs' | 'fuel_registry' | 'monitor_workbook'
+    default_mask: string
+  }>
+}
+
+export interface ConfigurationVersion {
+  version: number
+  state: 'active' | 'inactive'
+  created_at: string
+  activated_at: string | null
+  validation_status: 'valid'
+  configuration?: CostMonitorConfiguration | null
+}
+
+export interface ActiveConfiguration extends ConfigurationVersion {
+  state: 'active'
+  configuration: CostMonitorConfiguration
+}
+
+export interface ConfigurationReference {
+  version: number
+  state: ConfigurationState
+  created_at: string
+  activated_at: string | null
+  updated_at: string | null
+  base_version: number | null
+  validation_status: 'valid'
+}
+
+export interface ConfigurationComparison {
+  left: ConfigurationReference
+  right: ConfigurationReference
+  changes: Array<{ path: string; before: JsonValue; after: JsonValue }>
 }
 
 export interface CalculationDiagnostic {

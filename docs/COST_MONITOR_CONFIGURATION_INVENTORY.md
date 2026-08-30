@@ -2,11 +2,12 @@
 
 ## Статус и назначение
 
-**Iteration:** 4 — Configuration Service, Versions & Trace.
+**Iteration:** 5 — Read-only Configuration Admin Foundation.
 **Статус:** безопасные параметры живут в versioned runtime configuration с
 immutable active version, isolated drafts, validation, compare, activation,
-rollback и calculation trace. Admin UI и SQL persistence в этой итерации не
-создаются.
+rollback и calculation trace. Отдельный frontend admin contour показывает
+active configuration, immutable history, compare и текущий trace только для
+чтения; SQL persistence и UI lifecycle commands не создаются.
 
 Документ фиксирует фактические правила foundation-версии и их текущее место
 ответственности. Typed baseline воспроизводит прежние Python/Excel значения и
@@ -79,7 +80,7 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 | LP-08 | Пустой workbook section очищает прошлые values; failed full refresh сохраняет active dataset | source lifecycle | Reliability invariant, введённый в Iteration 1; не возвращать старое sticky/partial behaviour. |
 | LP-09 | Worksheet names, column positions и `Прочее!27` bindings | monitor/SRV/fuel adapters | Physical Excel binding; позднее может стать validated source mapping, сейчас не менять без adapter scope. |
 
-## Iteration 4 result and deferred decisions
+## Iteration 5 result and deferred decisions
 
 - Iteration 3 создала module-owned typed definition и baseline config для
   CF-01…CF-07/CF-09. Iteration 4 добавила JSON-backed configuration service:
@@ -90,11 +91,18 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 - Calculation result и exports несут `config_version`, data revision и
   structured trace фактически использованных inputs/lookups/parameters/
   operations/results.
+- Iteration 5 добавила отдельную lazy-loaded группу `Администрирование`:
+  active v/schema/validation/data revision, parameter groups, aircraft
+  multipliers, scenarios, source bindings, immutable version history, compare
+  и trace текущего in-memory расчёта отображаются без write controls.
+- Admin API errors изолированы от normal Cost Monitor startup; frontend client
+  использует только read operations active/list/compare и не вызывает draft,
+  activate или rollback endpoints.
 - Не переносить CI-01…CI-07, LP-01…LP-09 или raw Excel/SQL column names в
   arbitrary config. Они остаются code/adapters/legacy contracts до отдельного
   решения.
-- Iteration 5, а не эта итерация, добавляет read-only admin contour и только
-  затем рассматривает UI для безопасного editing.
+- Editing безопасных parameters/bindings, lifecycle commands и persisted
+  calculation history остаются отдельным будущим scope.
 - SQL Server, второй монитор, shared platform extraction, authentication/RBAC
   и no-code builder
   остаются `DEFERRED`.

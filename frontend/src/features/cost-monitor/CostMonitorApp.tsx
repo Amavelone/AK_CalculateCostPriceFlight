@@ -1,12 +1,25 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from './api'
 import { CalculatorPage } from './pages/CalculatorPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { SourcesPage } from './pages/SourcesPage'
 import { TariffsPage } from './pages/TariffsPage'
-import type { CalculationOptions, CalculationRequest, CalculationResult, ExportFormat, LegInput, SourceConfig, Tariff } from './types'
+import type {
+  ActiveConfiguration,
+  CalculationOptions,
+  CalculationRequest,
+  CalculationResult,
+  ConfigurationComparison,
+  ConfigurationVersion,
+  ExportFormat,
+  LegInput,
+  SourceConfig,
+  Tariff,
+} from './types'
 
-type Page = 'calculate' | 'sources' | 'tariffs' | 'settings'
+type Page = 'calculate' | 'sources' | 'tariffs' | 'settings' | 'admin'
+const userPages: Page[] = ['calculate', 'sources', 'tariffs', 'settings']
+const AdminPage = lazy(() => import('./pages/AdminPage').then((module) => ({ default: module.AdminPage })))
 
 const LOCAL_DRAFT_KEY = 'cost-monitor-calculation-draft-v1'
 
@@ -31,6 +44,7 @@ const pageMeta: Record<Page, { label: string; icon: string; subtitle: string }> 
   sources: { label: 'Источники', icon: '↻', subtitle: 'Файлы и обновление данных' },
   tariffs: { label: 'Подключённые услуги', icon: '⊞', subtitle: 'Тарифы аэропортов' },
   settings: { label: 'Параметры', icon: '⚙', subtitle: 'Пути и правила источников' },
+  admin: { label: 'Администрирование', icon: '◇', subtitle: 'Конфигурации, версии и trace' },
 }
 
 function createLeg(): LegInput {
@@ -60,6 +74,11 @@ function App() {
   const [exporting, setExporting] = useState<ExportFormat | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [adminActive, setAdminActive] = useState<ActiveConfiguration | null>(null)
+  const [adminVersions, setAdminVersions] = useState<ConfigurationVersion[]>([])
+  const [adminComparison, setAdminComparison] = useState<ConfigurationComparison | null>(null)
+  const [adminLoading, setAdminLoading] = useState(false)
+  const [adminCompareLoading, setAdminCompareLoading] = useState(false)
   const calculationRequestId = useRef(0)
   const calculationAbort = useRef<AbortController | null>(null)
 
@@ -80,6 +99,41 @@ function App() {
   const refreshTariffs = async (search = tariffSearch) => {
     const data = await api.tariffs(search)
     setTariffs(data)
+  }
+
+  const loadAdminData = async () => {
+    setAdminLoading(true)
+    setError(null)
+    try {
+      const [active, versions] = await Promise.all([
+        api.activeConfiguration(),
+        api.configurationVersions(),
+      ])
+      setAdminActive(active)
+      setAdminVersions(versions)
+      setAdminComparison(null)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Не удалось загрузить административные данные')
+    } finally {
+      setAdminLoading(false)
+    }
+  }
+
+  const compareAdminVersions = async (leftVersion: number, rightVersion: number) => {
+    setAdminCompareLoading(true)
+    setError(null)
+    try {
+      setAdminComparison(await api.compareConfigurations(leftVersion, rightVersion))
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Не удалось сравнить версии configuration')
+    } finally {
+      setAdminCompareLoading(false)
+    }
+  }
+
+  const selectPage = (nextPage: Page) => {
+    setPage(nextPage)
+    if (nextPage === 'admin' && !adminActive && !adminLoading) void loadAdminData()
   }
 
   const synchronizeCalculationData = async () => {
@@ -294,6 +348,18 @@ function App() {
     ),
     tariffs: <TariffsPage tariffs={tariffs} search={tariffSearch} onSearch={setTariffSearch} onDataChanged={synchronizeCalculationData} onError={setError} onNotice={setNotice} />,
     settings: <SettingsPage sources={sources} busySource={busySource} onChange={setSources} onSave={updateSource} />,
+    admin: (
+      <AdminPage
+        active={adminActive}
+        versions={adminVersions}
+        comparison={adminComparison}
+        result={result}
+        loading={adminLoading}
+        compareLoading={adminCompareLoading}
+        onRefresh={() => void loadAdminData()}
+        onCompare={(leftVersion, rightVersion) => void compareAdminVersions(leftVersion, rightVersion)}
+      />
+    ),
   }[page]
 
   return (
@@ -307,12 +373,19 @@ function App() {
           </div>
         </div>
         <nav className="navigation" aria-label="Основная навигация">
-          {(Object.keys(pageMeta) as Page[]).map((key) => (
-            <button key={key} className={`nav-item ${page === key ? 'active' : ''}`} onClick={() => setPage(key)}>
+          {userPages.map((key) => (
+            <button key={key} className={`nav-item ${page === key ? 'active' : ''}`} onClick={() => selectPage(key)}>
               <span className="nav-icon">{pageMeta[key].icon}</span>
               {pageMeta[key].label}
             </button>
           ))}
+          <div className="navigation-admin">
+            <span>Администрирование</span>
+            <button className={`nav-item ${page === 'admin' ? 'active' : ''}`} onClick={() => selectPage('admin')}>
+              <span className="nav-icon">{pageMeta.admin.icon}</span>
+              {pageMeta.admin.label}
+            </button>
+          </div>
         </nav>
         <div className="sidebar-footer">
           <span className="status-dot" />
@@ -327,15 +400,19 @@ function App() {
             <h1>{pageMeta[page].label}</h1>
             <p className="page-subtitle">{pageMeta[page].subtitle}</p>
           </div>
-          <div className="header-state">
-            <span className={`save-indicator ${isSaving ? 'saving' : ''}`} />
-            {isSaving ? 'Сохраняем изменения…' : 'Все изменения сохранены'}
-          </div>
+          {page === 'admin' ? <div className="header-state"><span className="read-only-dot" />Только чтение</div> : (
+            <div className="header-state">
+              <span className={`save-indicator ${isSaving ? 'saving' : ''}`} />
+              {isSaving ? 'Сохраняем изменения…' : 'Все изменения сохранены'}
+            </div>
+          )}
         </header>
 
         {notice && <div className="toast toast-success" onClick={() => setNotice(null)}>{notice}<button aria-label="Закрыть">×</button></div>}
         {error && <div className="toast toast-error" onClick={() => setError(null)}>{error}<button aria-label="Закрыть">×</button></div>}
-        {!isReady ? <div className="loading-card">Подготавливаем рабочее пространство…</div> : content}
+        {!isReady ? <div className="loading-card">Подготавливаем рабочее пространство…</div> : (
+          <Suspense fallback={<div className="loading-card">Загружаем административный контур…</div>}>{content}</Suspense>
+        )}
       </main>
     </div>
   )

@@ -1,5 +1,37 @@
 # Project Changelog
 
+## 2026-08-30 — Iteration 5: read-only configuration admin foundation
+
+### Изменено
+
+- Добавлена отдельная страница `Администрирование` с active-version summary,
+  read-only параметрами, source bindings, scenarios и immutable version history.
+- Добавлены сравнение immutable versions и отображение structured trace текущего
+  in-memory расчёта по плечам, стадиям, компонентам и фактическим значениям.
+- Frontend types/API client покрывают active config, versions, comparison,
+  `config_version`, `configuration_state` и trace payloads.
+
+### Architecture
+
+- Admin configuration queries загружаются только при входе на страницу, поэтому
+  их отказ не влияет на normal Cost Monitor startup, calculation или autosave.
+- Контур явно помечен «Только чтение» и не содержит callers для draft/edit/
+  activate/rollback. Backend lifecycle, persistence и formulas не изменялись.
+
+### Проверка
+
+- Browser smoke: admin load, active v1/VALID, parameters/history, single-version
+  empty state, trace и возврат в calculation/autosave — PASS; console errors: 0.
+- Backend: 38 тестов пройдены, включая Excel golden master и API contracts.
+- Ruff: PASS.
+- Frontend: strict TypeScript и production build пройдены.
+
+### Git
+
+- Baseline revision: `8105e60` (Iteration 4).
+- Commit: see git history.
+- Branch: `feature/module-architecture`.
+
 ## 2026-08-30 — Iteration 4: configuration versions and calculation trace
 
 ### Изменено

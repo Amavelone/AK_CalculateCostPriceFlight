@@ -37,7 +37,7 @@ Frontend:
 - `backend/app/modules/cost_monitor/configuration/` — typed definition и
   module-owned JSON-backed lifecycle service: immutable active versions,
   isolated drafts, validation, compare, activation и rollback. SQL persistence
-  и admin UI остаются за пределами Iteration 4.
+  остаётся deferred; Iteration 5 добавляет отдельный read-only frontend contour.
 
 ### Calculation and export
 
@@ -67,9 +67,11 @@ Frontend:
 ### App and pages
 
 - `frontend/src/features/cost-monitor/CostMonitorApp.tsx` — application shell,
-  autosave, data refresh, API orchestration и stale-request protection.
+  autosave, data refresh, API orchestration, stale-request protection и
+  отдельная lazy-loaded navigation group для администрирования.
 - `frontend/src/features/cost-monitor/pages/` — отдельные страницы калькулятора,
-  источников, тарифов и настроек.
+  источников, тарифов, настроек и read-only `AdminPage` для active
+  configuration, immutable versions, compare и текущего calculation trace.
 - `frontend/src/features/cost-monitor/formatting.ts` — общие форматтеры чисел,
   сумм и времени для feature-страниц.
 - `frontend/src/styles.css` — все стили приложения.
@@ -77,9 +79,9 @@ Frontend:
 ### API and types
 
 - `frontend/src/features/cost-monitor/api.ts` — Cost Monitor `/api` client,
-  upload и calculation export download.
+  upload, calculation export download и read-only configuration queries.
 - `frontend/src/features/cost-monitor/types.ts` — вручную поддерживаемые
-  TypeScript request/response types.
+  TypeScript request/response types, включая configuration lifecycle и trace.
 - `frontend/src/features/cost-monitor/index.ts` — feature entry.
 - `frontend/vite.config.ts` — dev proxy `/api -> localhost:8000`.
 
@@ -111,7 +113,8 @@ Frontend:
   единственный канонический архитектурный документ: целевая модель,
   инварианты, roadmap и правила выполнения итераций.
 - `docs/COST_MONITOR_CONFIGURATION_INVENTORY.md` — classification правил из
-  Iteration 2, typed baseline Iteration 3 и lifecycle boundaries Iteration 4.
+  Iteration 2, typed baseline Iteration 3, lifecycle boundaries Iteration 4 и
+  read-only admin boundary Iteration 5.
 - `ARCHITECTURE_AUDIT.md` — исторический аудит foundation-версии и исходные
   findings; не является текущим canonical architecture reference.
 - `PROJECT_CHANGELOG.md` — значимые технические изменения от этого аудита.
@@ -143,6 +146,8 @@ Frontend:
   парсеров, оркестрация источников и JSON adapter имеют отдельные границы.
 - Frontend страницы разделены; следующий безопасный seam — hooks только после
   фиксации autosave/API sequence отдельными тестами.
+- Read-only admin APIs загружаются только при входе в отдельный admin contour;
+  их отказ не входит в normal Cost Monitor startup path.
 - Клиентская детализация рендерит backend `details`; формулы АНО/питания/НДС
   на frontend не дублируются.
 - `JsonStore` безопасен только для одного процесса; shared deployment требует

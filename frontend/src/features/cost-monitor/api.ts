@@ -1,4 +1,15 @@
-import type { CalculationOptions, CalculationRequest, CalculationResult, DraftResponse, ExportFormat, SourceConfig, Tariff } from './types'
+import type {
+  ActiveConfiguration,
+  CalculationOptions,
+  CalculationRequest,
+  CalculationResult,
+  ConfigurationComparison,
+  ConfigurationVersion,
+  DraftResponse,
+  ExportFormat,
+  SourceConfig,
+  Tariff,
+} from './types'
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(`/api${path}`, {
@@ -21,6 +32,10 @@ export const api = {
   calculate: (calculation: CalculationRequest, signal?: AbortSignal) =>
     request<CalculationResult>('/calculations', { method: 'POST', body: JSON.stringify(calculation), signal }),
   calculationOptions: () => request<CalculationOptions>('/calculation-options'),
+  activeConfiguration: () => request<ActiveConfiguration>('/configuration/active'),
+  configurationVersions: () => request<ConfigurationVersion[]>('/configuration/versions'),
+  compareConfigurations: (leftVersion: number, rightVersion: number) =>
+    request<ConfigurationComparison>(`/configuration/compare/${leftVersion}/${rightVersion}`),
   sources: () => request<SourceConfig[]>('/sources'),
   refreshSource: (id: string) => request<SourceConfig>(`/sources/${id}/refresh`, { method: 'POST' }),
   rawPreview: (id: string, sheet?: string) =>
