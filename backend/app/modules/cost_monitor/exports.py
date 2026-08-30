@@ -64,6 +64,9 @@ def build_export_snapshot(request: CalculationRequest, result: dict[str, Any]) -
         "schema_version": "1.0",
         "exported_at": result["calculated_at"],
         "calculation": {
+            "config_version": result["config_version"],
+            "configuration_state": result["configuration_state"],
+            "data_snapshot": result["data_snapshot"],
             "configuration": request.settings.model_dump(),
             "legs": legs,
             "totals": {
@@ -75,6 +78,7 @@ def build_export_snapshot(request: CalculationRequest, result: dict[str, Any]) -
                 "m3": result["total"]["m3"],
             },
             "warnings": result["warnings"],
+            "trace": result["trace"],
         },
     }
 
@@ -101,9 +105,11 @@ def xlsx_bytes(snapshot: dict[str, Any]) -> bytes:
     calculation_sheet.title = "РАСЧЕТ"
     details_sheet = workbook.create_sheet("ДЕТАЛИЗАЦИЯ")
     settings_sheet = workbook.create_sheet("ПАРАМЕТРЫ")
+    trace_sheet = workbook.create_sheet("TRACE")
     _write_calculation_sheet(calculation_sheet, snapshot)
     _write_details_sheet(details_sheet, snapshot)
     _write_settings_sheet(settings_sheet, snapshot)
+    _write_trace_sheet(trace_sheet, snapshot)
     stream = BytesIO()
     workbook.save(stream)
     return stream.getvalue()
@@ -288,6 +294,9 @@ def _write_settings_sheet(sheet: Any, snapshot: dict[str, Any]) -> None:
     values = [
         ("Версия схемы", snapshot["schema_version"]),
         ("Дата и время расчёта (UTC)", snapshot["exported_at"]),
+        ("Версия configuration", snapshot["calculation"]["config_version"]),
+        ("Состояние configuration", snapshot["calculation"]["configuration_state"]),
+        ("Ревизия данных", snapshot["calculation"]["data_snapshot"]["revision"]),
         ("Сценарий ЛЧ", configuration["scenario"]),
         ("Источник ГСМ", configuration["fuel_source"]),
         ("Техстоп", configuration["techstop_leg_id"] or "Не выбран"),
@@ -312,9 +321,41 @@ def _write_settings_sheet(sheet: Any, snapshot: dict[str, Any]) -> None:
         sheet.merge_cells(start_row=sheet.max_row, start_column=1, end_row=sheet.max_row, end_column=2)
         sheet.cell(sheet.max_row, 1).alignment = Alignment(wrap_text=True, vertical="top")
     for row_index in range(2, warning_start):
-        if row_index in (10, 11):
+        if row_index in (13, 14):
             sheet.cell(row_index, 2).number_format = DECIMAL_FORMAT
-        if row_index in (12, 13, 14):
+        if row_index in (15, 16, 17):
             sheet.cell(row_index, 2).number_format = CURRENCY_FORMAT
     sheet.column_dimensions["A"].width = 33
     sheet.column_dimensions["B"].width = 58
+
+
+def _write_trace_sheet(sheet: Any, snapshot: dict[str, Any]) -> None:
+    """Экспортирует structured trace без повторного выполнения calculation."""
+
+    headers = ["Версия configuration", "Ревизия данных", "Плечо", "Этап", "Компонент", "Операция", "Значения"]
+    sheet.append(headers)
+    sheet.sheet_view.showGridLines = False
+    sheet.freeze_panes = "A2"
+    for cell in sheet[1]:
+        _header_style(cell, "1F4E78")
+    trace = snapshot["calculation"]["trace"]
+    for leg in trace["legs"]:
+        for step in leg["steps"]:
+            sheet.append(
+                [
+                    trace["config_version"],
+                    trace["data_revision"],
+                    leg["leg_id"],
+                    step["stage"],
+                    step["component"],
+                    step["operation"],
+                    json.dumps(step["values"], ensure_ascii=False, sort_keys=True),
+                ]
+            )
+    if sheet.max_row == 1:
+        sheet.append([trace["config_version"], trace["data_revision"], None, "result", "calculation", None, "Нет плеч"])
+    sheet.auto_filter.ref = f"A1:G{sheet.max_row}"
+    for column, width in enumerate([22, 18, 18, 15, 18, 22, 80], start=1):
+        sheet.column_dimensions[get_column_letter(column)].width = width
+    for row in sheet.iter_rows(min_row=2):
+        row[6].alignment = Alignment(wrap_text=True, vertical="top")

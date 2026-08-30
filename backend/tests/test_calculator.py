@@ -71,7 +71,15 @@ class CalculatorTests(unittest.TestCase):
             }
         )
 
-        self.assertEqual(calculate(state, request)["data_snapshot"]["revision"], 12)
+        result = calculate(state, request)
+
+        self.assertEqual(result["data_snapshot"]["revision"], 12)
+        self.assertEqual(result["config_version"], 1)
+        self.assertEqual(result["trace"]["data_revision"], 12)
+        self.assertEqual(
+            {step["stage"] for step in result["trace"]["legs"][0]["steps"]},
+            {"input", "lookup", "parameters", "operation", "result"},
+        )
 
     def test_ak_uses_fuel_registry_price(self) -> None:
         state = self.base_state()

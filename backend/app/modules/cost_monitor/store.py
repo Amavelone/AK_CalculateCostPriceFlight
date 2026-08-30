@@ -12,6 +12,7 @@ from typing import Any
 
 from ...core.config import Settings
 from .configuration import BASELINE_CONFIGURATION
+from .configuration.service import ensure_configuration_state
 
 
 def utc_now() -> str:
@@ -26,7 +27,7 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
     """
 
     shared_path = str(source_dir)
-    return {
+    state = {
         "version": 1,
         "created_at": utc_now(),
         # Монотонный номер активного набора расчётных данных. Он не заменяет
@@ -64,6 +65,8 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
         "drafts": {},
         "audit_log": [],
     }
+    ensure_configuration_state(state, state["created_at"])
+    return state
 
 
 class JsonStore:
@@ -119,6 +122,8 @@ class JsonStore:
                 if "uploaded_file" not in source:
                     source["uploaded_file"] = None
                     changed = True
+            if ensure_configuration_state(state):
+                changed = True
             if changed:
                 self._write(state)
 

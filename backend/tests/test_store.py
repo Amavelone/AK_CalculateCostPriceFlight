@@ -77,6 +77,33 @@ class JsonStoreTests(unittest.TestCase):
             self.assertNotIn("obsolete", [source["id"] for source in migrated["source_configs"]])
             self.assertEqual(migrated["imported_tariffs"], [{"airport": "KJA", "service": "ВОДА", "rate": 100}])
 
+    def test_legacy_store_gets_immutable_active_configuration_v1(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            settings = Settings(
+                project_root=root,
+                data_dir=root / "data",
+                default_source_dir=root / "sources",
+            )
+            store = JsonStore(settings)
+
+            def remove_configuration_lifecycle(state: dict) -> None:
+                for key in (
+                    "configuration_versions",
+                    "configuration_drafts",
+                    "active_configuration_version",
+                    "next_configuration_version",
+                ):
+                    state.pop(key, None)
+
+            store.mutate(remove_configuration_lifecycle)
+            migrated = JsonStore(settings).read()
+
+            self.assertEqual(migrated["active_configuration_version"], 1)
+            self.assertEqual(migrated["next_configuration_version"], 2)
+            self.assertEqual(migrated["configuration_drafts"], {})
+            self.assertEqual(migrated["configuration_versions"][0]["state"], "active")
+
 
 if __name__ == "__main__":
     unittest.main()

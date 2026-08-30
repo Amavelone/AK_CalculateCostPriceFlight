@@ -23,8 +23,9 @@ Frontend:
 ### Cost Monitor feature
 
 - `backend/app/modules/cost_monitor/api.py` — feature router, JSON store
-  composition, health/dashboard, calculation/options, drafts, exports,
-  sources/upload/refresh/preview, tariffs, routes и audit.
+  composition, health/dashboard, calculation/options, user drafts, versioned
+  configuration lifecycle, exports, sources/upload/refresh/preview, tariffs,
+  routes и audit.
 - `backend/app/modules/cost_monitor/schemas.py` — request DTO и явный
   `CalculationResponse` contract с diagnostics/status для `/api/calculations`.
 - `backend/app/modules/cost_monitor/records.py` — immutable canonical records
@@ -33,16 +34,16 @@ Frontend:
   imported-before-manual tariff view shared by calculation and source import.
 - `backend/app/modules/cost_monitor/store.py` — default state, миграция,
   атомарный JSON read/mutate, audit log и data revision этого feature.
-- `backend/app/modules/cost_monitor/configuration/` — module-owned typed
-  configuration definition: строгая schema, code-owned baseline, registered
-  variables, allowed primitives и semantic validation. Versioning, activation
-  lifecycle и trace остаются за пределами Iteration 3.
+- `backend/app/modules/cost_monitor/configuration/` — typed definition и
+  module-owned JSON-backed lifecycle service: immutable active versions,
+  isolated drafts, validation, compare, activation и rollback. SQL persistence
+  и admin UI остаются за пределами Iteration 4.
 
 ### Calculation and export
 
 - `backend/app/modules/cost_monitor/calculation.py` — источник истины для всех формул Cost
   Monitor; возвращает legs, totals, legacy warnings, structured diagnostics,
-  status и `data_snapshot` с активной ревизией.
+  status, `data_snapshot`, `config_version` и structured business trace.
 - `backend/app/modules/cost_monitor/exports.py` — единый export snapshot и JSON/XLSX writers;
   не должен выполнять тарифные lookup или изменять результат.
 
@@ -91,6 +92,8 @@ Frontend:
 - `backend/tests/test_store.py` — JSON persistence и legacy revision migration.
 - `backend/tests/test_configuration.py` — typed baseline, safety restrictions,
   зарегистрированные capabilities и инъекция validated configuration в расчёт.
+- `backend/tests/test_configuration_service.py` — lifecycle v1/draft/validate/
+  compare/preview/activate/rollback и изоляция configuration от user drafts.
 - `backend/tests/test_excel_parity.py` и
   `backend/tests/fixtures/excel_cost_monitor_baseline.json` — Excel-owned
   пяти-плечевой golden master и calculation/export shape.
@@ -99,7 +102,7 @@ Frontend:
 - `ruff.toml` — минимальный backend lint gate.
 - Backend: `$env:PYTHONPATH=(Resolve-Path .\backend).Path; .\.venv\Scripts\python -m unittest discover -s .\backend\tests -v`.
 - Frontend: `cd frontend; pnpm build` (strict TypeScript + Vite production build).
-- Текущий полный набор: 33 backend tests; `\.venv\Scripts\ruff check backend`.
+- Текущий полный набор: 38 backend tests; `\.venv\Scripts\ruff check backend`.
 
 ## Documentation and analysis
 
@@ -108,7 +111,7 @@ Frontend:
   единственный канонический архитектурный документ: целевая модель,
   инварианты, roadmap и правила выполнения итераций.
 - `docs/COST_MONITOR_CONFIGURATION_INVENTORY.md` — classification правил из
-  Iteration 2 и карта их реализации в typed configuration Iteration 3.
+  Iteration 2, typed baseline Iteration 3 и lifecycle boundaries Iteration 4.
 - `ARCHITECTURE_AUDIT.md` — исторический аудит foundation-версии и исходные
   findings; не является текущим canonical architecture reference.
 - `PROJECT_CHANGELOG.md` — значимые технические изменения от этого аудита.

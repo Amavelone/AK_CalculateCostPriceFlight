@@ -409,6 +409,109 @@ def calculate_leg(
     }
 
     diagnostics = [diagnostic_for_warning(warning, departure, route_key) for warning in warnings]
+    trace_steps = [
+        {
+            "stage": "input",
+            "component": "leg",
+            "operation": None,
+            "values": {
+                "departure": departure,
+                "arrival": arrival,
+                "aircraft": leg.aircraft,
+                "passengers": leg.passengers,
+                "fuel_source": request.settings.fuel_source,
+                "scenario": request.settings.scenario,
+            },
+        },
+        {
+            "stage": "lookup",
+            "component": "route",
+            "operation": "first_match",
+            "values": {
+                "route_key": route_key,
+                "found": context.has_route,
+                "flight_time": flight_time,
+                "distance": distance,
+                "line_type": line_type,
+            },
+        },
+    ]
+    trace_steps.extend(
+        [
+            {
+                "stage": "parameters",
+                "component": "fuel",
+                "operation": None,
+                "values": {"consumption_tons_per_hour": configuration.fuel.consumption_tons_per_hour},
+            },
+            {
+                "stage": "operation",
+                "component": "fuel",
+                "operation": "multiply",
+                "values": {"fuel_tons": fuel_tons, "detail_rows": len(fuel_detail)},
+            },
+            {"stage": "result", "component": "fuel", "operation": None, "values": {"amount": fuel}},
+            {
+                "stage": "parameters",
+                "component": "ground",
+                "operation": None,
+                "values": configuration.ground.model_dump(mode="json"),
+            },
+            {
+                "stage": "operation",
+                "component": "ground",
+                "operation": "sum_service_rows",
+                "values": {"is_techstop": is_techstop, "detail_rows": len(ground_detail)},
+            },
+            {"stage": "result", "component": "ground", "operation": None, "values": {"amount": ground}},
+            {
+                "stage": "parameters",
+                "component": "ano",
+                "operation": None,
+                "values": {"route_rate_per_100_km": configuration.ano.route_rate_per_100_km},
+            },
+            {
+                "stage": "operation",
+                "component": "ano",
+                "operation": "add",
+                "values": {"detail_rows": len(ano_detail), "aircraft_multiplier": aircraft_multiplier},
+            },
+            {"stage": "result", "component": "ano", "operation": None, "values": {"amount": ano}},
+            {
+                "stage": "parameters",
+                "component": "catering",
+                "operation": None,
+                "values": configuration.catering.model_dump(mode="json"),
+            },
+            {
+                "stage": "operation",
+                "component": "catering",
+                "operation": "add",
+                "values": {"enabled": request.settings.catering, "detail_rows": len(catering_detail)},
+            },
+            {"stage": "result", "component": "catering", "operation": None, "values": {"amount": catering}},
+            {
+                "stage": "parameters",
+                "component": "vat",
+                "operation": None,
+                "values": {"rate": configuration.vat.rate, "airports": list(configuration.vat.airports)},
+            },
+            {
+                "stage": "operation",
+                "component": "vat",
+                "operation": "multiply",
+                "values": {"applies": vat_applies, "base": vat_base},
+            },
+            {"stage": "result", "component": "vat", "operation": None, "values": {"amount": vat}},
+            {
+                "stage": "operation",
+                "component": "margin",
+                "operation": "multiply",
+                "values": {"rates": rates, "flight_time": flight_time, "factor": 1000},
+            },
+            {"stage": "result", "component": "margin", "operation": None, "values": {"m1": margins[0], "m2": margins[1], "m3": margins[2]}},
+        ]
+    )
     return {
         "id": leg.id,
         "route": route_key,
@@ -445,6 +548,7 @@ def calculate_leg(
         "warnings": warnings,
         "status": "degraded" if diagnostics else "complete",
         "diagnostics": diagnostics,
+        "_trace": trace_steps,
     }
 
 
@@ -452,6 +556,8 @@ def calculate(
     state: dict[str, Any],
     request: CalculationRequest,
     configuration: CostMonitorConfiguration = BASELINE_CONFIGURATION,
+    config_version: int = 1,
+    configuration_state: str = "active",
 ) -> dict[str, Any]:
     tariff_index = build_tariff_index(state)
     legs = [calculate_leg(state, leg, request, tariff_index, configuration) for leg in request.legs]
@@ -459,8 +565,10 @@ def calculate(
         level: round_currency(sum(item["_raw_totals"][level] for item in legs))
         for level in ("m1", "m2", "m3")
     }
+    trace_legs = []
     for item in legs:
         item.pop("_raw_totals", None)
+        trace_legs.append({"leg_id": item["id"], "steps": item.pop("_trace")})
     warnings = [warning for leg in legs for warning in leg["warnings"]]
     diagnostics = [diagnostic for leg in legs for diagnostic in leg["diagnostics"]]
     return {
@@ -476,5 +584,13 @@ def calculate(
             "manual_tariffs": len(state.get("manual_tariffs", [])),
             "fuel_prices": len(state.get("fuel_prices", [])),
             "routes": len(state.get("routes", [])),
+        },
+        "config_version": config_version,
+        "configuration_state": configuration_state,
+        "trace": {
+            "config_version": config_version,
+            "configuration_state": configuration_state,
+            "data_revision": int(state.get("data_revision", 0)),
+            "legs": trace_legs,
         },
     }

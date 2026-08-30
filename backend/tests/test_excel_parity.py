@@ -87,7 +87,18 @@ class ExcelParityTests(unittest.TestCase):
     def test_calculation_and_export_contract_shape_is_frozen(self) -> None:
         self.assertEqual(
             set(self.result),
-            {"calculated_at", "legs", "total", "warnings", "status", "diagnostics", "data_snapshot"},
+            {
+                "calculated_at",
+                "legs",
+                "total",
+                "warnings",
+                "status",
+                "diagnostics",
+                "data_snapshot",
+                "config_version",
+                "configuration_state",
+                "trace",
+            },
         )
         self.assertEqual(
             set(self.result["legs"][0]),
@@ -115,9 +126,11 @@ class ExcelParityTests(unittest.TestCase):
         self.assertEqual(set(snapshot), {"schema_version", "exported_at", "calculation"})
         self.assertEqual(
             set(snapshot["calculation"]),
-            {"configuration", "legs", "totals", "warnings"},
+            {"config_version", "configuration_state", "data_snapshot", "configuration", "legs", "totals", "warnings", "trace"},
         )
         self.assertEqual(snapshot["schema_version"], "1.0")
+        self.assertEqual(snapshot["calculation"]["config_version"], 1)
+        self.assertEqual(snapshot["calculation"]["trace"]["data_revision"], 1)
 
 
 if __name__ == "__main__":

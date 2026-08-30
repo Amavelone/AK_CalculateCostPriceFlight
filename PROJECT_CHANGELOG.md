@@ -1,5 +1,36 @@
 # Project Changelog
 
+## 2026-08-30 — Iteration 4: configuration versions and calculation trace
+
+### Изменено
+
+- Добавлен JSON-backed configuration service с active v1 migration, isolated
+  drafts, validation, compare, preview, activation и rollback.
+- Active calculation и exports используют versioned configuration и несут
+  `config_version`, data revision и structured business trace.
+- Введены explicit API DTO/routes и tests для lifecycle, migration, OpenAPI и
+  trace/export snapshot.
+
+### Architecture
+
+- Immutable configuration content и active pointer разделены; rollback
+  реактивирует существующую validated version без переписывания её правил.
+- Обычный Cost Monitor UX не менялся. Admin UI, SQL persistence, auth/RBAC и
+  expression evaluator остаются deferred.
+
+### Проверка
+
+- Backend: 38 тестов пройдены, включая Excel golden master, lifecycle и API
+  contracts.
+- Ruff: PASS.
+- Frontend: strict TypeScript и production build пройдены.
+
+### Git
+
+- Baseline revision: `e7db115` (Iteration 3).
+- Commit: see git history.
+- Branch: `feature/module-architecture`.
+
 ## 2026-08-30 — Iteration 3: typed Cost Monitor configuration model
 
 ### Изменено

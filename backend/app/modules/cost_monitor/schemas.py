@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
+
+from .configuration.schema import CostMonitorConfiguration
 
 
 class LegInput(BaseModel):
@@ -61,6 +63,52 @@ class DraftPayload(BaseModel):
     calculation: CalculationRequest
 
 
+class ConfigurationDraftUpdate(BaseModel):
+    configuration: CostMonitorConfiguration
+
+
+class ConfigurationVersionResponse(BaseModel):
+    version: int
+    state: Literal["active", "inactive"]
+    created_at: str
+    activated_at: str | None
+    validation_status: Literal["valid"]
+    configuration: CostMonitorConfiguration | None = None
+
+
+class ConfigurationDraftResponse(BaseModel):
+    version: int
+    state: Literal["draft"]
+    base_version: int
+    created_at: str
+    updated_at: str
+    validation_status: Literal["valid"]
+    validated_at: str | None = None
+    configuration: CostMonitorConfiguration
+
+
+class ConfigurationComparisonChange(BaseModel):
+    path: str
+    before: Any
+    after: Any
+
+
+class ConfigurationReferenceResponse(BaseModel):
+    version: int
+    state: Literal["active", "inactive", "draft"]
+    created_at: str
+    activated_at: str | None = None
+    updated_at: str | None = None
+    base_version: int | None = None
+    validation_status: Literal["valid"]
+
+
+class ConfigurationCompareResponse(BaseModel):
+    left: ConfigurationReferenceResponse
+    right: ConfigurationReferenceResponse
+    changes: list[ConfigurationComparisonChange]
+
+
 class DetailRow(BaseModel):
     airport: str
     service: str
@@ -116,6 +164,25 @@ class DataSnapshotResponse(BaseModel):
     routes: int
 
 
+class CalculationTraceStep(BaseModel):
+    stage: Literal["input", "lookup", "parameters", "operation", "result"]
+    component: str
+    operation: str | None = None
+    values: dict[str, Any]
+
+
+class CalculationTraceLeg(BaseModel):
+    leg_id: str
+    steps: list[CalculationTraceStep]
+
+
+class CalculationTrace(BaseModel):
+    config_version: int
+    configuration_state: Literal["active", "draft"]
+    data_revision: int
+    legs: list[CalculationTraceLeg]
+
+
 class CalculationResponse(BaseModel):
     calculated_at: str
     legs: list[CalculationLegResponse]
@@ -124,3 +191,6 @@ class CalculationResponse(BaseModel):
     status: Literal["complete", "degraded"]
     diagnostics: list[CalculationDiagnostics]
     data_snapshot: DataSnapshotResponse
+    config_version: int
+    configuration_state: Literal["active", "draft"]
+    trace: CalculationTrace

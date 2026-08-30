@@ -1320,7 +1320,7 @@ Python/Excel параметры. Calculation engine принимает validated
 добавлены. Configuration service, versions, activation, rollback и trace
 остаются scope Этапа 4.
 
-## Этап 4 - Configuration Service + Versioning + Trace
+## Этап 4 - Configuration Service + Versioning + Trace: реализован в Iteration 4
 
 - active version;
 - draft;
@@ -1330,6 +1330,12 @@ Python/Excel параметры. Calculation engine принимает validated
 - rollback;
 - audit;
 - calculation trace.
+
+Реализован module-owned JSON-backed lifecycle: baseline мигрирует в immutable
+active v1; drafts отделены от пользовательских calculation drafts; validate,
+compare, preview, atomic activation и rollback доступны через module API.
+Calculation и exports несут config version, data revision и structured business
+trace. SQL Server, authentication/RBAC и admin UI не добавлены.
 
 ## Этап 5 - Admin Contour
 

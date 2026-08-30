@@ -2,15 +2,16 @@
 
 ## Статус и назначение
 
-**Iteration:** 3 — Typed Configuration Model (classification создана в Iteration 2).
-**Статус:** безопасные параметры перенесены в module-owned typed definition и
-code-owned baseline. Runtime versioning, activation service, trace, admin UI и
-новый API в этой итерации не создаются.
+**Iteration:** 4 — Configuration Service, Versions & Trace.
+**Статус:** безопасные параметры живут в versioned runtime configuration с
+immutable active version, isolated drafts, validation, compare, activation,
+rollback и calculation trace. Admin UI и SQL persistence в этой итерации не
+создаются.
 
 Документ фиксирует фактические правила foundation-версии и их текущее место
 ответственности. Typed baseline воспроизводит прежние Python/Excel значения и
-защищён Excel golden master. Его изменение пока требует deploy: lifecycle
-runtime-версий относится к Iteration 4.
+защищён Excel golden master. Изменение безопасных параметров проходит через
+draft → validation → activation, а не редактирует active version напрямую.
 
 | Категория | Значение в этом проекте |
 |---|---|
@@ -78,17 +79,22 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 | LP-08 | Пустой workbook section очищает прошлые values; failed full refresh сохраняет active dataset | source lifecycle | Reliability invariant, введённый в Iteration 1; не возвращать старое sticky/partial behaviour. |
 | LP-09 | Worksheet names, column positions и `Прочее!27` bindings | monitor/SRV/fuel adapters | Physical Excel binding; позднее может стать validated source mapping, сейчас не менять без adapter scope. |
 
-## Iteration 3 result and deferred decisions
+## Iteration 4 result and deferred decisions
 
-- Iteration 3 создала **только** module-owned typed configuration definition и
-  code-owned baseline config для CF-01…CF-07/CF-09 там, где schema это безопасно
-  допускает. Baseline сохраняет текущие значения и Excel parity.
+- Iteration 3 создала module-owned typed definition и baseline config для
+  CF-01…CF-07/CF-09. Iteration 4 добавила JSON-backed configuration service:
+  v1 мигрирует из baseline, active version immutable, drafts изолированы,
+  activation/rollback атомарно меняют только active pointer.
 - Runtime payload не принимает произвольные поля, пути или код; переменные и
   primitives зарегистрированы явными whitelist, но expression evaluator не создан.
+- Calculation result и exports несут `config_version`, data revision и
+  structured trace фактически использованных inputs/lookups/parameters/
+  operations/results.
 - Не переносить CI-01…CI-07, LP-01…LP-09 или raw Excel/SQL column names в
   arbitrary config. Они остаются code/adapters/legacy contracts до отдельного
   решения.
-- Iteration 4, а не эта итерация, добавляет versions, draft/validate/activate,
-  rollback, config identity и calculation trace.
-- SQL Server, второй монитор, shared platform extraction и no-code builder
+- Iteration 5, а не эта итерация, добавляет read-only admin contour и только
+  затем рассматривает UI для безопасного editing.
+- SQL Server, второй монитор, shared platform extraction, authentication/RBAC
+  и no-code builder
   остаются `DEFERRED`.

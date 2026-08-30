@@ -10,8 +10,25 @@ from fastapi import APIRouter, File, HTTPException, Request, Response, UploadFil
 from ...core.config import settings
 from .calculation import calculate
 from .catalog import tariffs_for_view
+from .configuration import (
+    ConfigurationConflictError,
+    ConfigurationNotFoundError,
+    ConfigurationService,
+    ConfigurationValidationError,
+    JsonConfigurationRepository,
+)
 from .exports import build_export_snapshot, export_filename, json_bytes, xlsx_bytes
-from .schemas import CalculationRequest, CalculationResponse, DraftPayload, ManualTariffInput, SourceConfigUpdate
+from .schemas import (
+    CalculationRequest,
+    CalculationResponse,
+    ConfigurationCompareResponse,
+    ConfigurationDraftResponse,
+    ConfigurationDraftUpdate,
+    ConfigurationVersionResponse,
+    DraftPayload,
+    ManualTariffInput,
+    SourceConfigUpdate,
+)
 from .sources import (
     activate_staged_source,
     find_active_file,
@@ -26,6 +43,7 @@ from .store import JsonStore, utc_now
 
 router = APIRouter()
 store = JsonStore(settings)
+configuration_service = ConfigurationService(JsonConfigurationRepository(store))
 COOKIE_NAME = "cost_monitor_draft"
 
 
@@ -63,6 +81,16 @@ def get_source_or_404(state: dict[str, Any], source_id: str) -> dict[str, Any]:
         return source_by_id(state, source_id)
     except KeyError as error:
         raise HTTPException(status_code=404, detail="Источник не найден") from error
+
+
+def configuration_error_to_http(error: Exception) -> HTTPException:
+    if isinstance(error, ConfigurationNotFoundError):
+        return HTTPException(status_code=404, detail=str(error))
+    if isinstance(error, ConfigurationConflictError):
+        return HTTPException(status_code=409, detail=str(error))
+    if isinstance(error, ConfigurationValidationError):
+        return HTTPException(status_code=422, detail=str(error))
+    return HTTPException(status_code=500, detail="Не удалось обработать configuration")
 
 
 @router.get("/api/health")
@@ -127,7 +155,8 @@ def save_current_draft(payload: DraftPayload, request: Request, response: Respon
 
 @router.post("/api/calculations", response_model=CalculationResponse)
 def calculate_cost(payload: CalculationRequest) -> dict[str, Any]:
-    return calculate(store.read(), payload)
+    active = configuration_service.active()
+    return calculate(store.read(), payload, active["configuration"], active["version"], active["state"])
 
 
 @router.post("/api/exports/{file_format}")
@@ -140,7 +169,8 @@ def export_calculation(file_format: str, payload: CalculationRequest) -> Respons
 
     if file_format not in {"json", "xlsx"}:
         raise HTTPException(status_code=404, detail="Формат выгрузки не поддерживается")
-    result = calculate(store.read(), payload)
+    active = configuration_service.active()
+    result = calculate(store.read(), payload, active["configuration"], active["version"], active["state"])
     snapshot = build_export_snapshot(payload, result)
     content = json_bytes(snapshot) if file_format == "json" else xlsx_bytes(snapshot)
     media_type = "application/json; charset=utf-8" if file_format == "json" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -150,6 +180,81 @@ def export_calculation(file_format: str, payload: CalculationRequest) -> Respons
         media_type=media_type,
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
     )
+
+
+@router.get("/api/configuration/active", response_model=ConfigurationVersionResponse)
+def active_configuration() -> dict[str, Any]:
+    try:
+        active = configuration_service.active()
+        active["configuration"] = active["configuration"].model_dump(mode="json")
+        return active
+    except Exception as error:
+        raise configuration_error_to_http(error) from error
+
+
+@router.get("/api/configuration/versions", response_model=list[ConfigurationVersionResponse])
+def list_configuration_versions() -> list[dict[str, Any]]:
+    try:
+        return configuration_service.list_versions()
+    except Exception as error:
+        raise configuration_error_to_http(error) from error
+
+
+@router.post("/api/configuration/drafts", response_model=ConfigurationDraftResponse, status_code=201)
+def create_configuration_draft() -> dict[str, Any]:
+    try:
+        return configuration_service.create_draft()
+    except Exception as error:
+        raise configuration_error_to_http(error) from error
+
+
+@router.put("/api/configuration/drafts/{version}", response_model=ConfigurationDraftResponse)
+def update_configuration_draft(version: int, payload: ConfigurationDraftUpdate) -> dict[str, Any]:
+    try:
+        return configuration_service.update_draft(version, payload.configuration.model_dump(mode="json"))
+    except Exception as error:
+        raise configuration_error_to_http(error) from error
+
+
+@router.post("/api/configuration/drafts/{version}/validate", response_model=ConfigurationDraftResponse)
+def validate_configuration_draft(version: int) -> dict[str, Any]:
+    try:
+        return configuration_service.validate_draft(version)
+    except Exception as error:
+        raise configuration_error_to_http(error) from error
+
+
+@router.get("/api/configuration/compare/{left_version}/{right_version}", response_model=ConfigurationCompareResponse)
+def compare_configuration_versions(left_version: int, right_version: int) -> dict[str, Any]:
+    try:
+        return configuration_service.compare(left_version, right_version)
+    except Exception as error:
+        raise configuration_error_to_http(error) from error
+
+
+@router.post("/api/configuration/drafts/{version}/preview", response_model=CalculationResponse)
+def preview_configuration_draft(version: int, payload: CalculationRequest) -> dict[str, Any]:
+    try:
+        configuration = configuration_service.draft_configuration(version)
+        return calculate(store.read(), payload, configuration, version, "draft")
+    except Exception as error:
+        raise configuration_error_to_http(error) from error
+
+
+@router.post("/api/configuration/drafts/{version}/activate", response_model=ConfigurationVersionResponse)
+def activate_configuration_draft(version: int) -> dict[str, Any]:
+    try:
+        return configuration_service.activate(version)
+    except Exception as error:
+        raise configuration_error_to_http(error) from error
+
+
+@router.post("/api/configuration/rollback/{version}", response_model=ConfigurationVersionResponse)
+def rollback_configuration(version: int) -> dict[str, Any]:
+    try:
+        return configuration_service.rollback(version)
+    except Exception as error:
+        raise configuration_error_to_http(error) from error
 
 
 @router.get("/api/sources")

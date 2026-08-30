@@ -60,7 +60,7 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(loaded_json["calculation"]["totals"], snapshot["calculation"]["totals"])
 
         workbook = load_workbook(BytesIO(xlsx_bytes(snapshot)), data_only=True)
-        self.assertEqual(workbook.sheetnames, ["РАСЧЕТ", "ДЕТАЛИЗАЦИЯ", "ПАРАМЕТРЫ"])
+        self.assertEqual(workbook.sheetnames, ["РАСЧЕТ", "ДЕТАЛИЗАЦИЯ", "ПАРАМЕТРЫ", "TRACE"])
         calculation_sheet = workbook["РАСЧЕТ"]
         self.assertEqual(calculation_sheet["A1"].value, "Номер плеча")
         self.assertEqual(calculation_sheet["C2"].value, "AAA-DME")
@@ -69,6 +69,8 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(calculation_sheet["P3"].value, snapshot["calculation"]["totals"]["m2"])
         self.assertEqual(calculation_sheet["Q3"].value, snapshot["calculation"]["totals"]["m3"])
         self.assertGreater(workbook["ДЕТАЛИЗАЦИЯ"].max_row, 1)
+        self.assertGreater(workbook["TRACE"].max_row, 1)
+        self.assertEqual(workbook["TRACE"]["A2"].value, result["config_version"])
 
 
 if __name__ == "__main__":
