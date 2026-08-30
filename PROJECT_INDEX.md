@@ -34,7 +34,7 @@ Frontend:
 
 - `backend/app/modules/cost_monitor/calculation.py` — источник истины для всех формул Cost
   Monitor; `calculate(state, request)` возвращает legs, totals, warnings и
-  краткую data revision.
+  `data_snapshot` с активной ревизией и краткими счетчиками данных.
 - `backend/app/modules/cost_monitor/exports.py` — единый export snapshot и JSON/XLSX writers;
   не должен выполнять тарифные lookup или изменять результат.
 
@@ -60,7 +60,7 @@ Frontend:
 - `frontend/src/features/cost-monitor/CostMonitorApp.tsx` — application shell,
   autosave, data refresh и API orchestration.
 - `frontend/src/features/cost-monitor/pages/` — отдельные страницы калькулятора,
-  источников, тарифов и настроек с неизменной JSX-разметкой.
+  источников, тарифов и настроек.
 - `frontend/src/features/cost-monitor/formatting.ts` — общие форматтеры чисел,
   сумм и времени для feature-страниц.
 - `frontend/src/styles.css` — все стили приложения.
@@ -88,7 +88,7 @@ Frontend:
   characterization текущего partial refresh.
 - Backend: `$env:PYTHONPATH=(Resolve-Path .\backend).Path; .\.venv\Scripts\python -m unittest discover -s .\backend\tests -v`.
 - Frontend: `cd frontend; pnpm build` (strict TypeScript + Vite production build).
-- Текущий полный набор: 25 backend tests.
+- Текущий полный набор: 26 backend tests.
 
 ## Documentation and analysis
 

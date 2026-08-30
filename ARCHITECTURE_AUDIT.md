@@ -2,9 +2,8 @@
 
 Дата аудита: 2026-08-30  
 Репозиторий: `Web view monitors`  
-Текущая ветка: `main`  
-Исходное состояние working tree: clean  
-Проверенный commit: `7a43b6f feat: export calculation results to json and xlsx`
+Текущая ветка: `codex/architecture-foundation`
+Проверенный commit: `603637a feat: complete cost monitor architecture foundation`
 
 Implementation update (2026-08-30): на ветке
 `codex/architecture-foundation` выполнен первый этап миграции. Добавлен
@@ -89,8 +88,8 @@ runtime-конфигурация.
 - CORS ограничен двумя локальными origin, cookie `HttpOnly` и `SameSite=Lax`.
 - Frontend собирается со strict TypeScript; централизованный API client одинаково
   обрабатывает основные HTTP-ошибки.
-- Предупреждения расчётного ядра выводятся пользователю, а активная data revision
-  отображается на экране.
+- Предупреждения расчётного ядра выводятся пользователю; активная data revision
+  возвращается в API-результате, но отдельный UI-блок для неё удалён.
 - Нет circular dependencies, избыточного DI, repository на каждую сущность,
   Redux/Zustand или других преждевременных enterprise-абстракций.
 - Текущие `useState/useEffect` достаточны. Реальной необходимости во внешнем
@@ -300,18 +299,18 @@ Must preserve: Нынешние имена полей и observable status codes
 ### F-10
 
 Status: PARTIALLY ADDRESSED — добавлен Excel-owned пяти-плечевой golden master,
-API/export shape и reliability characterization; parser fixtures и расширенная
-scenario matrix ещё нужны.  
+API/export shape, parser characterization и reliability tests; расширенная
+scenario matrix ещё нужна.
 
 ID: F-10  
 Severity: HIGH as a refactoring gate; MEDIUM for the unchanged local MVP  
 Area: Tests / Excel parity  
-Current behavior: 15 backend unit tests проверяют отдельные synthetic cases,
-JSON/XLSX packaging, preview и базовую persistence migration. В Git нет Excel
-fixture или golden expected snapshot. Нет автоматической проверки полного
-пяти-плечевого контрольного сценария из README, по-плечевых компонентов,
-нормализованных таблиц и source ordering. Нет API integration, concurrency,
-partial refresh, invalid/large upload или frontend tests.  
+Current behavior: 26 backend tests проверяют synthetic cases, JSON/XLSX
+packaging, preview, persistence migration, partial refresh, parser
+characterization и Excel-owned пяти-плечевой golden master. Golden fixture
+сверяет все компоненты каждого плеча и итоговые М1/М2/М3 с утвержденными
+кэшированными значениями Excel. Нет проверки исходной книги через Excel runtime,
+concurrency, invalid/large upload или frontend tests.
 Why it is a problem: Текущие тесты не доказывают calculation parity с эталонным
 Excel и недостаточны для безопасного перемещения/разбиения расчётного кода.  
 When it becomes a problem: При первом существенном архитектурном refactoring,
@@ -353,15 +352,14 @@ Severity: LOW
 Area: Build/configuration portability  
 Current behavior: Backend dependencies заданы диапазонами без lock-файла и без
 зафиксированной версии Python; default source path содержит конкретный
-`C:/Users/soale/Downloads`. Frontend имеет lock-файл. README заканчивается
-случайной NUL/UTF-16 строкой заголовка.  
+`C:/Users/soale/Downloads`. Frontend имеет lock-файл.
 Why it is a problem: Новое окружение может получить иной dependency graph или
-локальный path, а документация содержит артефакт кодировки.  
+локальный path.
 When it becomes a problem: При CI, onboarding, deployment или обновлении
 окружения.  
 Suggested direction: Зафиксировать поддерживаемую Python version и
 воспроизводимый backend lock после выбора packaging tool; оставить source path
-только environment/config default. Отдельно очистить README.  
+только environment/config default.
 Must preserve: Возможность переопределения путей environment variables.
 
 Не обнаружены: circular dependencies, скрытый global state внутри calculator,
@@ -441,7 +439,7 @@ Redis, broker, microservices и background workers сейчас добавлят
 ## 8. Testability
 
 Сильная сторона — pure-ish calculator и небольшое число зависимостей. Текущие
-21 tests быстры и покрывают:
+26 tests быстры и покрывают:
 
 - first-match tariff и сумму нескольких legs;
 - catering toggle, АК fuel, techstop, missing route/fuel warnings;
@@ -454,14 +452,13 @@ Redis, broker, microservices и background workers сейчас добавлят
 
 Критические пробелы:
 
-- нет golden master относительно реального Excel;
-- не проверяются все компоненты каждого плеча и финальные значения контрольных
-  пяти плеч;
-- нет parser fixtures для SRV/registry/monitor workbook и проверки physical
-  order/duplicates;
+- golden master использует кэшированные значения утвержденного Excel, а не
+  запуск Excel runtime;
+- нет versioned fixtures из реальных SRV/registry/monitor workbook и полной
+  проверки physical order/duplicates;
 - нет CBR rate/date fixture или test fallback metadata;
-- нет partial refresh/stale/invalid workbook/atomic activation tests;
-- нет API response/contract/status-code tests;
+- нет stale/invalid workbook/atomic activation tests;
+- нет API response/status-code contract tests;
 - нет multi-process/concurrency/lost-update tests;
 - нет frontend tests на autosave race, warnings и backend-driven details.
 
@@ -571,7 +568,7 @@ adapters, вызываемые application layer.
 - Зафиксировать current API response shapes и export content contract tests.
 - Покрыть partial refresh, fallback и duplicate/input invariants как текущее
   поведение, не исправляя формулы.
-- Exit criterion: нынешние 15 tests, parity suite и frontend build проходят.
+- Exit criterion: нынешние 26 tests, parity suite и frontend build проходят.
 
 ### Stage 2 — Split frontend by feature (feature boundary established; component split pending)
 

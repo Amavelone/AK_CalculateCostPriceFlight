@@ -80,7 +80,10 @@ class ExcelParityTests(unittest.TestCase):
 
         result_with_legacy_source = calculate(state_with_legacy_source, self.request)
 
-        self.assertEqual(result_with_legacy_source, self.result)
+        self.assertEqual(
+            {key: value for key, value in result_with_legacy_source.items() if key != "calculated_at"},
+            {key: value for key, value in self.result.items() if key != "calculated_at"},
+        )
 
     def test_calculation_and_export_contract_shape_is_frozen(self) -> None:
         self.assertEqual(
