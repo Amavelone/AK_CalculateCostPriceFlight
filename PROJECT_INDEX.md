@@ -101,6 +101,8 @@ Frontend:
 - `docs/AK_CalculateCostPriceFlight_Архитектурное_ТЗ_и_спецификация.md` —
   единственный канонический архитектурный документ: целевая модель,
   инварианты, roadmap и правила выполнения итераций.
+- `docs/COST_MONITOR_CONFIGURATION_INVENTORY.md` — Iteration 2 classification
+  текущих правил: `CODE_INVARIANT` / `CONFIGURABLE` / `DATA` / `LEGACY_PARITY`.
 - `ARCHITECTURE_AUDIT.md` — исторический аудит foundation-версии и исходные
   findings; не является текущим canonical architecture reference.
 - `PROJECT_CHANGELOG.md` — значимые технические изменения от этого аудита.

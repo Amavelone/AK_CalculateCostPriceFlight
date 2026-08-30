@@ -1,5 +1,30 @@
 # Project Changelog
 
+## 2026-08-30 — Iteration 2: Cost Monitor configuration inventory
+
+### Изменено
+
+- Добавлен `docs/COST_MONITOR_CONFIGURATION_INVENTORY.md` с полной
+  классификацией fuel, НО, АНО, catering, VAT, techstop, M1/M2/M3, lookups,
+  rounding, source bindings и fallback rules.
+
+### Architecture
+
+- Отделены module code invariants, будущие safe runtime parameters, business
+  data и Excel/Power Query legacy parity. Configuration engine, versions,
+  trace и admin contour сознательно не создавались.
+
+### Проверка
+
+- Backend: 29 тестов и Excel golden master пройдены.
+- Ruff: PASS.
+- Frontend: strict TypeScript и production build пройдены.
+
+### Git
+
+- Commit: see git history.
+- Branch: `feature/module-architecture`.
+
 ## 2026-08-30 — Iteration 1: module code foundation
 
 ### Изменено

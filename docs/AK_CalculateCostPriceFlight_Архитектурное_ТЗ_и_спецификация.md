@@ -1294,13 +1294,17 @@ git remote -v
 - httpx CBR adapter;
 - upload/preview safety.
 
-## Этап 2 - Configuration Inventory
+## Этап 2 - Configuration Inventory: реализован в Iteration 2
 
 Для каждого правила:
 
 ```text
 CODE_INVARIANT / CONFIGURABLE / DATA / LEGACY_PARITY
 ```
+
+Результат зафиксирован в `docs/COST_MONITOR_CONFIGURATION_INVENTORY.md`.
+Никакой configuration engine, baseline runtime config или admin UI на этом
+этапе не добавляются.
 
 ## Этап 3 - Typed Configuration Model
 
