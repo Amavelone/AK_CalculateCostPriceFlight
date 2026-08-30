@@ -6,9 +6,9 @@ from io import BytesIO
 
 from openpyxl import load_workbook
 
-from app.schemas import CalculationRequest
-from app.services.calculator import calculate
-from app.services.exports import build_export_snapshot, json_bytes, xlsx_bytes
+from app.modules.cost_monitor.calculation import calculate
+from app.modules.cost_monitor.exports import build_export_snapshot, json_bytes, xlsx_bytes
+from app.modules.cost_monitor.schemas import CalculationRequest
 
 
 class ExportTests(unittest.TestCase):

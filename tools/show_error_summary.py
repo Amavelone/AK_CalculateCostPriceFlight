@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Print cached formula error inventory for the monitor workbook."""
+"""Печатает перечень сохранённых ошибок формул в книге монитора."""
 
 from __future__ import annotations
 

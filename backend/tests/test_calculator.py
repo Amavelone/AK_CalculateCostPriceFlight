@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import unittest
 
-from app.schemas import CalculationRequest
-from app.services.calculator import calculate
+from app.modules.cost_monitor.calculation import calculate
+from app.modules.cost_monitor.schemas import CalculationRequest
 
 
 class CalculatorTests(unittest.TestCase):

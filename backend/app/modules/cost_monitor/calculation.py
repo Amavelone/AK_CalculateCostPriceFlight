@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 from math import ceil
 from typing import Any
 
-from ..schemas import CalculationRequest, LegInput
-from .sources import normalize_key, tariffs_for_view
+from .catalog import normalize_key, tariffs_for_view
+from .schemas import CalculationRequest, LegInput
 
 
 def round_currency(value: float) -> float:
@@ -18,8 +18,8 @@ def first_rate(index: dict[str, dict[str, Any]], airport: str, service: str) -> 
 
 def build_tariff_index(state: dict[str, Any]) -> dict[str, dict[str, Any]]:
     index: dict[str, dict[str, Any]] = {}
-    # `setdefault` intentionally preserves the first physical item, the same
-    # current baseline behavior as Excel VLOOKUP against ЦРТ_Check.
+    # `setdefault` намеренно сохраняет первую физическую строку — это повторяет
+    # действующее поведение ВПР Excel по таблице ЦРТ_Check.
     for tariff in tariffs_for_view(state):
         index.setdefault(f"{tariff['airport']}-{tariff['service']}", tariff)
     return index
@@ -33,7 +33,11 @@ def add_service(
     volume: float,
     divisor: float = 1,
 ) -> float:
-    """Calculate a НО line with Excel's volume × rate ÷ divisor semantics."""
+    """Рассчитывает строку НО по правилу Excel: объём × ставка ÷ делитель.
+
+    Если тариф или объём отсутствует, строка не добавляется в детализацию и
+    возвращается ноль, как в действующей книге.
+    """
 
     tariff = first_rate(tariff_index, airport, service)
     if not tariff or not volume:
@@ -59,7 +63,11 @@ def calculate_ground(
     line_type: str,
     is_techstop: bool,
 ) -> tuple[float, list[dict[str, Any]]]:
-    """Reproduces normal and tech-stop НО blocks from the current workbook."""
+    """Воспроизводит обычный и техстоповый блоки НО действующей книги.
+
+    Состав услуг, объёмы и делители зависят от типа линии и признака техстопа;
+    порядок добавления сохраняет семантику первого совпадения Excel.
+    """
 
     departure = normalize_key(leg.departure)
     arrival = normalize_key(leg.arrival)
@@ -67,7 +75,7 @@ def calculate_ground(
     details: list[dict[str, Any]] = []
 
     if is_techstop:
-        # НО rows 33:38. The fire truck is a fixed current workbook value.
+        # Строки НО 33:38. Пожарная машина — фиксированное значение текущей книги.
         ground = 0.0
         ground += add_service(details, tariff_index, departure, "ВЗЛЕТ-ПОСАДКА", aircraft_factor)
         ground += add_service(details, tariff_index, departure, "ТРАНСПБЕЗОП", aircraft_factor)
@@ -87,8 +95,8 @@ def calculate_ground(
         )
         return ground + fire_truck, details
 
-    # НО rows 6:24. Passenger and terminal services apply in mutually
-    # exclusive domestic/international branches exactly as Excel does.
+    # Строки НО 6:24. Пассажирские и аэровокзальные услуги применяются во
+    # взаимоисключающих ветках ВВЛ/МВЛ в точности как в Excel.
     is_domestic = line_type == "ВВЛ"
     passenger_volume = float(leg.passengers)
     terminal_departure = passenger_volume if is_domestic else 0.0
@@ -136,8 +144,8 @@ def calculate_leg(
     route_key = f"{departure}-{arrival}"
     routes: dict[str, dict[str, Any]] = {}
     for candidate in state.get("routes", []):
-        # ИШР is also searched by VLOOKUP, therefore a duplicate route keeps
-        # the first physical row rather than the last parsed one.
+        # ИШР также ищется через ВПР, поэтому при дубликате маршрута сохраняется
+        # первая физическая строка, а не последняя прочитанная.
         routes.setdefault(candidate["key"], candidate)
     route = routes.get(route_key)
     warnings: list[str] = []
@@ -183,8 +191,8 @@ def calculate_leg(
                 if departure:
                     warnings.append(f"Не найдена ставка {service} для {departure}.")
                 continue
-            # Both КЕРОСИН and ЗАПРАВКА ВС use the fuel-tonnage volume in
-            # НО rows 3–4 (and the analogous tech-stop rows 30–31).
+            # КЕРОСИН и ЗАПРАВКА ВС используют объём топлива в тоннах в строках
+            # НО 3–4 и в соответствующих строках техстопа 30–31.
             volume = fuel_tons
             amount = float(tariff["rate"]) * volume
             fuel += amount
@@ -307,8 +315,8 @@ def calculate_leg(
             "m3": round_currency(margins[2]),
         },
         "totals": {level: round_currency(value) for level, value in raw_totals.items()},
-        # This is removed before returning API output. Excel's bottom line sums
-        # full-precision row formulas and only then formats the result.
+        # Поле удаляется перед ответом API. Итоговая строка Excel суммирует
+        # формулы полной точности и только затем форматирует результат.
         "_raw_totals": raw_totals,
         "details": {
             "fuel": fuel_detail,

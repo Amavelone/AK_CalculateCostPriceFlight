@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only duplicate-key analysis for the tariff table used by VLOOKUP."""
+"""Анализирует дубликаты ключей таблицы тарифов для ВПР без изменения книги."""
 
 from __future__ import annotations
 

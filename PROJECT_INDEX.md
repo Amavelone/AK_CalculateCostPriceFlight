@@ -1,0 +1,131 @@
+# Project Index
+
+Карта отражает текущее состояние репозитория на 2026-08-30. Целевая структура и
+порядок миграции описаны в `ARCHITECTURE_AUDIT.md`.
+
+## Entry Points
+
+Backend:
+- `backend/app/main.py` — FastAPI composition root: middleware, Cost Monitor
+  router и раздача `frontend/dist`.
+- Dev: `python -m uvicorn app.main:app --app-dir backend --reload --port 8000`.
+
+Frontend:
+- `frontend/src/main.tsx` — React bootstrap.
+- `frontend/src/App.tsx` — стабильный root entry, реэкспортирующий Cost Monitor
+  feature.
+- Dev: `cd frontend; pnpm dev`.
+
+## Backend
+
+### Cost Monitor feature
+
+- `backend/app/modules/cost_monitor/api.py` — feature router, JSON store
+  composition, health/dashboard, calculation/options, drafts, exports,
+  sources/upload/refresh/preview, tariffs, routes и audit.
+- `backend/app/modules/cost_monitor/schemas.py` — request DTO: legs/settings,
+  source update, manual tariff и draft payload. Явных response DTO пока нет.
+- `backend/app/modules/cost_monitor/catalog.py` — нормализация ключей и stable
+  imported-before-manual tariff view shared by calculation and source import.
+- `backend/app/modules/cost_monitor/store.py` — default state, миграция,
+  атомарный JSON read/mutate, audit log и data revision этого feature.
+
+### Calculation and export
+
+- `backend/app/modules/cost_monitor/calculation.py` — источник истины для всех формул Cost
+  Monitor; `calculate(state, request)` возвращает legs, totals, warnings и
+  краткую data revision.
+- `backend/app/modules/cost_monitor/exports.py` — единый export snapshot и JSON/XLSX writers;
+  не должен выполнять тарифные lookup или изменять результат.
+
+### Data sources
+
+- `backend/app/modules/cost_monitor/sources.py` — оркестрация применения
+  результатов импорта к активному состоянию.
+- `backend/app/modules/cost_monitor/source_files.py` — выбор latest file,
+  безопасная публикация upload и raw workbook preview.
+- `backend/app/modules/cost_monitor/parsers/` — общие преобразования и
+  изолированные SRV, fuel/CBR и monitor-workbook парсеры.
+- `backend/data/store.json` — runtime data, drafts и audit; игнорируется Git.
+
+### Persistence and configuration
+
+- `backend/app/core/config.py` — project/data/source paths из environment.
+- Environment: `MONITOR_DATA_DIRECTORY`, `MONITOR_SOURCE_DIRECTORY`.
+
+## Frontend
+
+### App and pages
+
+- `frontend/src/features/cost-monitor/CostMonitorApp.tsx` — application shell,
+  autosave, data refresh и API orchestration.
+- `frontend/src/features/cost-monitor/pages/` — отдельные страницы калькулятора,
+  источников, тарифов и настроек с неизменной JSX-разметкой.
+- `frontend/src/features/cost-monitor/formatting.ts` — общие форматтеры чисел,
+  сумм и времени для feature-страниц.
+- `frontend/src/styles.css` — все стили приложения.
+
+### API and types
+
+- `frontend/src/features/cost-monitor/api.ts` — Cost Monitor `/api` client,
+  upload и calculation export download.
+- `frontend/src/features/cost-monitor/types.ts` — вручную поддерживаемые
+  TypeScript request/response types.
+- `frontend/src/features/cost-monitor/index.ts` — feature entry.
+- `frontend/vite.config.ts` — dev proxy `/api -> localhost:8000`.
+
+## Tests and validation
+
+- `backend/tests/test_calculator.py` — synthetic calculation cases.
+- `backend/tests/test_sources.py` — parser fixtures, preview, manual conflict,
+  source errors и CBR fallback.
+- `backend/tests/test_exports.py` — shared JSON/XLSX snapshot packaging.
+- `backend/tests/test_store.py` — JSON persistence и legacy revision migration.
+- `backend/tests/test_excel_parity.py` и
+  `backend/tests/fixtures/excel_cost_monitor_baseline.json` — Excel-owned
+  пяти-плечевой golden master и calculation/export shape.
+- `backend/tests/test_api_contract.py` — стабильный набор API operations и
+  characterization текущего partial refresh.
+- Backend: `$env:PYTHONPATH=(Resolve-Path .\backend).Path; .\.venv\Scripts\python -m unittest discover -s .\backend\tests -v`.
+- Frontend: `cd frontend; pnpm build` (strict TypeScript + Vite production build).
+- Текущий полный набор: 25 backend tests.
+
+## Documentation and analysis
+
+- `README.md` — local setup, validation commands и runtime overview.
+- `ARCHITECTURE_AUDIT.md` — findings, target architecture и staged migration.
+- `PROJECT_CHANGELOG.md` — значимые технические изменения от этого аудита.
+- `docs/cost-monitor-business-logic.md` — утверждённый calculation baseline.
+- `docs/cost-monitor-analysis.md` — reverse engineering исходного Excel.
+- `docs/cost-monitor-dependency-map.md` — Excel и web data flow.
+- `docs/cost-monitor-architecture-plan.md` — первоначальное решение MVP.
+- `analysis/xlsx-inventory.json` и `tools/*.py` — исследовательские артефакты и
+  скрипты инвентаризации; не входят в production runtime.
+
+## Important invariants
+
+- Preserve behavior first; improve architecture second.
+- Excel calculation parity, physical first-match order, formulas, rounding и
+  итоговые M1/M2/M3 нельзя менять неявно.
+- Frontend не должен становиться источником calculation formulas; backend result
+  и details — источник истины.
+- JSON и XLSX exports должны представлять один completed calculation snapshot.
+- Manual tariffs дополняют отсутствующие ключи, не override imported tariff;
+  imported rows идут первыми.
+- Failed source parse не должен уничтожать предыдущие активные parsed data.
+- `PROJECT_INDEX.md` обновляется после изменения структуры/ответственностей.
+- `PROJECT_CHANGELOG.md` обновляется после значимых изменений проекта.
+- Перед существенным refactoring нужен Excel-owned golden-master parity suite.
+
+## Known architecture seams
+
+- Backend Cost Monitor сгруппирован по feature; файловый ввод, семейства
+  парсеров, оркестрация источников и JSON adapter имеют отдельные границы.
+- Frontend страницы разделены; следующий безопасный seam — hooks только после
+  фиксации autosave/API sequence отдельными тестами.
+- Клиентская детализация АНО/питания/НДС всё ещё повторяет формулы. Переход на
+  backend `details` требует сначала зафиксировать контракт округления, иначе
+  возможно незаметное изменение отображаемой суммы на пограничных значениях.
+- `JsonStore` безопасен только для одного процесса; shared deployment требует
+  транзакционного persistence.
+- Текущая рабочая ветка — `codex/architecture-foundation`.

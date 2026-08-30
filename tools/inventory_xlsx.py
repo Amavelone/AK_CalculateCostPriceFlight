@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Read-only structural inventory for OOXML Excel workbooks.
+"""Строит структурный инвентарь рабочих книг Excel в формате OOXML.
 
-Uses only Python's standard library and never writes to input workbooks.
-The JSON output is intentionally compact: it records workbook structure,
-formula patterns, cross-sheet links, and representative values for analysis.
+Скрипт использует только стандартную библиотеку Python, работает в режиме
+чтения и никогда не изменяет исходные книги. Компактный JSON фиксирует
+структуру книги, шаблоны формул, межлистовые связи и характерные значения.
 """
 
 from __future__ import annotations
@@ -77,10 +77,10 @@ def parse_a1(reference: str) -> tuple[int, int] | None:
 
 
 def normalise_formula(formula: str, cell_ref: str) -> str:
-    """Convert simple A1 references to relative R1C1-ish markers.
+    """Преобразует простые ссылки A1 в относительные маркеры, близкие к R1C1.
 
-    This intentionally keeps sheet and external references intact, while
-    grouping copied-down/copied-across formula families.
+    Ссылки на листы и внешние книги намеренно остаются неизменными, а формулы,
+    скопированные по строкам или столбцам, объединяются в одно семейство.
     """
     position = parse_a1(cell_ref)
     if position is None:
@@ -100,7 +100,7 @@ def normalise_formula(formula: str, cell_ref: str) -> str:
 
 
 def translate_formula(formula: str, source_ref: str, target_ref: str) -> str:
-    """Translate a shared-formula master from its source cell to a child cell."""
+    """Переносит основную общую формулу из исходной ячейки в дочернюю."""
     source = parse_a1(source_ref)
     target = parse_a1(target_ref)
     if source is None or target is None:
@@ -127,7 +127,7 @@ def translate_formula(formula: str, source_ref: str, target_ref: str) -> str:
 
 
 def looks_like_external_file(value: str) -> bool:
-    """Exclude structured table references such as [#All] or [Column]."""
+    """Отличает внешние файлы от структурированных ссылок вида [#All] или [Column]."""
     candidate = value.lower()
     return ".xls" in candidate or "\\" in value or "/" in value or candidate.startswith("http")
 

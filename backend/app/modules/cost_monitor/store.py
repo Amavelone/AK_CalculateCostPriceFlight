@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
-from .config import Settings
+from ...core.config import Settings
 
 
 def utc_now() -> str:
@@ -17,7 +17,7 @@ def utc_now() -> str:
 
 
 def _default_scenarios() -> dict[str, dict[str, list[float]]]:
-    # Initial, configurable values used until the configuration workbook is parsed.
+    # Настраиваемые начальные значения действуют до чтения книги конфигурации.
     return {
         "ГБ 2026": {
             "733": [78.48, 220.45, 272.17],
@@ -33,15 +33,18 @@ def _default_scenarios() -> dict[str, dict[str, list[float]]]:
 
 
 def build_default_state(source_dir: Path) -> dict[str, Any]:
-    """A small, self-explaining initial state; actual data arrives through refresh."""
+    """Создаёт минимальное начальное состояние до первого обновления источников.
+
+    Значения сценариев и множителей соответствуют текущей рабочей базе, а
+    фактические тарифы, маршруты и цены поступают только из внешних файлов.
+    """
 
     shared_path = str(source_dir)
     return {
         "version": 1,
         "created_at": utc_now(),
-        # Monotonically increasing marker of the active calculation data. It is
-        # not a replacement for historical snapshots, but makes the input state
-        # of a result visible to the user and API clients.
+        # Монотонный номер активного набора расчётных данных. Он не заменяет
+        # снимки истории, но делает версию исходных данных видимой клиентам API.
         "data_revision": 0,
         "data_updated_at": None,
         "source_configs": [
@@ -52,21 +55,6 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
                 "directory": shared_path,
                 "mask": "7480_srv*.xlsx",
                 "parser": "srv_tariffs",
-                "last_status": "not_updated",
-                "last_file": None,
-                "last_updated": None,
-                "last_error": None,
-                "rows_read": 0,
-                "rows_loaded": 0,
-                "preview": [],
-            },
-            {
-                "id": "nad",
-                "label": "Надбавки и скидки NAD",
-                "description": "Файл NAD; текущая Excel-логика отбрасывает его строки без ставки",
-                "directory": shared_path,
-                "mask": "7480_nad*.xlsx",
-                "parser": "nad_baseline",
                 "last_status": "not_updated",
                 "last_file": None,
                 "last_updated": None,
@@ -120,10 +108,10 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
 
 
 class JsonStore:
-    """Thread-safe, atomic local development storage.
+    """Предоставляет потокобезопасное атомарное локальное хранилище JSON.
 
-    Its narrow read/mutate interface is intentionally the seam for a future
-    PostgreSQL repository. No API or calculation service talks to a file directly.
+    Узкий интерфейс чтения и изменения служит границей для будущего репозитория
+    PostgreSQL: API и расчётный модуль не работают с файлом напрямую.
     """
 
     def __init__(self, settings: Settings) -> None:
@@ -137,15 +125,14 @@ class JsonStore:
             self._migrate_state()
 
     def _migrate_state(self) -> None:
-        """Apply small backwards-compatible schema defaults to local stores."""
+        """Добавляет совместимые значения по умолчанию в ранее созданное хранилище."""
 
         with self._lock:
             state = self._read()
             changed = False
             if "data_revision" not in state:
                 has_calculation_data = any(
-                    state.get(key)
-                    for key in ("imported_tariffs", "manual_tariffs", "fuel_prices", "routes")
+                    state.get(key) for key in ("imported_tariffs", "manual_tariffs", "fuel_prices", "routes")
                 )
                 state["data_revision"] = 1 if has_calculation_data else 0
                 changed = True
@@ -156,6 +143,15 @@ class JsonStore:
                     if source.get("last_updated")
                 ]
                 state["data_updated_at"] = max(timestamps) if timestamps else None
+                changed = True
+            source_configs = state.get("source_configs", [])
+            active_source_configs = [
+                source
+                for source in source_configs
+                if source.get("parser") in {"srv_tariffs", "fuel_registry", "monitor_workbook"}
+            ]
+            if len(active_source_configs) != len(source_configs):
+                state["source_configs"] = active_source_configs
                 changed = True
             if changed:
                 self._write(state)
@@ -194,7 +190,7 @@ class JsonStore:
         del events[:-100]
 
     def mark_calculation_data_changed(self, state: dict[str, Any]) -> int:
-        """Advance the active data revision after a successful data mutation."""
+        """Повышает ревизию активных данных после успешного изменения источников."""
 
         revision = int(state.get("data_revision", 0)) + 1
         state["data_revision"] = revision

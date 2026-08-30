@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Print compact source workbook headers and representative rows."""
+"""Печатает заголовки и характерные строки исходных рабочих книг."""
 
 from __future__ import annotations
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Print detailed, review-friendly information for the primary workbook."""
+"""Печатает подробные сведения об основной книге в удобном для проверки виде."""
 
 from __future__ import annotations
 

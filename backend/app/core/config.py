@@ -7,7 +7,11 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class Settings:
-    """Runtime paths. Environment variables deliberately override local defaults."""
+    """Содержит пути среды выполнения с поддержкой переменных окружения.
+
+    Явно заданные переменные окружения имеют приоритет над локальными
+    значениями по умолчанию, чтобы конфигурация подходила для разных сред.
+    """
 
     project_root: Path
     data_dir: Path

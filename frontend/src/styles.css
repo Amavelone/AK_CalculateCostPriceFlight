@@ -58,8 +58,6 @@ input:checked + .switch::after { transform: translateX(15px); }
 .segmented button { flex: 1; border: 0; border-radius: 5px; background: transparent; color: #718397; font-size: 12px; font-weight: 700; }
 .segmented button.selected { color: #167fdd; background: #fff; box-shadow: 0 1px 3px rgba(52, 82, 105, .12); }
 .toggle-caption { display: flex; gap: 9px; align-items: center; height: 37px; color: #41566b; font-size: 12px; }
-.snapshot { display: grid; gap: 6px; padding: 1px 0; color: #7b8c9c; font-size: 11px; }
-.snapshot b { color: #53687c; font-size: 12px; white-space: nowrap; }
 
 .calculator-layout { display: grid; grid-template-columns: minmax(610px, 1fr) 282px; gap: 18px; align-items: start; }
 .legs-card { padding: 21px 22px; }

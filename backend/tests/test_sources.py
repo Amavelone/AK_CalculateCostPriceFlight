@@ -2,11 +2,104 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from datetime import time
 from pathlib import Path
+from unittest.mock import patch
 
 from openpyxl import Workbook
 
-from app.services.sources import mark_source_error, refresh_source, tariffs_for_view, workbook_preview
+from app.modules.cost_monitor.catalog import tariffs_for_view
+from app.modules.cost_monitor.sources import (
+    fetch_usd_rate,
+    mark_source_error,
+    parse_fuel_registry,
+    parse_monitor_workbook,
+    parse_srv_tariffs,
+    refresh_source,
+    workbook_preview,
+)
+
+
+class SourceParserCharacterizationTests(unittest.TestCase):
+    def test_srv_parser_keeps_max_kerosene_rate_and_source_order(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "srv.xlsx"
+            workbook = Workbook()
+            worksheet = workbook.active
+            worksheet.append(["АП", "Услуга", "В/С", "Ставка", "Ед.изм.", "Дата с", "Дата по", "Наименование Орг"])
+            worksheet.append(["KJA", "ВОДА", "738", 100, "рейс", "2026-01-01", "2026-12-31", "Тест"])
+            worksheet.append(["KJA", "КЕРОСИН", "737", 80, "т", "2026-01-01", "2026-12-31", "Тест"])
+            worksheet.append(["KJA", "КЕРОСИН", "738", 90, "т", "2026-02-01", "2026-12-31", "Тест"])
+            worksheet.append(["KJA", "НЕИЗВЕСТНАЯ УСЛУГА", "738", 999, "рейс", None, None, "Тест"])
+            workbook.save(path)
+
+            tariffs, rows_read, preview, note = parse_srv_tariffs(path)
+
+        self.assertEqual(rows_read, 4)
+        self.assertEqual([(row["service"], row["rate"]) for row in tariffs], [("ВОДА", 100.0), ("КЕРОСИН", 90.0)])
+        self.assertEqual(len(preview), 4)
+        self.assertIsNone(note)
+
+    def test_fuel_parser_converts_usd_and_keeps_max_price_per_airport(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "fuel.xlsx"
+            workbook = Workbook()
+            worksheet = workbook.active
+            worksheet.append(["Служебная строка"])
+            worksheet.append(["Партнер", "Валюта", "Цена", "Вид цены поставщика", "Период"])
+            worksheet.append(["Поставщик 1", "USD", 1.5, "-|KJA|НДС сверху|USD", "2026-08"])
+            worksheet.append(["Поставщик 2", "RUB", 140, "-|KJA|НДС сверху|RUB", "2026-08"])
+            workbook.save(path)
+
+            with patch("app.modules.cost_monitor.parsers.fuel.fetch_usd_rate", return_value=(100.0, "тестовый курс")):
+                prices, rows_read, preview, note = parse_fuel_registry(path)
+
+        self.assertEqual(rows_read, 2)
+        self.assertEqual(prices[0]["airport"], "KJA")
+        self.assertEqual(prices[0]["price"], 150.0)
+        self.assertEqual(len(preview), 2)
+        self.assertEqual(note, "тестовый курс")
+
+    def test_monitor_parser_reads_all_configuration_sections(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "monitor.xlsx"
+            workbook = Workbook()
+            routes = workbook.active
+            routes.title = "ИШР"
+            routes.append(["№", "Откуда", "Куда", "Расстояние", "Время"])
+            routes.append([1, "KJA", "OVB", 650, time(1, 30)])
+
+            international = workbook.create_sheet("Признак МВЛ")
+            international.append(["АП", "Признак"])
+            international.append(["OVB", 1])
+
+            directories = workbook.create_sheet("Справочники")
+            directories.append([None] * 16)
+            directory_row = [None] * 16
+            directory_row[5:7] = ["738", 1.25]
+            directory_row[11:16] = ["Базовый", "738", 1, 2, 3]
+            directories.append(directory_row)
+
+            other = workbook.create_sheet("Прочее")
+            other.cell(1, 2, "OVB")
+            other.cell(27, 2, 1234.5)
+
+            manual = workbook.create_sheet("ЦРТ+")
+            manual.append(["АП", "Услуга", "Ставка", "Ед.изм.", "В/С", "Дата с", "Дата по", "Наименование Орг"])
+            manual.append(["OVB", "ВОДА", 500, "рейс", "738", "2026-01-01", "2026-12-31", "Тест"])
+            workbook.save(path)
+
+            result, rows_read, preview, note = parse_monitor_workbook(path)
+
+        self.assertEqual(rows_read, 1)
+        self.assertEqual(result["routes"][0]["flight_time"], 1.5)
+        self.assertTrue(result["international_airports"]["OVB"])
+        self.assertEqual(result["aircraft_multipliers"]["738"], 1.25)
+        self.assertEqual(result["scenario_rates"]["Базовый"]["738"], [1.0, 2.0, 3.0])
+        self.assertEqual(result["other_costs"]["OVB"], 1234.5)
+        self.assertEqual(result["legacy_manual_tariffs"][0]["rate"], 500.0)
+        self.assertEqual(len(preview), 1)
+        self.assertIsNone(note)
 
 
 class WorkbookPreviewTests(unittest.TestCase):
@@ -69,6 +162,13 @@ class WorkbookPreviewTests(unittest.TestCase):
 
         self.assertEqual(source["last_status"], "error")
         self.assertEqual(source["last_error"], "Директория не найдена")
+
+    def test_cbr_failure_keeps_documented_current_fallback(self) -> None:
+        with patch("app.modules.cost_monitor.parsers.fuel.urllib.request.urlopen", side_effect=OSError("offline")):
+            rate, note = fetch_usd_rate()
+
+        self.assertEqual(rate, 95.0)
+        self.assertIn("резервное значение 95 RUB/USD", note)
 
 
 if __name__ == "__main__":

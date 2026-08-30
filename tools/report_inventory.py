@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Print concise reports from tools/inventory_xlsx.py JSON."""
+"""Печатает краткие отчёты из JSON, созданного tools/inventory_xlsx.py."""
 
 from __future__ import annotations
 

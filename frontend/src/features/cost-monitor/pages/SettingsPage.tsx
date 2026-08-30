@@ -1,0 +1,7 @@
+import type { SourceConfig } from '../types'
+
+export function SettingsPage({ sources, busySource, onChange, onSave }: { sources: SourceConfig[]; busySource: string | null; onChange: (sources: SourceConfig[]) => void; onSave: (source: SourceConfig) => void }) {
+  const edit = (id: string, patch: Partial<SourceConfig>) => onChange(sources.map((source) => source.id === id ? { ...source, ...patch } : source))
+  return <section className="page-stack"><div className="settings-intro"><h2>Пути и правила выбора файлов</h2><p>Изменения применятся при следующем обновлении источника. Путь можно направить на прежнюю папку Power Query.</p></div><div className="settings-list">{sources.map((source) => <article className="settings-card" key={source.id}><div><h3>{source.label}</h3><p>{source.description}</p></div><label className="wide-field"><span>Директория</span><input value={source.directory} onChange={(event) => edit(source.id, { directory: event.target.value })} /></label><label><span>Маска файла</span><input value={source.mask} onChange={(event) => edit(source.id, { mask: event.target.value })} /></label><button className="button button-secondary" disabled={busySource !== null} onClick={() => onSave(source)}>{busySource === source.id ? 'Сохраняем…' : 'Сохранить'}</button></article>)}</div><div className="information-card"><b>Как работает хранение</b><p>Черновик расчета сохраняется в браузере и на сервере. Файлы, ручные услуги и пути источников не зависят от кэша браузера.</p></div></section>
+}
+

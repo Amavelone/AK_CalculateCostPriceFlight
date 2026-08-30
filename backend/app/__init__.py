@@ -1,2 +1,1 @@
-"""Backend package for the cost-monitor application."""
-
+"""Серверная часть приложения для мониторинга себестоимости рейсов."""

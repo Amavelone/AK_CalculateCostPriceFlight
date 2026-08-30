@@ -9,7 +9,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
-from ..schemas import CalculationRequest
+from .schemas import CalculationRequest
 
 
 COMPONENT_LABELS = {
@@ -25,11 +25,11 @@ DECIMAL_FORMAT = '0.000;[Red](0.000);-'
 
 
 def build_export_snapshot(request: CalculationRequest, result: dict[str, Any]) -> dict[str, Any]:
-    """Create the single data model used by both JSON and XLSX exports.
+    """Создаёт единый снимок данных для экспорта в JSON и XLSX.
 
-    The function only packages the already calculated result. It deliberately
-    contains no tariff lookups or business formulas, so export cannot alter a
-    calculation.
+    Функция только упаковывает уже рассчитанный результат и намеренно не
+    обращается к тарифам и бизнес-формулам. Поэтому формат экспорта не может
+    изменить расчёт или состав его компонентов.
     """
 
     inputs_by_id = {leg.id: leg.model_dump() for leg in request.legs}
@@ -91,7 +91,11 @@ def export_filename(snapshot: dict[str, Any], extension: str) -> str:
 
 
 def xlsx_bytes(snapshot: dict[str, Any]) -> bytes:
-    """Package the shared snapshot into an XLSX layout resembling РАСЧЕТ."""
+    """Упаковывает единый снимок в XLSX со структурой, близкой к листу «РАСЧЕТ».
+
+    Таблицы строятся только из переданного снимка, поэтому XLSX содержит те же
+    входы, детализацию и итоги, что и JSON-выгрузка.
+    """
 
     workbook = Workbook()
     calculation_sheet = workbook.active

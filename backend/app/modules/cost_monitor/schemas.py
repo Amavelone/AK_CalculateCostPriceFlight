@@ -22,8 +22,8 @@ class CalculationSettings(BaseModel):
     scenario: str = "ГБ 2026"
     fuel_source: Literal["ЦРТ", "АК"] = "ЦРТ"
     techstop_leg_id: str | None = None
-    # Matches the current workbook's initial AA2 value: the fixed catering
-    # cost is always present, while this control enables passenger add-on.
+    # Соответствует исходному значению AA2 текущей книги: фиксированная стоимость
+    # питания присутствует всегда, а этот флаг включает доплату за пассажиров.
     catering: bool = False
     show_details: bool = True
 

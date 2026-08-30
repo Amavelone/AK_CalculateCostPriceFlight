@@ -1,2 +1,1 @@
-"""Application configuration and persistence helpers."""
-
+"""Общая конфигурация приложения, не зависящая от бизнес-модулей."""
