@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import re
-import urllib.request
 import xml.etree.ElementTree as element_tree
 from pathlib import Path
 from typing import Any
 
+import httpx
 from openpyxl import load_workbook
 
 from ..catalog import normalize_key, normalize_text
@@ -20,8 +20,9 @@ def fetch_usd_rate() -> tuple[float, str]:
     """
 
     try:
-        with urllib.request.urlopen("https://www.cbr.ru/scripts/XML_daily.asp", timeout=5) as response:
-            document = element_tree.fromstring(response.read())
+        response = httpx.get("https://www.cbr.ru/scripts/XML_daily.asp", timeout=5.0)
+        response.raise_for_status()
+        document = element_tree.fromstring(response.content)
         for node in document.findall("Valute"):
             if node.findtext("CharCode") == "USD":
                 rate = float((node.findtext("Value") or "").replace(",", "."))

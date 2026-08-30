@@ -8,7 +8,6 @@ from openpyxl import load_workbook
 from ..catalog import normalize_key, normalize_text
 from .common import as_float, date_rank, header_index, value_by_key
 
-
 ALLOWED_SERVICES = {
     "АНО АД",
     "АЭРОВОКЗАЛ",

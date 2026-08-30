@@ -18,7 +18,7 @@ class Settings:
     default_source_dir: Path
 
     @classmethod
-    def from_environment(cls) -> "Settings":
+    def from_environment(cls) -> Settings:
         project_root = Path(__file__).resolve().parents[3]
         data_dir = Path(os.getenv("MONITOR_DATA_DIRECTORY", project_root / "backend" / "data"))
         configured_source_dir = os.getenv("MONITOR_SOURCE_DIRECTORY")

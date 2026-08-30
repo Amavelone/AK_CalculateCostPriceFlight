@@ -5,15 +5,16 @@ import json
 import os
 import tempfile
 import threading
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from ...core.config import Settings
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _default_scenarios() -> dict[str, dict[str, list[float]]]:
@@ -57,6 +58,8 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
                 "parser": "srv_tariffs",
                 "last_status": "not_updated",
                 "last_file": None,
+                "active_file": None,
+                "uploaded_file": None,
                 "last_updated": None,
                 "last_error": None,
                 "rows_read": 0,
@@ -72,6 +75,8 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
                 "parser": "fuel_registry",
                 "last_status": "not_updated",
                 "last_file": None,
+                "active_file": None,
+                "uploaded_file": None,
                 "last_updated": None,
                 "last_error": None,
                 "rows_read": 0,
@@ -87,6 +92,8 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
                 "parser": "monitor_workbook",
                 "last_status": "not_updated",
                 "last_file": None,
+                "active_file": None,
+                "uploaded_file": None,
                 "last_updated": None,
                 "last_error": None,
                 "rows_read": 0,
@@ -153,6 +160,13 @@ class JsonStore:
             if len(active_source_configs) != len(source_configs):
                 state["source_configs"] = active_source_configs
                 changed = True
+            for source in state.get("source_configs", []):
+                if "active_file" not in source:
+                    source["active_file"] = source.get("last_file") if source.get("last_status") == "ready" else None
+                    changed = True
+                if "uploaded_file" not in source:
+                    source["uploaded_file"] = None
+                    changed = True
             if changed:
                 self._write(state)
 

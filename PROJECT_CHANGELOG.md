@@ -1,5 +1,36 @@
 # Project Changelog
 
+## 2026-08-30 — Iteration 1: module code foundation
+
+### Изменено
+
+- Введены immutable canonical records для тарифов, цен топлива и маршрутов,
+  explicit `CalculationResponse` OpenAPI contract и structured diagnostics со
+  статусом `complete`/`degraded`; legacy warnings и расчётные числа сохранены.
+- `refresh-all` теперь stage/validate/activate набор источников атомарно;
+  пустые workbook sections заменяют прежние значения, upload ограничен 25 МБ и
+  проверяется как XLSX до публикации, preview использует active file.
+- CBR adapter переведён на `httpx`; добавлен Ruff. Frontend рендерит backend
+  details без повторных formulas и отменяет/игнорирует stale calculation responses.
+
+### Architecture
+
+- Calculation engine остаётся единственным источником бизнес-формул; JSON
+  остаётся local persistence adapter. `pydantic-settings` отложен: текущие
+  два path settings не оправдывают новую dependency.
+
+### Проверка
+
+- Backend: 29 тестов пройдены, включая Excel golden master, diagnostics,
+  OpenAPI contract, atomic activation, sticky-state и upload safeguards.
+- Ruff: PASS — `ruff check backend`.
+- Frontend: strict TypeScript и production build пройдены.
+
+### Git
+
+- Commit: see git history.
+- Branch: `feature/module-architecture`.
+
 ## 2026-08-30 — Iteration 0: baseline and branch initialization
 
 ### Изменено

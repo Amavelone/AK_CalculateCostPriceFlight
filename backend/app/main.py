@@ -7,7 +7,6 @@ from fastapi.staticfiles import StaticFiles
 from .core.config import settings
 from .modules.cost_monitor.api import router as cost_monitor_router
 
-
 app = FastAPI(
     title="Монитор расчета себестоимости",
     version="0.1.0",

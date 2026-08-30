@@ -195,7 +195,7 @@ export function CalculatorPage({ calculation, result, options, summary, onSettin
                         <span className="component-label"><i className="component-chevron" aria-hidden="true">⌄</i>{label}</span>
                         <b>{money(leg.components[key])} ₽</b>
                       </button>
-                      {isExpanded && <ComponentBreakdown component={key} leg={leg} settings={calculation.settings} />}
+                      {isExpanded && <ComponentBreakdown component={key} leg={leg} />}
                     </div>
                   )
                 })}
@@ -218,83 +218,16 @@ function BreakdownRow({ label, description, amount, muted = false }: { label: st
   )
 }
 
-function ComponentBreakdown({ component, leg, settings }: { component: CostComponentKey; leg: CalculatedLeg; settings: CalculationRequest['settings'] }) {
-  if (component === 'fuel') {
-    return (
-      <div className="component-breakdown">
-        <p className="breakdown-context">Источник: <b>{settings.fuel_source}</b> · расход: <b>{quantity(leg.fuel_tons)} т</b></p>
-        <div className="breakdown-list">
-          {leg.details.fuel.length ? leg.details.fuel.map((item) => (
-            <BreakdownRow key={item.service} label={item.service} description={`${money(item.rate)} ₽ за т × ${quantity(item.volume)} т`} amount={item.amount} />
-          )) : <BreakdownRow label="Тариф ГСМ" description="Для аэропорта не найдена ставка из выбранного источника" muted />}
-        </div>
-      </div>
-    )
-  }
-
-  if (component === 'ground') {
-    return (
-      <div className="component-breakdown">
-        <p className="breakdown-context">Услуги, учтённые для плеча {leg.route || '—'}</p>
-        <div className="breakdown-list">
-          {leg.details.ground.length ? leg.details.ground.map((item, index) => (
-            <BreakdownRow key={`${item.service}-${index}`} label={item.service} description={`Ставка: ${money(item.rate)} ₽ · объём: ${quantity(item.volume)}`} amount={item.amount} />
-          )) : <BreakdownRow label="Наземные услуги" description="Для аэропорта не найдены применимые тарифы" muted />}
-        </div>
-      </div>
-    )
-  }
-
-  if (component === 'ano') {
-    const total = leg.components.ano ?? 0
-    const routePart = total > 0 ? leg.distance / 100 * 1666.6 : 0
-    const airportPart = Math.max(0, total - routePart)
-    return (
-      <div className="component-breakdown">
-        <p className="breakdown-context">Детализация текущей формулы АНО</p>
-        <div className="breakdown-list">
-          {total > 0 ? <>
-            <BreakdownRow label="АНО АД" description={`Ставка аэропорта с коэффициентом типа ВС ${leg.aircraft}`} amount={airportPart} />
-            <BreakdownRow label="Маршрутная часть" description={`${quantity(leg.distance)} км ÷ 100 × 1 666,6 ₽`} amount={routePart} />
-          </> : <BreakdownRow label="АНО" description="Для плеча отсутствует маршрут или ставка АНО АД" muted />}
-        </div>
-      </div>
-    )
-  }
-
-  if (component === 'catering') {
-    const total = leg.components.catering ?? 0
-    const base = Math.min(total, 9000)
-    const passengerExtra = Math.max(0, total - base)
-    return (
-      <div className="component-breakdown">
-        <p className="breakdown-context">Отдельный компонент бортпитания в текущем расчёте</p>
-        <div className="breakdown-list">
-          {total > 0 ? <BreakdownRow label="Базовая часть" description="6 комплектов × 1 500 ₽" amount={base} /> : <BreakdownRow label="Базовая часть" description="Маршрут не указан — компонент не применяется" muted />}
-          {settings.catering ? <BreakdownRow label="Доплата за пассажиров" description={`${leg.passengers} пассажиров × 500 ₽`} amount={passengerExtra} /> : <BreakdownRow label="Доплата за пассажиров" description="Переключатель доплаты выключен" muted />}
-        </div>
-      </div>
-    )
-  }
-
-  const total = leg.components.vat ?? 0
-  const taxBase = total > 0 ? total / 0.1 : 0
+function ComponentBreakdown({ component, leg }: { component: CostComponentKey; leg: CalculatedLeg }) {
+  const rows = leg.details[component]
   return (
     <div className="component-breakdown">
-      {total > 0 ? <>
-        <p className="breakdown-context">НДС применяется к текущей базе для этого плеча</p>
-        <div className="breakdown-list">
-          <BreakdownRow label="ГСМ в базе НДС" description="Учтённый компонент ГСМ" amount={leg.components.fuel} />
-          <BreakdownRow label="Наземное обслуживание в базе" description="Учтённый компонент наземного обслуживания" amount={leg.components.ground} />
-          <BreakdownRow label="АНО в базе НДС" description="Учтённый компонент АНО" amount={leg.components.ano} />
-          <BreakdownRow label="Бортпитание в базе НДС" description="Учтённый компонент бортпитания" amount={leg.components.catering} />
-          <BreakdownRow label="Налоговая база" description="Сумма компонентов выше" amount={taxBase} />
-          <BreakdownRow label="Ставка НДС" description="10% от налоговой базы" amount={total} />
-        </div>
-      </> : <>
-        <p className="breakdown-context">НДС для этого плеча не применяется</p>
-        <div className="breakdown-list"><BreakdownRow label="Условие НДС" description="Условия текущего расчёта не выполнены" muted /></div>
-      </>}
+      <p className="breakdown-context">Детализация из расчёта backend для плеча {leg.route || '—'}</p>
+      <div className="breakdown-list">
+        {rows.length ? rows.map((item, index) => (
+          <BreakdownRow key={`${item.service}-${index}`} label={item.service} description={`Ставка: ${money(item.rate)} ₽ · объём: ${quantity(item.volume)} · делитель: ${quantity(item.divisor ?? 1)}`} amount={item.amount} />
+        )) : <BreakdownRow label="Компонент" description="В расчёте нет применимых строк детализации" muted />}
+      </div>
     </div>
   )
 }

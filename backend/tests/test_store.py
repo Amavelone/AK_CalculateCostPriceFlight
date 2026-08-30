@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 from app.core.config import Settings
-from app.modules.cost_monitor.store import JsonStore, build_default_state
+from app.modules.cost_monitor.store import JsonStore
 
 
 class JsonStoreTests(unittest.TestCase):

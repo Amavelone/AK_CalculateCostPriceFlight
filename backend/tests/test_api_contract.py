@@ -6,10 +6,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 from app import main
-from app.modules.cost_monitor.store import build_default_state, utc_now
 from app.modules.cost_monitor import api as cost_api
-from app.modules.cost_monitor.sources import source_by_id
-
+from app.modules.cost_monitor.sources import SourceRefreshStage
+from app.modules.cost_monitor.store import build_default_state, utc_now
 
 EXPECTED_OPERATIONS = {
     ("GET", "/api/health"),
@@ -63,7 +62,12 @@ class ApiContractTests(unittest.TestCase):
         }
         self.assertEqual(actual, EXPECTED_OPERATIONS)
 
-    def test_refresh_all_currently_publishes_partial_success(self) -> None:
+    def test_calculation_response_has_explicit_openapi_contract(self) -> None:
+        operation = main.app.openapi()["paths"]["/api/calculations"]["post"]
+        schema = operation["responses"]["200"]["content"]["application/json"]["schema"]
+        self.assertEqual(schema, {"$ref": "#/components/schemas/CalculationResponse"})
+
+    def test_refresh_all_preserves_active_dataset_when_any_source_fails(self) -> None:
         state = build_default_state(Path("sources"))
         state["data_revision"] = 4
         state["imported_tariffs"] = [{"airport": "OLD", "service": "ВОДА", "rate": 1}]
@@ -71,28 +75,22 @@ class ApiContractTests(unittest.TestCase):
         state["routes"] = [{"key": "OLD-OLD", "flight_time": 1, "distance": 1}]
         memory_store = MemoryStore(state)
 
-        def refresh_with_one_failure(active_state: dict, source_id: str, now: str) -> dict:
+        def stage_with_one_failure(active_state: dict, source_id: str, now: str) -> SourceRefreshStage:
             if source_id == "fuel_registry":
                 raise ValueError("invalid fuel workbook")
-            source = source_by_id(active_state, source_id)
-            source.update({"last_status": "ready", "last_updated": now, "last_error": None})
-            if source_id == "srv":
-                active_state["imported_tariffs"] = [{"airport": "NEW", "service": "ВОДА", "rate": 2}]
-            if source_id == "monitor_workbook":
-                active_state["routes"] = [{"key": "NEW-NEW", "flight_time": 2, "distance": 2}]
-            return source
+            return SourceRefreshStage(source_id, f"{source_id}.xlsx", [], 1, [], None, now)
 
         with (
             patch.object(cost_api, "store", memory_store),
-            patch.object(cost_api, "refresh_source", side_effect=refresh_with_one_failure),
+            patch.object(cost_api, "stage_source_refresh", side_effect=stage_with_one_failure),
         ):
             response = cost_api.refresh_all_sources()
 
         failed = next(source for source in response["sources"] if source["id"] == "fuel_registry")
         self.assertEqual(failed["last_status"], "error")
-        self.assertEqual(memory_store.state["data_revision"], 5)
-        self.assertEqual(memory_store.state["imported_tariffs"][0]["airport"], "NEW")
-        self.assertEqual(memory_store.state["routes"][0]["key"], "NEW-NEW")
+        self.assertEqual(memory_store.state["data_revision"], 4)
+        self.assertEqual(memory_store.state["imported_tariffs"][0]["airport"], "OLD")
+        self.assertEqual(memory_store.state["routes"][0]["key"], "OLD-OLD")
         self.assertEqual(memory_store.state["fuel_prices"][0]["airport"], "OLD")
 
 

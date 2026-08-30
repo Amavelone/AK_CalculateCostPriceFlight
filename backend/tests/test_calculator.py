@@ -120,6 +120,8 @@ class CalculatorTests(unittest.TestCase):
         self.assertEqual(result["legs"][0]["flight_time"], 0)
         self.assertTrue(any("Маршрут CCC-DDD не найден" in warning for warning in result["warnings"]))
         self.assertTrue(any("Не найдена цена керосина АК" in warning for warning in result["warnings"]))
+        self.assertEqual(result["status"], "degraded")
+        self.assertEqual({item["code"] for item in result["diagnostics"]}, {"missing_route", "missing_fuel_price", "missing_ano_rate"})
 
     def test_any_number_of_legs_is_accepted(self) -> None:
         state = self.base_state()

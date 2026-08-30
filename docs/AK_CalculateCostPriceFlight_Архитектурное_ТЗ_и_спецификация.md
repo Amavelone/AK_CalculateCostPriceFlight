@@ -108,7 +108,8 @@ backend/app/
   modules/
     cost_monitor/
       api.py                    # feature API
-      schemas.py                # request models
+      schemas.py                # request/response contracts
+      records.py                # typed canonical calculation records
       calculation.py            # calculation source of truth
       catalog.py                # tariff semantics
       exports.py                # JSON/XLSX exports
@@ -855,17 +856,18 @@ Cost Monitor
 
 Ниже только проблемы, которые влияют на correctness, auditability, поддержку или масштабирование.
 
-## 18.1. Неполный расчёт может выглядеть нормальным
+## 18.1. Неполный расчёт может выглядеть нормальным — resolved in Iteration 1
 
 Отсутствующая ground-service ставка может превращаться в `0.0`, а итог продолжает выглядеть как полноценный calculation.
 
-Требование: не менять baseline numbers автоматически, а добавить structured diagnostics/readiness.
+Сохранены baseline numbers и legacy `warnings`; API теперь также возвращает
+`status: complete | degraded` и structured diagnostics.
 
-## 18.2. Missing route даёт частичный финансовый результат
+## 18.2. Missing route даёт частичный финансовый результат — resolved in Iteration 1
 
-При отсутствии ИШР flight time/distance/margin могут стать нулём, но часть ground/catering остаётся. Это legacy-compatible behavior, но должно маркироваться как degraded.
+При отсутствии ИШР flight time/distance/margin могут стать нулём, но часть ground/catering остаётся. Это legacy-compatible behavior и теперь маркируется как `degraded` diagnostic.
 
-## 18.3. `refresh-all` публикует partial success
+## 18.3. `refresh-all` публикует partial success — resolved in Iteration 1
 
 Нельзя активировать смесь:
 
@@ -875,11 +877,11 @@ new SRV + old Fuel + new Workbook
 
 как один новый dataset revision.
 
-Цель: `stage -> validate -> atomic activate`.
+Реализовано `stage -> validate -> atomic activate`: при ошибке хотя бы одного source активный dataset и его revision сохраняются.
 
-## 18.4. Sticky workbook configuration
+## 18.4. Sticky workbook configuration — resolved in Iteration 1
 
-Пустые `aircraft_multipliers` или `scenario_rates` в новом workbook не должны молча оставлять старые значения под видом нового успешного refresh.
+Пустые валидные `aircraft_multipliers` или `scenario_rates` заменяют предыдущие значения и покрыты regression test.
 
 ## 18.5. `data_revision` не является snapshot
 
@@ -889,31 +891,31 @@ new SRV + old Fuel + new Workbook
 
 `RLock` работает только в одном процессе. Несколько workers могут привести к lost update. До перехода в shared deployment это допустимо; расширять JsonStore в «самодельную production DB» не нужно.
 
-## 18.7. Слабая типизация response contracts
+## 18.7. Слабая типизация response contracts — resolved in Iteration 1
 
 Большие `dict[str, Any]` повышают риск тихого расхождения FastAPI/OpenAPI/TypeScript.
 
-Цель: explicit response DTO + contract tests.
+`CalculationResponse` стал явным OpenAPI/Pydantic contract и покрыт contract test; внутренние тарифы, цены и маршруты представлены immutable canonical records.
 
-## 18.8. Frontend повторяет бизнес-формулы
+## 18.8. Frontend повторяет бизнес-формулы — resolved in Iteration 1
 
-Если React повторно считает ANO/catering/VAT, нарушается single source of truth. После фиксации rounding/detail contract frontend должен только render backend details.
+React рендерит backend `details` для всех компонентов; локальные формулы ANO/catering/VAT удалены.
 
-## 18.9. Race condition calculation requests
+## 18.9. Race condition calculation requests — resolved in Iteration 1
 
-Старый request может завершиться позже нового и перезаписать result. Простое решение: `AbortController` или monotonic request id.
+`AbortController` вместе с monotonic request id не позволяет старому response перезаписать актуальный result.
 
 ## 18.10. CBR fallback недостаточно прозрачен
 
 `95.0` как legacy fallback может оставаться, но result должен знать `rate_source`, `fallback_used`, timestamp/quality metadata.
 
-## 18.11. Upload validation минимальна
+## 18.11. Upload validation минимальна — resolved in Iteration 1
 
-Нужны дешёвые safeguards: max size, безопасное имя, проверка реально открываемого XLSX до activation.
+Добавлены max size 25 МБ, безопасное имя и проверка фактически открываемого XLSX до публикации файла.
 
-## 18.12. Raw preview может показать не active file
+## 18.12. Raw preview может показать не active file — resolved in Iteration 1
 
-Нужно разделять `latest available file` и `active parsed file`.
+Состояние source хранит отдельные `uploaded_file` и `active_file`; raw preview использует активированный файл.
 
 ---
 
@@ -1279,7 +1281,7 @@ git remote -v
 - calculation source of truth;
 - golden master.
 
-## Этап 1 - Code Foundation
+## Этап 1 - Code Foundation: реализован в Iteration 1
 
 - typed canonical source/domain contracts;
 - explicit response DTO;
@@ -1288,7 +1290,7 @@ git remote -v
 - remove frontend formula duplication;
 - stale request protection;
 - Ruff;
-- pydantic-settings where justified;
+- `pydantic-settings` deferred: два существующих path settings остаются простой typed dataclass без измеренной необходимости нового package;
 - httpx CBR adapter;
 - upload/preview safety.
 

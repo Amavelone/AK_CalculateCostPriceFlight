@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import uuid
 from typing import Any
 from urllib.parse import quote
@@ -7,20 +8,21 @@ from urllib.parse import quote
 from fastapi import APIRouter, File, HTTPException, Request, Response, UploadFile
 
 from ...core.config import settings
-from .store import JsonStore, utc_now
 from .calculation import calculate
 from .catalog import tariffs_for_view
 from .exports import build_export_snapshot, export_filename, json_bytes, xlsx_bytes
-from .schemas import CalculationRequest, DraftPayload, ManualTariffInput, SourceConfigUpdate
+from .schemas import CalculationRequest, CalculationResponse, DraftPayload, ManualTariffInput, SourceConfigUpdate
 from .sources import (
-    find_latest_file,
+    activate_staged_source,
+    find_active_file,
     mark_source_error,
     refresh_source,
     save_uploaded_file,
     source_by_id,
+    stage_source_refresh,
     workbook_preview,
 )
-
+from .store import JsonStore, utc_now
 
 router = APIRouter()
 store = JsonStore(settings)
@@ -123,7 +125,7 @@ def save_current_draft(payload: DraftPayload, request: Request, response: Respon
     return store.mutate(operation)
 
 
-@router.post("/api/calculations")
+@router.post("/api/calculations", response_model=CalculationResponse)
 def calculate_cost(payload: CalculationRequest) -> dict[str, Any]:
     return calculate(store.read(), payload)
 
@@ -181,7 +183,7 @@ def source_raw_preview(source_id: str, sheet: str | None = None) -> dict[str, An
     state = store.read()
     source = get_source_or_404(state, source_id)
     try:
-        file_path = find_latest_file(source)
+        file_path = find_active_file(source)
         return {"file": file_path.name, **workbook_preview(file_path, sheet_name=sheet)}
     except Exception as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
@@ -207,20 +209,27 @@ def refresh_one_source(source_id: str) -> dict[str, Any]:
 @router.post("/api/sources/refresh-all")
 def refresh_all_sources() -> dict[str, Any]:
     def operation(state: dict[str, Any]) -> dict[str, Any]:
-        updated: list[dict[str, Any]] = []
-        changed = False
+        staged = []
+        failures: dict[str, str] = {}
+        candidate = copy.deepcopy(state)
         for config in state["source_configs"]:
             source_id = config["id"]
             try:
-                updated.append(refresh_source(state, source_id, utc_now()))
-                changed = True
+                staged.append(stage_source_refresh(candidate, source_id, utc_now()))
             except Exception as error:
-                updated.append(mark_source_error(state, source_id, str(error), utc_now()))
+                failures[source_id] = str(error)
                 store.append_audit(state, "source_refresh_failed", f"{source_id}: {error}")
-        if changed:
+        if failures:
+            for source_id, message in failures.items():
+                mark_source_error(state, source_id, message, utc_now())
+            store.append_audit(state, "all_sources_refresh_failed", "active dataset preserved")
+            return {"sources": state["source_configs"]}
+        for item in staged:
+            activate_staged_source(state, item)
+        if staged:
             store.mark_calculation_data_changed(state)
-        store.append_audit(state, "all_sources_refreshed", f"{len(updated)} источника(ов)")
-        return {"sources": updated}
+        store.append_audit(state, "all_sources_refreshed", f"{len(staged)} источника(ов)")
+        return {"sources": state["source_configs"]}
 
     return store.mutate(operation)
 
@@ -233,7 +242,7 @@ async def upload_source_file(source_id: str, file: UploadFile = File(...)) -> di
         source.update(
             {
                 "last_status": "uploaded",
-                "last_file": target.name,
+                "uploaded_file": target.name,
                 "last_error": None,
                 "last_note": "Файл загружен. Запустите обновление для парсинга.",
             }

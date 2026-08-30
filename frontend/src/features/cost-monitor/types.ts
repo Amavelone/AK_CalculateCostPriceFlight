@@ -24,6 +24,8 @@ export interface CalculationRequest {
 
 export interface CalculationResult {
   calculated_at: string
+  status: 'complete' | 'degraded'
+  diagnostics: CalculationDiagnostic[]
   legs: Array<{
     id: string
     route: string
@@ -40,10 +42,20 @@ export interface CalculationResult {
     totals: Record<string, number>
     details: { fuel: DetailRow[]; ground: DetailRow[]; ano: DetailRow[]; catering: DetailRow[]; vat: DetailRow[] }
     warnings: string[]
+    status: 'complete' | 'degraded'
+    diagnostics: CalculationDiagnostic[]
   }>
   total: Record<string, number>
   warnings: string[]
   data_snapshot: Record<string, number>
+}
+
+export interface CalculationDiagnostic {
+  code: string
+  severity: 'warning'
+  component: string
+  reference: string | null
+  message: string
 }
 
 export interface DetailRow {
@@ -74,6 +86,8 @@ export interface SourceConfig {
   parser: string
   last_status: 'not_updated' | 'uploaded' | 'ready' | 'error'
   last_file: string | null
+  active_file?: string | null
+  uploaded_file?: string | null
   last_updated: string | null
   last_error: string | null
   last_note?: string | null

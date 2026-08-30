@@ -9,7 +9,6 @@ from app.modules.cost_monitor.calculation import calculate
 from app.modules.cost_monitor.exports import build_export_snapshot
 from app.modules.cost_monitor.schemas import CalculationRequest
 
-
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "excel_cost_monitor_baseline.json"
 MONEY_COMPONENTS_WITH_DETAILS = ("fuel", "ground", "ano", "catering")
 
@@ -88,7 +87,7 @@ class ExcelParityTests(unittest.TestCase):
     def test_calculation_and_export_contract_shape_is_frozen(self) -> None:
         self.assertEqual(
             set(self.result),
-            {"calculated_at", "legs", "total", "warnings", "data_snapshot"},
+            {"calculated_at", "legs", "total", "warnings", "status", "diagnostics", "data_snapshot"},
         )
         self.assertEqual(
             set(self.result["legs"][0]),
@@ -108,6 +107,8 @@ class ExcelParityTests(unittest.TestCase):
                 "totals",
                 "details",
                 "warnings",
+                "status",
+                "diagnostics",
             },
         )
         snapshot = build_export_snapshot(self.request, self.result)

@@ -59,3 +59,68 @@ class ManualTariffInput(BaseModel):
 
 class DraftPayload(BaseModel):
     calculation: CalculationRequest
+
+
+class DetailRow(BaseModel):
+    airport: str
+    service: str
+    rate: float
+    volume: float
+    divisor: float = 1
+    amount: float
+
+
+class CalculationDiagnostics(BaseModel):
+    """Машиночитаемое описание degraded calculation без изменения чисел."""
+
+    code: str
+    severity: Literal["warning"] = "warning"
+    component: str
+    reference: str | None = None
+    message: str
+
+
+class CalculationDetails(BaseModel):
+    fuel: list[DetailRow]
+    ground: list[DetailRow]
+    ano: list[DetailRow]
+    catering: list[DetailRow]
+    vat: list[DetailRow]
+
+
+class CalculationLegResponse(BaseModel):
+    id: str
+    route: str
+    departure: str
+    arrival: str
+    aircraft: str
+    passengers: int
+    flight_time: float
+    distance: float
+    fuel_tons: float
+    line_type: str
+    is_techstop: bool
+    components: dict[str, float]
+    totals: dict[str, float]
+    details: CalculationDetails
+    warnings: list[str]
+    status: Literal["complete", "degraded"]
+    diagnostics: list[CalculationDiagnostics]
+
+
+class DataSnapshotResponse(BaseModel):
+    revision: int
+    tariffs: int
+    manual_tariffs: int
+    fuel_prices: int
+    routes: int
+
+
+class CalculationResponse(BaseModel):
+    calculated_at: str
+    legs: list[CalculationLegResponse]
+    total: dict[str, float]
+    warnings: list[str]
+    status: Literal["complete", "degraded"]
+    diagnostics: list[CalculationDiagnostics]
+    data_snapshot: DataSnapshotResponse

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from './api'
 import { CalculatorPage } from './pages/CalculatorPage'
 import { SettingsPage } from './pages/SettingsPage'
@@ -60,6 +60,22 @@ function App() {
   const [exporting, setExporting] = useState<ExportFormat | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const calculationRequestId = useRef(0)
+  const calculationAbort = useRef<AbortController | null>(null)
+
+  const runCalculation = async (nextCalculation: CalculationRequest) => {
+    const requestId = ++calculationRequestId.current
+    calculationAbort.current?.abort()
+    const controller = new AbortController()
+    calculationAbort.current = controller
+    try {
+      const nextResult = await api.calculate(nextCalculation, controller.signal)
+      if (requestId === calculationRequestId.current) setResult(nextResult)
+      return nextResult
+    } finally {
+      if (requestId === calculationRequestId.current) calculationAbort.current = null
+    }
+  }
 
   const refreshTariffs = async (search = tariffSearch) => {
     const data = await api.tariffs(search)
@@ -67,14 +83,13 @@ function App() {
   }
 
   const synchronizeCalculationData = async () => {
-    const [nextTariffs, nextOptions, nextResult] = await Promise.all([
+    const [nextTariffs, nextOptions] = await Promise.all([
       api.tariffs(tariffSearch),
       api.calculationOptions(),
-      api.calculate(calculation),
     ])
     setTariffs(nextTariffs)
     setOptions(nextOptions)
-    setResult(nextResult)
+    await runCalculation(calculation)
   }
 
   useEffect(() => {
@@ -109,13 +124,17 @@ function App() {
     window.localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(calculation))
     const timer = window.setTimeout(() => {
       setIsSaving(true)
-      void Promise.all([api.saveDraft(calculation), api.calculate(calculation)])
-        .then(([, nextResult]) => setResult(nextResult))
-        .catch((caught) => setError(caught instanceof Error ? caught.message : 'Не удалось сохранить расчет'))
+      void Promise.all([api.saveDraft(calculation), runCalculation(calculation)])
+        .catch((caught) => {
+          if (caught instanceof DOMException && caught.name === 'AbortError') return
+          setError(caught instanceof Error ? caught.message : 'Не удалось сохранить расчет')
+        })
         .finally(() => setIsSaving(false))
     }, 350)
     return () => window.clearTimeout(timer)
   }, [calculation, isReady])
+
+  useEffect(() => () => calculationAbort.current?.abort(), [])
 
   useEffect(() => {
     if (!isReady) return

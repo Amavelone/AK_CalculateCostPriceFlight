@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import shutil
 import uuid
 from itertools import chain
 from pathlib import Path
@@ -11,6 +10,8 @@ from openpyxl import load_workbook
 from .catalog import normalize_key, normalize_text
 from .parsers.common import normalize_for_json
 
+MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+
 
 def find_latest_file(source: dict[str, Any]) -> Path:
     directory = Path(source["directory"])
@@ -20,6 +21,19 @@ def find_latest_file(source: dict[str, Any]) -> Path:
     if not candidates:
         raise FileNotFoundError(f"Не найден файл по маске {source['mask']}")
     return max(candidates, key=lambda path: path.stat().st_mtime)
+
+
+def find_active_file(source: dict[str, Any]) -> Path:
+    """Возвращает файл уже активированного набора, не просто последний upload."""
+
+    active_name = source.get("active_file")
+    if not active_name:
+        return find_latest_file(source)
+    directory = Path(source["directory"])
+    path = directory / Path(str(active_name)).name
+    if not path.is_file():
+        raise FileNotFoundError(f"Активный файл источника не найден: {path.name}")
+    return path
 
 
 def workbook_preview(path: Path, sheet_name: str | None = None, row_limit: int = 12) -> dict[str, Any]:
@@ -72,7 +86,19 @@ def save_uploaded_file(source: dict[str, Any], original_name: str, source_file: 
     directory.mkdir(parents=True, exist_ok=True)
     target = directory / file_name
     temporary = directory / f".{file_name}.{uuid.uuid4().hex}.uploading"
-    with temporary.open("wb") as target_file:
-        shutil.copyfileobj(source_file, target_file)
-    temporary.replace(target)
+    written = 0
+    try:
+        with temporary.open("wb") as target_file:
+            while chunk := source_file.read(1024 * 1024):
+                written += len(chunk)
+                if written > MAX_UPLOAD_BYTES:
+                    raise ValueError(f"Размер файла превышает лимит {MAX_UPLOAD_BYTES // 1024 // 1024} МБ")
+                target_file.write(chunk)
+        # Проверяем фактическую структуру книги до публикации final filename.
+        workbook = load_workbook(temporary, read_only=True, data_only=True)
+        workbook.close()
+        temporary.replace(target)
+    except Exception:
+        temporary.unlink(missing_ok=True)
+        raise
     return target

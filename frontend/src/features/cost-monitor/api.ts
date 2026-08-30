@@ -18,8 +18,8 @@ export const api = {
   getDraft: () => request<DraftResponse>('/drafts/current'),
   saveDraft: (calculation: CalculationRequest) =>
     request<DraftResponse>('/drafts/current', { method: 'PUT', body: JSON.stringify({ calculation }) }),
-  calculate: (calculation: CalculationRequest) =>
-    request<CalculationResult>('/calculations', { method: 'POST', body: JSON.stringify(calculation) }),
+  calculate: (calculation: CalculationRequest, signal?: AbortSignal) =>
+    request<CalculationResult>('/calculations', { method: 'POST', body: JSON.stringify(calculation), signal }),
   calculationOptions: () => request<CalculationOptions>('/calculation-options'),
   sources: () => request<SourceConfig[]>('/sources'),
   refreshSource: (id: string) => request<SourceConfig>(`/sources/${id}/refresh`, { method: 'POST' }),

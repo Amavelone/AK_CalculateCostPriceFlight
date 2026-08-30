@@ -3,21 +3,24 @@ from __future__ import annotations
 import tempfile
 import unittest
 from datetime import time
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
-from openpyxl import Workbook
-
 from app.modules.cost_monitor.catalog import tariffs_for_view
 from app.modules.cost_monitor.sources import (
+    SourceRefreshStage,
+    activate_staged_source,
     fetch_usd_rate,
     mark_source_error,
     parse_fuel_registry,
     parse_monitor_workbook,
     parse_srv_tariffs,
     refresh_source,
+    save_uploaded_file,
     workbook_preview,
 )
+from openpyxl import Workbook
 
 
 class SourceParserCharacterizationTests(unittest.TestCase):
@@ -164,11 +167,51 @@ class WorkbookPreviewTests(unittest.TestCase):
         self.assertEqual(source["last_error"], "Директория не найдена")
 
     def test_cbr_failure_keeps_documented_current_fallback(self) -> None:
-        with patch("app.modules.cost_monitor.parsers.fuel.urllib.request.urlopen", side_effect=OSError("offline")):
+        with patch("app.modules.cost_monitor.parsers.fuel.httpx.get", side_effect=OSError("offline")):
             rate, note = fetch_usd_rate()
 
         self.assertEqual(rate, 95.0)
         self.assertIn("резервное значение 95 RUB/USD", note)
+
+    def test_empty_workbook_sections_replace_previous_values(self) -> None:
+        state = {
+            "source_configs": [{"id": "monitor_workbook"}],
+            "manual_tariffs": [],
+            "routes": [{"key": "OLD-OLD"}],
+            "international_airports": {"OLD": True},
+            "other_costs": {"OLD": 1},
+            "aircraft_multipliers": {"738": 1.0},
+            "scenario_rates": {"Old": {"738": [1, 2, 3]}},
+        }
+        staged = SourceRefreshStage(
+            "monitor_workbook",
+            "fresh.xlsx",
+            {
+                "routes": [],
+                "international_airports": {},
+                "other_costs": {},
+                "aircraft_multipliers": {},
+                "scenario_rates": {},
+                "legacy_manual_tariffs": [],
+            },
+            0,
+            [],
+            None,
+            "2026-08-30T00:00:00+00:00",
+        )
+
+        activate_staged_source(state, staged)
+
+        self.assertEqual(state["aircraft_multipliers"], {})
+        self.assertEqual(state["scenario_rates"], {})
+        self.assertEqual(state["routes"], [])
+
+    def test_invalid_upload_is_not_published(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            source = {"directory": temporary_directory}
+            with self.assertRaises(Exception):
+                save_uploaded_file(source, "invalid.xlsx", BytesIO(b"not an xlsx workbook"))
+            self.assertFalse((Path(temporary_directory) / "invalid.xlsx").exists())
 
 
 if __name__ == "__main__":

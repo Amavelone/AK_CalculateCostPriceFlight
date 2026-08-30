@@ -11,7 +11,6 @@ from openpyxl.utils import get_column_letter
 
 from .schemas import CalculationRequest
 
-
 COMPONENT_LABELS = {
     "fuel": "ГСМ",
     "ground": "Наземное обслуживание",

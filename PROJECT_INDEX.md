@@ -25,8 +25,10 @@ Frontend:
 - `backend/app/modules/cost_monitor/api.py` — feature router, JSON store
   composition, health/dashboard, calculation/options, drafts, exports,
   sources/upload/refresh/preview, tariffs, routes и audit.
-- `backend/app/modules/cost_monitor/schemas.py` — request DTO: legs/settings,
-  source update, manual tariff и draft payload. Явных response DTO пока нет.
+- `backend/app/modules/cost_monitor/schemas.py` — request DTO и явный
+  `CalculationResponse` contract с diagnostics/status для `/api/calculations`.
+- `backend/app/modules/cost_monitor/records.py` — immutable canonical records
+  тарифов, цен топлива и маршрутов на границе JSON state → calculation engine.
 - `backend/app/modules/cost_monitor/catalog.py` — нормализация ключей и stable
   imported-before-manual tariff view shared by calculation and source import.
 - `backend/app/modules/cost_monitor/store.py` — default state, миграция,
@@ -35,17 +37,17 @@ Frontend:
 ### Calculation and export
 
 - `backend/app/modules/cost_monitor/calculation.py` — источник истины для всех формул Cost
-  Monitor; `calculate(state, request)` возвращает legs, totals, warnings и
-  `data_snapshot` с активной ревизией и краткими счетчиками данных.
+  Monitor; возвращает legs, totals, legacy warnings, structured diagnostics,
+  status и `data_snapshot` с активной ревизией.
 - `backend/app/modules/cost_monitor/exports.py` — единый export snapshot и JSON/XLSX writers;
   не должен выполнять тарифные lookup или изменять результат.
 
 ### Data sources
 
-- `backend/app/modules/cost_monitor/sources.py` — оркестрация применения
-  результатов импорта к активному состоянию.
-- `backend/app/modules/cost_monitor/source_files.py` — выбор latest file,
-  безопасная публикация upload и raw workbook preview.
+- `backend/app/modules/cost_monitor/sources.py` — stage/activate orchestration;
+  `refresh-all` публикует набор только при успехе всех обязательных sources.
+- `backend/app/modules/cost_monitor/source_files.py` — ограниченный по размеру,
+  проверяемый XLSX upload и preview активированного файла.
 - `backend/app/modules/cost_monitor/parsers/` — общие преобразования и
   изолированные SRV, fuel/CBR и monitor-workbook парсеры.
 - `backend/data/store.json` — runtime data, drafts и audit; игнорируется Git.
@@ -60,7 +62,7 @@ Frontend:
 ### App and pages
 
 - `frontend/src/features/cost-monitor/CostMonitorApp.tsx` — application shell,
-  autosave, data refresh и API orchestration.
+  autosave, data refresh, API orchestration и stale-request protection.
 - `frontend/src/features/cost-monitor/pages/` — отдельные страницы калькулятора,
   источников, тарифов и настроек.
 - `frontend/src/features/cost-monitor/formatting.ts` — общие форматтеры чисел,
@@ -79,18 +81,19 @@ Frontend:
 ## Tests and validation
 
 - `backend/tests/test_calculator.py` — synthetic calculation cases.
-- `backend/tests/test_sources.py` — parser fixtures, preview, manual conflict,
-  source errors и CBR fallback.
+- `backend/tests/test_sources.py` — parser fixtures, preview/upload safeguards,
+  atomic source activation, sticky-state regression, manual conflict и CBR fallback.
 - `backend/tests/test_exports.py` — shared JSON/XLSX snapshot packaging.
 - `backend/tests/test_store.py` — JSON persistence и legacy revision migration.
 - `backend/tests/test_excel_parity.py` и
   `backend/tests/fixtures/excel_cost_monitor_baseline.json` — Excel-owned
   пяти-плечевой golden master и calculation/export shape.
-- `backend/tests/test_api_contract.py` — стабильный набор API operations и
-  characterization текущего partial refresh.
+- `backend/tests/test_api_contract.py` — стабильный набор API operations,
+  explicit OpenAPI response contract и atomic refresh-all characterization.
+- `ruff.toml` — минимальный backend lint gate.
 - Backend: `$env:PYTHONPATH=(Resolve-Path .\backend).Path; .\.venv\Scripts\python -m unittest discover -s .\backend\tests -v`.
 - Frontend: `cd frontend; pnpm build` (strict TypeScript + Vite production build).
-- Текущий полный набор: 26 backend tests.
+- Текущий полный набор: 29 backend tests; `\.venv\Scripts\ruff check backend`.
 
 ## Documentation and analysis
 
@@ -129,9 +132,8 @@ Frontend:
   парсеров, оркестрация источников и JSON adapter имеют отдельные границы.
 - Frontend страницы разделены; следующий безопасный seam — hooks только после
   фиксации autosave/API sequence отдельными тестами.
-- Клиентская детализация АНО/питания/НДС всё ещё повторяет формулы. Переход на
-  backend `details` требует сначала зафиксировать контракт округления, иначе
-  возможно незаметное изменение отображаемой суммы на пограничных значениях.
+- Клиентская детализация рендерит backend `details`; формулы АНО/питания/НДС
+  на frontend не дублируются.
 - `JsonStore` безопасен только для одного процесса; shared deployment требует
   транзакционного persistence.
 - Активная ветка архитектурной инициативы — `feature/module-architecture`.

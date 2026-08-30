@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from math import ceil
 from typing import Any
 
 from .catalog import normalize_key, tariffs_for_view
+from .records import FuelPriceRecord, RouteRecord, TariffRecord
 from .schemas import CalculationRequest, LegInput
 
 
@@ -12,22 +14,91 @@ def round_currency(value: float) -> float:
     return round(value, 2)
 
 
-def first_rate(index: dict[str, dict[str, Any]], airport: str, service: str) -> dict[str, Any] | None:
+def diagnostic_for_warning(warning: str, departure: str, route_key: str) -> dict[str, str | None]:
+    """Сохраняет legacy warning и добавляет стабильную структуру для API clients."""
+
+    if warning.startswith("Заполните аэропорты"):
+        return {"code": "missing_airport", "component": "input", "reference": None, "message": warning}
+    if warning.startswith("Маршрут "):
+        return {"code": "missing_route", "component": "route", "reference": route_key, "message": warning}
+    if "керосина АК" in warning:
+        return {"code": "missing_fuel_price", "component": "fuel", "reference": departure, "message": warning}
+    if warning.startswith("Не найдена ставка АНО"):
+        return {"code": "missing_ano_rate", "component": "ano", "reference": departure, "message": warning}
+    if warning.startswith("Не найдена ставка"):
+        return {"code": "missing_tariff", "component": "fuel", "reference": departure, "message": warning}
+    if warning.startswith("Для типа ВС") and "коэффициент" in warning:
+        return {"code": "missing_aircraft_multiplier", "component": "ground", "reference": None, "message": warning}
+    return {"code": "missing_scenario_rate", "component": "margin", "reference": None, "message": warning}
+
+
+def first_rate(index: dict[str, TariffRecord], airport: str, service: str) -> TariffRecord | None:
     return index.get(f"{airport}-{service}")
 
 
-def build_tariff_index(state: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    index: dict[str, dict[str, Any]] = {}
+def build_tariff_index(state: dict[str, Any]) -> dict[str, TariffRecord]:
+    index: dict[str, TariffRecord] = {}
     # `setdefault` намеренно сохраняет первую физическую строку — это повторяет
     # действующее поведение ВПР Excel по таблице ЦРТ_Check.
-    for tariff in tariffs_for_view(state):
-        index.setdefault(f"{tariff['airport']}-{tariff['service']}", tariff)
+    for raw_tariff in tariffs_for_view(state):
+        tariff = TariffRecord.from_mapping(raw_tariff)
+        index.setdefault(f"{tariff.airport}-{tariff.service}", tariff)
     return index
+
+
+@dataclass(frozen=True)
+class LegContext:
+    departure: str
+    arrival: str
+    route_key: str
+    flight_time: float
+    distance: float
+    has_route: bool
+    fuel_tons: float
+    line_type: str
+    is_techstop: bool
+
+
+def resolve_leg_context(state: dict[str, Any], leg: LegInput, request: CalculationRequest) -> tuple[LegContext, list[str]]:
+    """Подготавливает lookup-контекст плеча, сохраняя Excel first-match маршрута."""
+
+    departure = normalize_key(leg.departure)
+    arrival = normalize_key(leg.arrival)
+    route_key = f"{departure}-{arrival}"
+    routes: dict[str, RouteRecord] = {}
+    for raw_candidate in state.get("routes", []):
+        candidate = RouteRecord.from_mapping(raw_candidate)
+        routes.setdefault(candidate.key, candidate)
+    route = routes.get(route_key)
+    warnings: list[str] = []
+    if not departure or not arrival:
+        warnings.append("Заполните аэропорты вылета и посадки.")
+    if route is None and departure and arrival:
+        warnings.append(f"Маршрут {route_key} не найден в ИШР: налет принят равным 0.")
+
+    international = bool(state.get("international_airports", {}).get(departure)) or bool(
+        state.get("international_airports", {}).get(arrival)
+    )
+    flight_time = route.flight_time if route else 0.0
+    return (
+        LegContext(
+            departure=departure,
+            arrival=arrival,
+            route_key=route_key,
+            flight_time=flight_time,
+            distance=route.distance if route else 0.0,
+            has_route=route is not None,
+            fuel_tons=flight_time * 2.7,
+            line_type="МВЛ" if international else "ВВЛ",
+            is_techstop=request.settings.techstop_leg_id == leg.id,
+        ),
+        warnings,
+    )
 
 
 def add_service(
     details: list[dict[str, Any]],
-    tariff_index: dict[str, dict[str, Any]],
+    tariff_index: dict[str, TariffRecord],
     airport: str,
     service: str,
     volume: float,
@@ -42,12 +113,12 @@ def add_service(
     tariff = first_rate(tariff_index, airport, service)
     if not tariff or not volume:
         return 0.0
-    amount = volume * float(tariff["rate"]) / divisor
+    amount = volume * tariff.rate / divisor
     details.append(
         {
             "airport": airport,
             "service": service,
-            "rate": tariff["rate"],
+            "rate": tariff.rate,
             "volume": volume,
             "divisor": divisor,
             "amount": amount,
@@ -59,7 +130,7 @@ def add_service(
 def calculate_ground(
     state: dict[str, Any],
     leg: LegInput,
-    tariff_index: dict[str, dict[str, Any]],
+    tariff_index: dict[str, TariffRecord],
     line_type: str,
     is_techstop: bool,
 ) -> tuple[float, list[dict[str, Any]]]:
@@ -137,46 +208,32 @@ def calculate_leg(
     state: dict[str, Any],
     leg: LegInput,
     request: CalculationRequest,
-    tariff_index: dict[str, dict[str, Any]],
+    tariff_index: dict[str, TariffRecord],
 ) -> dict[str, Any]:
-    departure = normalize_key(leg.departure)
-    arrival = normalize_key(leg.arrival)
-    route_key = f"{departure}-{arrival}"
-    routes: dict[str, dict[str, Any]] = {}
-    for candidate in state.get("routes", []):
-        # ИШР также ищется через ВПР, поэтому при дубликате маршрута сохраняется
-        # первая физическая строка, а не последняя прочитанная.
-        routes.setdefault(candidate["key"], candidate)
-    route = routes.get(route_key)
-    warnings: list[str] = []
-
-    if not departure or not arrival:
-        warnings.append("Заполните аэропорты вылета и посадки.")
-    if route is None and departure and arrival:
-        warnings.append(f"Маршрут {route_key} не найден в ИШР: налет принят равным 0.")
-
-    flight_time = float(route["flight_time"]) if route else 0.0
-    distance = float(route["distance"]) if route else 0.0
-    fuel_tons = flight_time * 2.7
-    is_techstop = request.settings.techstop_leg_id == leg.id
-
-    international = bool(state.get("international_airports", {}).get(departure)) or bool(
-        state.get("international_airports", {}).get(arrival)
-    )
-    line_type = "МВЛ" if international else "ВВЛ"
+    context, warnings = resolve_leg_context(state, leg, request)
+    departure = context.departure
+    arrival = context.arrival
+    route_key = context.route_key
+    flight_time = context.flight_time
+    distance = context.distance
+    fuel_tons = context.fuel_tons
+    line_type = context.line_type
+    is_techstop = context.is_techstop
 
     fuel = 0.0
     fuel_detail: list[dict[str, Any]] = []
     if request.settings.fuel_source == "АК":
-        fuel_prices = {record["airport"]: record for record in state.get("fuel_prices", [])}
+        fuel_prices = {
+            record.airport: record for record in (FuelPriceRecord.from_mapping(value) for value in state.get("fuel_prices", []))
+        }
         price = fuel_prices.get(departure)
         if price:
-            fuel = float(price["price"]) * fuel_tons
+            fuel = price.price * fuel_tons
             fuel_detail.append(
                 {
                     "airport": departure,
                     "service": "Керосин АК",
-                    "rate": price["price"],
+                    "rate": price.price,
                     "volume": fuel_tons,
                     "divisor": 1,
                     "amount": fuel,
@@ -194,13 +251,13 @@ def calculate_leg(
             # КЕРОСИН и ЗАПРАВКА ВС используют объём топлива в тоннах в строках
             # НО 3–4 и в соответствующих строках техстопа 30–31.
             volume = fuel_tons
-            amount = float(tariff["rate"]) * volume
+            amount = tariff.rate * volume
             fuel += amount
             fuel_detail.append(
                 {
                     "airport": departure,
                     "service": service,
-                    "rate": tariff["rate"],
+                    "rate": tariff.rate,
                     "volume": volume,
                     "divisor": 1,
                     "amount": amount,
@@ -213,15 +270,15 @@ def calculate_leg(
     aircraft_multiplier = float(state.get("aircraft_multipliers", {}).get(leg.aircraft, 0.0))
     ano = 0.0
     ano_detail: list[dict[str, Any]] = []
-    if ano_tariff and route:
-        airport_ano = float(ano_tariff["rate"]) * aircraft_multiplier
+    if ano_tariff and context.has_route:
+        airport_ano = ano_tariff.rate * aircraft_multiplier
         route_ano = distance / 100 * 1666.6
         ano = airport_ano + route_ano
         ano_detail = [
             {
                 "airport": departure,
                 "service": "АНО АД",
-                "rate": ano_tariff["rate"],
+                "rate": ano_tariff.rate,
                 "volume": aircraft_multiplier,
                 "divisor": 1,
                 "amount": airport_ano,
@@ -292,6 +349,7 @@ def calculate_leg(
         "m3": base_cost + margins[2],
     }
 
+    diagnostics = [diagnostic_for_warning(warning, departure, route_key) for warning in warnings]
     return {
         "id": leg.id,
         "route": route_key,
@@ -326,6 +384,8 @@ def calculate_leg(
             "vat": vat_detail,
         },
         "warnings": warnings,
+        "status": "degraded" if diagnostics else "complete",
+        "diagnostics": diagnostics,
     }
 
 
@@ -339,11 +399,14 @@ def calculate(state: dict[str, Any], request: CalculationRequest) -> dict[str, A
     for item in legs:
         item.pop("_raw_totals", None)
     warnings = [warning for leg in legs for warning in leg["warnings"]]
+    diagnostics = [diagnostic for leg in legs for diagnostic in leg["diagnostics"]]
     return {
-        "calculated_at": datetime.now(timezone.utc).isoformat(),
+        "calculated_at": datetime.now(UTC).isoformat(),
         "legs": legs,
         "total": total,
         "warnings": list(dict.fromkeys(warnings)),
+        "status": "degraded" if diagnostics else "complete",
+        "diagnostics": diagnostics,
         "data_snapshot": {
             "revision": int(state.get("data_revision", 0)),
             "tariffs": len(state.get("imported_tariffs", [])),
