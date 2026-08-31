@@ -1,5 +1,26 @@
 # Project Changelog
 
+## 2026-08-31 — Release Iteration 4: reference data administration
+
+### Изменено
+
+- Существующий `/admin` расширен отдельной Reference Data section без второго
+  admin app. Она использует lifecycle API Iteration 3 и независимый локальный
+  draft pointer, поэтому Configuration и Reference Data drafts могут
+  существовать одновременно.
+- Добавлены search/add/inline edit/delete таблицы для Routes и Airport Other
+  Costs. Active records disabled/read-only; Save передаёт full typed draft
+  payload, а Validate/Compare/Preview/Activate/Rollback не меняют active data
+  до activation.
+- Version history, semantic diff и active-vs-draft calculation preview
+  показывают `reference_version`. Sources/Audit не переносились в `/admin`;
+  CSV/XLSX bulk import остаётся explicitly deferred.
+
+### Проверка
+
+- Frontend client/types покрывают existing Reference Data API contract;
+  production build и strict TypeScript подтверждают `/admin` composition.
+
 ## 2026-08-31 — Release Iteration 3: versioned cost monitor reference data
 
 ### Изменено

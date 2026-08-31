@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import type {
   ActiveConfiguration,
   CalculationRequest,
@@ -34,6 +34,7 @@ interface AdminPageProps {
   onActivate: () => void
   onRollback: (version: number) => void
   onCompare: (left: number, right: number) => void
+  referenceDataSection: ReactNode
 }
 
 const number = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 3 })
@@ -134,7 +135,7 @@ function JsonEditor({ value, onChange }: { value: unknown; onChange: (value: Rec
 }
 
 export function AdminPage(props: AdminPageProps) {
-  const { active, versions, capabilities, draft, configuration, comparison, preview, calculation, loading, busy } = props
+  const { active, versions, capabilities, draft, configuration, comparison, preview, calculation, loading, busy, referenceDataSection } = props
   const [leftVersion, setLeftVersion] = useState<number | null>(null)
   const [rightVersion, setRightVersion] = useState<number | null>(null)
   const orderedVersions = [...versions].sort((a, b) => b.version - a.version)
@@ -198,6 +199,8 @@ export function AdminPage(props: AdminPageProps) {
           <article><h3>Scenario rates JSON</h3><JsonEditor value={configuration.overrides.scenario_rates} onChange={(value) => updateConfiguration((next) => { next.overrides.scenario_rates = value })} /></article></div>
       </section>
     </>}
+
+    {referenceDataSection}
 
     <section className="admin-card"><div className="section-heading"><div><h2>Контрольный input и Preview</h2><p>Active и draft рассчитываются на одном input, active pointer не меняется.</p></div></div>
       <div className="admin-form-grid"><label><span>DEP</span><input value={firstLeg.departure} onChange={(event) => setLeg('departure', event.target.value.toUpperCase())} /></label><label><span>ARR</span><input value={firstLeg.arrival} onChange={(event) => setLeg('arrival', event.target.value.toUpperCase())} /></label><label><span>Aircraft</span><input value={firstLeg.aircraft} onChange={(event) => setLeg('aircraft', event.target.value.toUpperCase())} /></label><label><span>Passengers</span><input type="number" value={firstLeg.passengers} onChange={(event) => setLeg('passengers', Number(event.target.value))} /></label><label><span>Scenario</span><input value={calculation.settings.scenario} onChange={(event) => props.onCalculationChange({ ...calculation, settings: { ...calculation.settings, scenario: event.target.value } })} /></label><label className="checkbox-field"><input type="checkbox" checked={calculation.settings.catering} onChange={(event) => props.onCalculationChange({ ...calculation, settings: { ...calculation.settings, catering: event.target.checked } })} /><span>Пассажирское питание</span></label></div>

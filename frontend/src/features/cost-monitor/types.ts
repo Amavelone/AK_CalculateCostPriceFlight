@@ -202,6 +202,78 @@ export interface ConfigurationPreviewComparison {
   difference: { total: Record<string, number>; legs: Record<string, Record<string, number>> }
 }
 
+export interface ReferenceRoute {
+  departure: string
+  arrival: string
+  distance: number
+  flight_time: number
+  source_row: number | null
+}
+
+export interface AirportOtherCost {
+  airport: string
+  amount: number
+}
+
+export interface CostMonitorReferenceData {
+  schema_version: '1.0'
+  routes: ReferenceRoute[]
+  airport_other_costs: AirportOtherCost[]
+}
+
+export interface ReferenceDataVersion {
+  version: number
+  state: 'active' | 'inactive'
+  created_at: string
+  activated_at: string | null
+  validation_status: 'valid'
+  reference_data?: CostMonitorReferenceData | null
+}
+
+export interface ActiveReferenceData extends ReferenceDataVersion {
+  state: 'active'
+  reference_data: CostMonitorReferenceData
+}
+
+export interface ReferenceDataDraft {
+  version: number
+  state: 'draft'
+  base_version: number
+  created_at: string
+  updated_at: string
+  validated_at: string | null
+  validation_status: 'valid'
+  reference_data: CostMonitorReferenceData
+}
+
+export interface ReferenceDataVersionReference {
+  version: number
+  state: 'active' | 'inactive' | 'draft'
+  created_at: string
+  activated_at: string | null
+  updated_at: string | null
+  base_version: number | null
+  validation_status: 'valid'
+}
+
+export interface ReferenceDataComparison {
+  left: ReferenceDataVersionReference
+  right: ReferenceDataVersionReference
+  changes: Array<{
+    path: string
+    before: JsonValue
+    after: JsonValue
+    kind: 'record_added' | 'record_removed' | 'record_changed'
+    summary: string
+  }>
+}
+
+export interface ReferenceDataPreviewComparison {
+  active: CalculationResult
+  draft: CalculationResult
+  difference: { total: Record<string, number>; legs: Record<string, Record<string, number>> }
+}
+
 export interface CalculationDiagnostic {
   code: string
   severity: 'warning'

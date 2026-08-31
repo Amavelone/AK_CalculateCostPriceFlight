@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { api } from './api'
 import { AdminPage } from './pages/AdminPage'
+import { ReferenceDataAdmin } from './pages/ReferenceDataAdmin'
 import type {
   ActiveConfiguration,
+  ActiveReferenceData,
   CalculationRequest,
   ConfigurationCapabilities,
   ConfigurationComparison,
@@ -10,9 +12,14 @@ import type {
   ConfigurationPreviewComparison,
   ConfigurationVersion,
   CostMonitorConfiguration,
+  ReferenceDataComparison,
+  ReferenceDataDraft,
+  ReferenceDataPreviewComparison,
+  ReferenceDataVersion,
 } from './types'
 
 const ADMIN_DRAFT_KEY = 'cost-monitor-admin-draft-version-v2'
+const REFERENCE_DATA_DRAFT_KEY = 'cost-monitor-reference-data-draft-version-v1'
 
 const controlCalculation: CalculationRequest = {
   legs: [{ id: 'control-leg', departure: 'DME', arrival: 'KJA', aircraft: '738', passengers: 150 }],
@@ -33,21 +40,33 @@ export default function AdminApp() {
   const [configuration, setConfiguration] = useState<CostMonitorConfiguration | null>(null)
   const [comparison, setComparison] = useState<ConfigurationComparison | null>(null)
   const [preview, setPreview] = useState<ConfigurationPreviewComparison | null>(null)
+  const [referenceActive, setReferenceActive] = useState<ActiveReferenceData | null>(null)
+  const [referenceVersions, setReferenceVersions] = useState<ReferenceDataVersion[]>([])
+  const [referenceDraft, setReferenceDraft] = useState<ReferenceDataDraft | null>(null)
+  const [referenceComparison, setReferenceComparison] = useState<ReferenceDataComparison | null>(null)
+  const [referencePreview, setReferencePreview] = useState<ReferenceDataPreviewComparison | null>(null)
   const [calculation, setCalculation] = useState<CalculationRequest>(controlCalculation)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [referenceBusy, setReferenceBusy] = useState<string | null>(null)
+  const [referenceError, setReferenceError] = useState<string | null>(null)
+  const [referenceNotice, setReferenceNotice] = useState<string | null>(null)
 
   const refresh = async () => {
-    const [nextActive, nextVersions, nextCapabilities] = await Promise.all([
+    const [nextActive, nextVersions, nextCapabilities, nextReferenceActive, nextReferenceVersions] = await Promise.all([
       api.activeConfiguration(),
       api.configurationVersions(),
       api.configurationCapabilities(),
+      api.activeReferenceData(),
+      api.referenceDataVersions(),
     ])
     setActive(nextActive)
     setVersions(nextVersions)
     setCapabilities(nextCapabilities)
+    setReferenceActive(nextReferenceActive)
+    setReferenceVersions(nextReferenceVersions)
   }
 
   useEffect(() => {
@@ -55,16 +74,25 @@ export default function AdminApp() {
     async function bootstrap() {
       try {
         await refresh()
-        const savedVersion = Number(window.localStorage.getItem(ADMIN_DRAFT_KEY))
-        if (savedVersion) {
+        const savedConfigurationVersion = Number(window.localStorage.getItem(ADMIN_DRAFT_KEY))
+        if (savedConfigurationVersion) {
           try {
-            const savedDraft = await api.configurationDraft(savedVersion)
+            const savedDraft = await api.configurationDraft(savedConfigurationVersion)
             if (mounted) {
               setDraft(savedDraft)
               setConfiguration(savedDraft.configuration)
             }
           } catch {
             window.localStorage.removeItem(ADMIN_DRAFT_KEY)
+          }
+        }
+        const savedReferenceVersion = Number(window.localStorage.getItem(REFERENCE_DATA_DRAFT_KEY))
+        if (savedReferenceVersion) {
+          try {
+            const savedReferenceDraft = await api.referenceDataDraft(savedReferenceVersion)
+            if (mounted) setReferenceDraft(savedReferenceDraft)
+          } catch {
+            window.localStorage.removeItem(REFERENCE_DATA_DRAFT_KEY)
           }
         }
       } catch (caught) {
@@ -149,10 +177,81 @@ export default function AdminApp() {
     setComparison(await api.compareConfigurations(left, right))
   })
 
+  const runReference = async (name: string, operation: () => Promise<void>) => {
+    setReferenceBusy(name)
+    setReferenceError(null)
+    setReferenceNotice(null)
+    try {
+      await operation()
+    } catch (caught) {
+      setReferenceError(caught instanceof Error ? caught.message : 'Операция Reference Data завершилась ошибкой')
+    } finally {
+      setReferenceBusy(null)
+    }
+  }
+
+  const createReferenceDraft = () => runReference('create', async () => {
+    const next = await api.createReferenceDataDraft()
+    setReferenceDraft(next)
+    setReferencePreview(null)
+    setReferenceComparison(null)
+    window.localStorage.setItem(REFERENCE_DATA_DRAFT_KEY, String(next.version))
+    setReferenceNotice(`Создан Reference Data draft v${next.version}`)
+  })
+
+  const saveReferenceDraft = async (): Promise<ReferenceDataDraft> => {
+    if (!referenceDraft) throw new Error('Сначала создайте Reference Data draft')
+    const saved = await api.updateReferenceDataDraft(referenceDraft.version, referenceDraft.reference_data)
+    setReferenceDraft(saved)
+    return saved
+  }
+
+  const saveReference = () => runReference('save', async () => {
+    const saved = await saveReferenceDraft()
+    setReferenceNotice(`Reference Data draft v${saved.version} сохранён`)
+  })
+
+  const validateReference = () => runReference('validate', async () => {
+    const saved = await saveReferenceDraft()
+    const validated = await api.validateReferenceDataDraft(saved.version)
+    setReferenceDraft(validated)
+    setReferenceNotice(`Reference Data draft v${validated.version}: VALID`)
+  })
+
+  const previewReference = () => runReference('preview', async () => {
+    const saved = await saveReferenceDraft()
+    setReferencePreview(await api.previewReferenceDataDraft(saved.version, calculation))
+    setReferenceNotice('Reference Data preview рассчитан без изменения active version')
+  })
+
+  const activateReference = () => runReference('activate', async () => {
+    const saved = await saveReferenceDraft()
+    await api.validateReferenceDataDraft(saved.version)
+    await api.activateReferenceDataDraft(saved.version)
+    window.localStorage.removeItem(REFERENCE_DATA_DRAFT_KEY)
+    setReferenceDraft(null)
+    setReferencePreview(null)
+    await refresh()
+    setReferenceNotice(`Reference Data v${saved.version} активирована`)
+  })
+
+  const rollbackReference = (version: number) => runReference('rollback', async () => {
+    await api.rollbackReferenceData(version)
+    setReferencePreview(null)
+    await refresh()
+    setReferenceNotice(`Выполнен rollback Reference Data на v${version}`)
+  })
+
+  const compareReference = (left: number, right: number) => runReference('compare', async () => {
+    setReferenceComparison(await api.compareReferenceData(left, right))
+  })
+
   return (
     <div className="admin-shell">
       {notice && <div className="toast toast-success" onClick={() => setNotice(null)}>{notice}<button aria-label="Закрыть">×</button></div>}
       {error && <div className="toast toast-error" onClick={() => setError(null)}>{error}<button aria-label="Закрыть">×</button></div>}
+      {referenceNotice && <div className="toast toast-success" onClick={() => setReferenceNotice(null)}>{referenceNotice}<button aria-label="Закрыть">×</button></div>}
+      {referenceError && <div className="toast toast-error" onClick={() => setReferenceError(null)}>{referenceError}<button aria-label="Закрыть">×</button></div>}
       <AdminPage
         active={active}
         versions={versions}
@@ -173,6 +272,23 @@ export default function AdminApp() {
         onActivate={activate}
         onRollback={rollback}
         onCompare={compare}
+        referenceDataSection={<ReferenceDataAdmin
+          active={referenceActive}
+          versions={referenceVersions}
+          draft={referenceDraft}
+          comparison={referenceComparison}
+          preview={referencePreview}
+          calculation={calculation}
+          busy={referenceBusy}
+          onReferenceDataChange={(referenceData) => referenceDraft && setReferenceDraft({ ...referenceDraft, reference_data: referenceData })}
+          onCreateDraft={createReferenceDraft}
+          onSave={saveReference}
+          onValidate={validateReference}
+          onPreview={previewReference}
+          onActivate={activateReference}
+          onRollback={rollbackReference}
+          onCompare={compareReference}
+        />}
       />
     </div>
   )

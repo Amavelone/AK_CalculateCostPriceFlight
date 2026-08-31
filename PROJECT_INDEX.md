@@ -83,9 +83,9 @@ Frontend:
 - `frontend/src/features/cost-monitor/CostMonitorApp.tsx` — пользовательский
   application shell без administrative workflow; `AdminApp.tsx` — отдельный
   lazy-loaded lifecycle UI для `/admin`.
-- `frontend/src/features/cost-monitor/pages/` — user pages и editable
-  `AdminPage`: parameters, safe operation parts, overrides, preview, compare,
-  activate/rollback и trace.
+- `frontend/src/features/cost-monitor/pages/` — user pages, editable
+  Configuration `AdminPage` и draft-only `ReferenceDataAdmin`: Routes/Airport
+  Other Costs search, row editing, preview, compare, activate/rollback и trace.
 - `frontend/src/features/cost-monitor/formatting.ts` — общие форматтеры чисел,
   сумм и времени для feature-страниц.
 - `frontend/src/styles.css` — все стили приложения.
@@ -93,7 +93,7 @@ Frontend:
 ### API and types
 
 - `frontend/src/features/cost-monitor/api.ts` — Cost Monitor `/api` client,
-  upload/export и typed configuration lifecycle/capabilities/preview calls.
+  upload/export и typed Configuration/Reference Data lifecycle calls.
 - `frontend/src/features/cost-monitor/types.ts` — вручную поддерживаемые
   TypeScript request/response types, включая configuration lifecycle и trace.
 - `frontend/src/features/cost-monitor/index.ts` — feature entry.
@@ -180,9 +180,9 @@ Frontend:
   только DEV compatibility tooling.
 - Configuration v1 — единственный production owner aircraft multipliers и
   M1/M2/M3 scenario rates. Active Reference Data — единственный production
-  owner Routes и Airport Other Costs; его lifecycle API независим от
-  Configuration и live `data_revision`. UI и построчный CRUD deferred to
-  Iteration 4.
+  owner Routes и Airport Other Costs; его lifecycle API и `/admin` draft-only
+  UI независимы от Configuration и live `data_revision`. Bulk CSV/XLSX import
+  остаётся deferred.
 - Physical Excel names принадлежат module-local adapters; calculation получает
   только `CostMonitorDataset` и не зависит от JSON, filesystem или будущего SQL.
 - Активная ветка архитектурной инициативы — `feature/module-architecture`.

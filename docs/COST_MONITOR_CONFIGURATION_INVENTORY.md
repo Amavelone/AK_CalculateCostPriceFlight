@@ -2,15 +2,16 @@
 
 ## Статус и назначение
 
-**Iteration:** Release Iteration 3 — Versioned Reference Data.
+**Iteration:** Release Iteration 4 — Reference Data Administration.
 **Статус:** active configuration schema `2.0` содержит typed parameters,
 operation parts, safe conditions/lookups и versioned configuration-owned
 aircraft/scenario values.
 ANO, Catering и VAT выполняются через Cost Monitor-owned operation executor.
 Configuration и Reference Data имеют независимые immutable active versions,
 draft/validate/compare/preview/activate/rollback API. Отдельный `/admin`
-сейчас управляет только Configuration; Reference Data UI и построчный CRUD
-отложены до Iteration 4.
+управляет обоими draft workflows: Reference Data UI редактирует только full
+typed draft payload. CSV/XLSX bulk import, Sources и Audit остаются вне scope
+этой административной секции.
 
 Документ фиксирует фактические правила foundation-версии и их текущее место
 ответственности. Typed baseline воспроизводит прежние Python/Excel значения и

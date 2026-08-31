@@ -10,6 +10,11 @@ import type {
   ConfigurationVersion,
   DraftResponse,
   ExportFormat,
+  ActiveReferenceData,
+  ReferenceDataComparison,
+  ReferenceDataDraft,
+  ReferenceDataPreviewComparison,
+  ReferenceDataVersion,
   SourceConfig,
   Tariff,
 } from './types'
@@ -58,6 +63,28 @@ export const api = {
     request<ActiveConfiguration>(`/configuration/rollback/${version}`, { method: 'POST' }),
   compareConfigurations: (leftVersion: number, rightVersion: number) =>
     request<ConfigurationComparison>(`/configuration/compare/${leftVersion}/${rightVersion}`),
+  activeReferenceData: () => request<ActiveReferenceData>('/reference-data/active'),
+  referenceDataVersions: () => request<ReferenceDataVersion[]>('/reference-data/versions'),
+  createReferenceDataDraft: () => request<ReferenceDataDraft>('/reference-data/drafts', { method: 'POST' }),
+  referenceDataDraft: (version: number) => request<ReferenceDataDraft>(`/reference-data/drafts/${version}`),
+  updateReferenceDataDraft: (version: number, referenceData: ReferenceDataDraft['reference_data']) =>
+    request<ReferenceDataDraft>(`/reference-data/drafts/${version}`, {
+      method: 'PUT',
+      body: JSON.stringify({ reference_data: referenceData }),
+    }),
+  validateReferenceDataDraft: (version: number) =>
+    request<ReferenceDataDraft>(`/reference-data/drafts/${version}/validate`, { method: 'POST' }),
+  previewReferenceDataDraft: (version: number, calculation: CalculationRequest) =>
+    request<ReferenceDataPreviewComparison>(`/reference-data/drafts/${version}/preview-comparison`, {
+      method: 'POST',
+      body: JSON.stringify(calculation),
+    }),
+  activateReferenceDataDraft: (version: number) =>
+    request<ActiveReferenceData>(`/reference-data/drafts/${version}/activate`, { method: 'POST' }),
+  rollbackReferenceData: (version: number) =>
+    request<ActiveReferenceData>(`/reference-data/rollback/${version}`, { method: 'POST' }),
+  compareReferenceData: (leftVersion: number, rightVersion: number) =>
+    request<ReferenceDataComparison>(`/reference-data/compare/${leftVersion}/${rightVersion}`),
   sources: () => request<SourceConfig[]>('/sources'),
   refreshSource: (id: string) => request<SourceConfig>(`/sources/${id}/refresh`, { method: 'POST' }),
   rawPreview: (id: string, sheet?: string) =>

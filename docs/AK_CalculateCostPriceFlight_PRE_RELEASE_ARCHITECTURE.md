@@ -168,8 +168,9 @@ Production больше не получает их из Monitor Workbook.
 
 Fresh/empty JsonStore получает 45 значений из Git seed; populated legacy state
 мигрируется в active Reference v1 без overwrite. Lifecycle API уже независим
-от Configuration; Reference Data admin UI и построчное редактирование — scope
-Iteration 4.
+от Configuration. **Выполнено в Iteration 4:** `/admin` даёт draft-only
+search/add/edit/delete для обоих catalogs, lifecycle controls, diff и preview;
+CSV/XLSX bulk import остаётся deferred.
 
 ---
 
@@ -412,6 +413,11 @@ http://127.0.0.1:8000/admin
 
 # 13. Reference Data CRUD
 
+**Выполнено в Iteration 4:** CRUD доступен только через отдельный Reference
+Data draft в существующем `/admin`; active record не редактируется напрямую.
+Save отправляет полный typed payload, а Validate/Compare/Preview/Activate и
+Rollback используют lifecycle API. Sources и Audit не перемещаются в этот UI.
+
 ## Routes
 
 Поля:
@@ -451,6 +457,9 @@ Validation:
 ---
 
 # 14. Bulk Import
+
+CSV/XLSX import сознательно отложен после Iteration 4: UI CRUD и lifecycle
+полностью работают без нового файлового runtime/dependency boundary.
 
 Допустим controlled import:
 
