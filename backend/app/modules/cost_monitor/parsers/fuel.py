@@ -26,7 +26,7 @@ class ExchangeRateMetadata:
         return self.source if not self.fallback_used else "резервное значение 95 RUB/USD: ЦБ РФ недоступен"
 
     def __iter__(self):
-        # Backward-compatible unpacking for existing adapter callers.
+        # Сохраняет backward-compatible распаковку для существующих вызовов adapter.
         yield self.rate
         yield self.note
 
@@ -53,6 +53,13 @@ def fetch_usd_rate() -> ExchangeRateMetadata:
 
 
 def parse_fuel_registry(path: Path) -> tuple[list[dict[str, Any]], int, list[dict[str, Any]], str | None]:
+    """Извлекает канонические цены Fuel Registry и метаданные курса USD.
+
+    Для каждого аэропорта сохраняется максимальная применимая цена. Конвертация
+    USD использует ЦБ РФ с документированным fallback, который возвращается в
+    заметке источника и сохраняется в provenance записи.
+    """
+
     workbook = load_workbook(path, read_only=True, data_only=True)
     worksheet = workbook.active
     header_row: tuple[Any, ...] | None = None
@@ -111,8 +118,8 @@ def parse_fuel_registry(path: Path) -> tuple[list[dict[str, Any]], int, list[dic
                 }
             )
         current = fuel_by_airport.get(airport)
-        # The approved registry rule keeps the highest applicable airport price;
-        # do not replace this with a first-row lookup when refactoring parsing.
+        # Утверждённое правило реестра сохраняет максимальную применимую цену
+        # аэропорта; при доработке parser нельзя заменять его поиском первой строки.
         if current is None or record["price"] > current["price"]:
             fuel_by_airport[airport] = record
         if len(preview) < 12:

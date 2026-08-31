@@ -79,10 +79,10 @@ def workbook_preview(path: Path, sheet_name: str | None = None, row_limit: int =
 
 
 def save_uploaded_file(source: dict[str, Any], original_name: str, source_file: Any) -> Path:
-    """Validate and atomically publish an uploaded workbook into its source directory.
+    """Проверяет и атомарно публикует загруженный workbook в директории источника.
 
-    The final filename is not replaced until ``openpyxl`` accepts the temporary
-    file. A failed upload therefore cannot become a candidate for refresh.
+    Финальное имя файла не заменяется, пока ``openpyxl`` не примет временный
+    файл. Поэтому неуспешная загрузка не может стать кандидатом на refresh.
     """
 
     file_name = Path(original_name or "source.xlsx").name
@@ -100,7 +100,7 @@ def save_uploaded_file(source: dict[str, Any], original_name: str, source_file: 
                 if written > MAX_UPLOAD_BYTES:
                     raise ValueError(f"Размер файла превышает лимит {MAX_UPLOAD_BYTES // 1024 // 1024} МБ")
                 target_file.write(chunk)
-        # Проверяем фактическую структуру книги до публикации final filename.
+        # Проверяем фактическую структуру книги до публикации финального имени.
         workbook = load_workbook(temporary, read_only=True, data_only=True)
         workbook.close()
         temporary.replace(target)

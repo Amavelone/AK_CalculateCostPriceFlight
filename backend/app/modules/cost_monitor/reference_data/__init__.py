@@ -1,4 +1,4 @@
-"""Versioned, module-owned Routes and Airport Other Costs."""
+"""Версионируемые принадлежащие модулю Routes и Airport Other Costs."""
 
 from .defaults import BASELINE_REFERENCE_DATA
 from .service import (

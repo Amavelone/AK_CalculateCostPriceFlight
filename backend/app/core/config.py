@@ -8,7 +8,7 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class Settings:
-    """Explicit runtime settings with safe repository-local development defaults."""
+    """Явные runtime-настройки с безопасными repository-local значениями для разработки."""
 
     project_root: Path
     data_dir: Path
@@ -73,7 +73,7 @@ class Settings:
 
 
 def configure_logging(runtime_settings: Settings) -> None:
-    """Configure compact text logs without request secrets or payloads."""
+    """Настраивает компактные текстовые логи без секретов и payload'ов запросов."""
 
     logging.basicConfig(
         level=getattr(logging, runtime_settings.log_level),

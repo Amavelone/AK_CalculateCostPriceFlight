@@ -53,10 +53,10 @@ def build_tariff_index(dataset: CostMonitorDataset) -> dict[str, TariffRecord]:
 
 @dataclass(frozen=True)
 class LegContext:
-    """Resolved inputs shared by every component of one flight leg.
+    """Контекст поиска, общий для всех компонентов одного плеча.
 
-    Missing routes deliberately produce a zero-valued context plus diagnostics,
-    so a partial calculation remains traceable instead of being rejected.
+    Отсутствующий маршрут намеренно даёт нулевые значения и diagnostics, чтобы
+    частичный расчёт оставался прослеживаемым, а не отклонялся целиком.
     """
 
     departure: str
@@ -265,11 +265,11 @@ def calculate_leg(
     tariff_index: dict[str, TariffRecord],
     effective: EffectiveCalculationContext,
 ) -> dict[str, Any]:
-    """Calculate one leg and retain full precision for the later flight total.
+    """Рассчитывает плечо и сохраняет полную точность для общего итога рейса.
 
-    The returned private fields are an internal hand-off to :func:`calculate`:
-    API-facing component values are rounded per leg, while M1/M2/M3 totals are
-    rounded only after summing all legs to preserve Excel parity.
+    Приватные поля результата используются только :func:`calculate`: значения
+    компонентов для API округляются на уровне плеча, а M1/M2/M3 — лишь после
+    суммирования всех плеч, что сохраняет parity с Excel.
     """
 
     configuration = effective.configuration
@@ -690,10 +690,10 @@ def calculate(
     reference_version: int = 1,
     reference_state: str = "active",
 ) -> dict[str, Any]:
-    """Produce a versioned, traceable calculation snapshot for all request legs.
+    """Формирует версионированный прослеживаемый снимок расчёта всех плеч запроса.
 
-    ``reference_data`` remains optional for baseline-compatible callers; normal
-    runtime callers pass the active immutable Reference Data version explicitly.
+    ``reference_data`` остаётся необязательным для baseline-compatible вызовов;
+    в обычном runtime вызывающий передаёт активную неизменяемую версию Reference Data.
     """
 
     if reference_data is None:

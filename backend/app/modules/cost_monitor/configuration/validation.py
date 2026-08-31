@@ -12,7 +12,7 @@ VARIABLE_TYPES = {item.name: item.value_type for item in REGISTERED_VARIABLES}
 
 
 def parameter_value(configuration: CostMonitorConfiguration, path: str) -> Any:
-    """Resolve a path that has already been admitted by the parameter registry."""
+    """Разрешает path, уже допущенный registry параметров."""
 
     value: Any = configuration
     for segment in path.split("."):
@@ -53,9 +53,9 @@ def _reference_type(reference: ValueReference) -> str:
 
 
 def _validate_operations(configuration: CostMonitorConfiguration) -> None:
-    # Validation deliberately constrains configuration to the same bounded
-    # interpreter that executes it; accepting arbitrary paths or expressions
-    # would turn an administrative payload into a code-execution surface.
+    # Validation намеренно ограничивает Configuration тем же bounded interpreter,
+    # который её выполняет: произвольные paths или expressions превратили бы
+    # administrative payload в поверхность для выполнения кода.
     total_parts = 0
     for step_name in ("ano", "catering", "vat"):
         step = getattr(configuration.operations, step_name)
@@ -100,7 +100,7 @@ def _validate_operations(configuration: CostMonitorConfiguration) -> None:
 
 
 def validate_configuration(value: CostMonitorConfiguration | Mapping[str, Any]) -> CostMonitorConfiguration:
-    """Validates types, registries and module-specific semantic restrictions."""
+    """Проверяет типы, registry и семантические ограничения модуля."""
 
     configuration = (
         value

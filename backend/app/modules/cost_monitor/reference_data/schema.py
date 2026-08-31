@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 
 class RouteReference(BaseModel):
-    """One editable route; key is derived from the two stored endpoint codes."""
+    """Один редактируемый маршрут; ключ выводится из двух сохранённых кодов endpoint'ов."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -38,7 +38,7 @@ class RouteReference(BaseModel):
 
 
 class AirportOtherCost(BaseModel):
-    """One non-negative airport-level fixed ground cost."""
+    """Одна неотрицательная фиксированная наземная стоимость уровня аэропорта."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -62,7 +62,7 @@ class AirportOtherCost(BaseModel):
 
 
 class CostMonitorReferenceData(BaseModel):
-    """Bounded Cost Monitor reference catalog, deliberately not a generic framework."""
+    """Ограниченный справочный каталог Cost Monitor, намеренно не generic framework."""
 
     model_config = ConfigDict(extra="forbid")
 

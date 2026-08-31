@@ -1,4 +1,4 @@
-"""Checked-in migration seeds derived once from the approved legacy workbook."""
+"""Зафиксированные migration-seed данные, однократно извлечённые из утверждённой legacy workbook."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ def baseline_manual_tariffs() -> list[dict[str, Any]]:
 
 
 def migrate_legacy_workbook_data(state: dict[str, Any]) -> bool:
-    """Seed stable workbook-owned data once without restoring a workbook dependency."""
+    """Однократно добавляет стабильные workbook-данные, не возвращая зависимость от workbook."""
 
     if state.get(_WORKBOOK_MIGRATION_MARKER):
         return False

@@ -8,8 +8,8 @@ class PrimitiveDefinition:
     description: str
 
 
-# This is a capability whitelist, not an expression evaluator. Configuration
-# payloads cannot introduce formulas or executable expressions.
+# Это capability whitelist, а не expression evaluator. Payload Configuration не
+# может добавлять формулы или исполняемые expressions.
 ALLOWED_PRIMITIVES = (
     PrimitiveDefinition("add", 2, "Сложение двух чисел."),
     PrimitiveDefinition("subtract", 2, "Вычитание двух чисел."),

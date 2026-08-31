@@ -17,8 +17,8 @@ PRODUCTION_SOURCE_DEFINITIONS = (
     SourceDefinition("fuel_registry", "Реестр керосина", "Выгрузка 1С цен поставщиков", "fuel_registry", "реестр*.xlsx"),
 )
 
-# Legacy Monitor Workbook remains available to DEV parity and migration tools,
-# but it is deliberately absent from production runtime source configuration.
+# Legacy Monitor Workbook остаётся доступным DEV-инструментам parity и migration,
+# но намеренно отсутствует в production runtime-конфигурации источников.
 COMPATIBILITY_SOURCE_DEFINITIONS = (
     SourceDefinition(
         "monitor_workbook",

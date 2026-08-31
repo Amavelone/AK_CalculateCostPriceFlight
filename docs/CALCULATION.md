@@ -1,30 +1,32 @@
-# Calculation Baseline
+# Базовые правила расчёта
 
-## Supported v1 behavior
+## Поддерживаемое поведение v1
 
-Cost Monitor accepts any number of ВВЛ flight legs. Each leg contains departure,
-arrival, aircraft and passenger count; one leg may be selected as a technical
-stop. The calculation request chooses scenario, fuel source (`ЦРТ` or `АК`) and
-whether passenger catering is enabled.
+Cost Monitor принимает любое количество плеч ВВЛ. Для каждого плеча задаются
+вылет, посадка, тип ВС и число пассажиров; одно плечо может быть выбрано как
+техническая посадка. В запросе расчёта выбираются сценарий, источник ГСМ
+(`ЦРТ` или `АК`) и включение пассажирской части бортпитания.
 
-For each leg the backend resolves Route and then calculates fuel, ground costs,
-ANO, catering, VAT and M1/M2/M3. The result is the sum of all leg totals and
-includes diagnostics, details and provenance versions.
+Для каждого плеча backend находит Route, затем рассчитывает топливо, наземное
+обслуживание, АНО, бортпитание, НДС и M1/M2/M3. Результат суммирует итоги всех
+плеч и содержит diagnostics, details и версии источников данных.
 
-- Fuel consumption, aircraft multipliers and scenario rates are active
-  Configuration values.
-- Routes and Airport Other Costs are active Reference Data values.
-- SRV tariffs and Fuel Registry prices are live data.
-- With fuel source `АК`, the Fuel Registry price for the departure airport is
-  used; otherwise the parity-sensitive ground tariff matrix supplies fuel costs.
+- Расход топлива, множители типов ВС и ставки сценариев берутся из активной
+  Configuration.
+- Routes и Airport Other Costs берутся из активных Reference Data.
+- Тарифы SRV и цены Fuel Registry являются live-данными.
+- При источнике ГСМ `АК` используется цена Fuel Registry для аэропорта вылета;
+  в остальных случаях стоимость ГСМ формирует parity-sensitive матрица
+  наземных тарифов.
 
-## Parity rules
+## Правила parity
 
-The backend preserves physical first-match tariff lookup order, approved rounding
-rules and the M1/M2/M3 result contract. Imported tariffs precede manual tariffs;
-manual values never override an imported duplicate. Missing route, tariff or
-fuel data is reported in diagnostics rather than silently inventing a value.
+Backend сохраняет порядок поиска первого физического тарифа, утверждённые
+правила округления и контракт результата M1/M2/M3. Импортированные тарифы
+предшествуют ручным; ручные значения никогда не заменяют импортированный
+дубликат. Отсутствующие маршрут, тариф или цена топлива передаются в
+diagnostics, а не заменяются искусственными значениями.
 
-Any calculation-rule change requires an explicit business decision and updates
-to the Excel golden-parity fixtures/tests. Legacy workbook parsing is retained
-only for DEV compatibility and migration tests, never as production input.
+Изменение любого правила расчёта требует явного бизнес-решения и обновления
+fixtures/tests Excel golden-parity. Парсинг legacy workbook сохранён только для
+DEV-совместимости и migration-тестов, но не используется как production-вход.

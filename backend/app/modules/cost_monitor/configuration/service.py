@@ -62,7 +62,7 @@ def ensure_configuration_state(state: dict[str, Any], now: str | None = None) ->
 
 
 def ensure_release_configuration_ownership(state: dict[str, Any]) -> bool:
-    """Move release-owned multipliers and scenario rates into every config record once."""
+    """Однократно переносит принадлежащие релизу множители и ставки сценариев в каждую config-запись."""
 
     marker = "release_v1_configuration_ownership_migrated"
     if state.get(marker):

@@ -12,19 +12,19 @@ from .schema import CostMonitorReferenceData
 
 
 class ReferenceDataError(Exception):
-    """Base lifecycle error for Cost Monitor Reference Data."""
+    """Базовая lifecycle-ошибка Cost Monitor Reference Data."""
 
 
 class ReferenceDataNotFoundError(ReferenceDataError):
-    """Requested version or draft does not exist."""
+    """Запрошенная версия или draft отсутствует."""
 
 
 class ReferenceDataConflictError(ReferenceDataError):
-    """Requested lifecycle transition is not valid for its current state."""
+    """Запрошенный lifecycle-переход недопустим для текущего состояния."""
 
 
 class ReferenceDataValidationError(ReferenceDataError):
-    """Candidate cannot become a Cost Monitor Reference Data version."""
+    """Кандидат не может стать версией Cost Monitor Reference Data."""
 
 
 def _now() -> str:
@@ -56,7 +56,7 @@ def _legacy_reference_payload(state: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def ensure_reference_data_state(state: dict[str, Any], now: str | None = None) -> bool:
-    """Migrate the former unversioned routes/other-costs fields into active v1."""
+    """Мигрирует прежние неверсионируемые поля routes/other_costs в активную v1."""
 
     required = {
         "reference_data_versions",
@@ -159,7 +159,7 @@ def _diff(left: CostMonitorReferenceData, right: CostMonitorReferenceData) -> li
 
 
 class ReferenceDataService:
-    """Owns immutable versions and drafts for Cost Monitor routes and airport costs."""
+    """Управляет неизменяемыми версиями и draft для Routes и airport costs Cost Monitor."""
 
     def __init__(self, repository: ReferenceDataRepository) -> None:
         self._repository = repository

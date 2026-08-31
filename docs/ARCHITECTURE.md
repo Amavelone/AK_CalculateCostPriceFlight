@@ -1,44 +1,44 @@
-# Architecture
+# Архитектура
 
-## Scope
+## Область применения
 
-Cost Monitor v1 calculates the cost of ВВЛ flight legs. The backend is the only
-owner of calculation rules; React renders typed API results and never recreates
-formulas. The application release is defined by the repository-root `VERSION`
-file.
+Cost Monitor v1 рассчитывает себестоимость плеч рейсов ВВЛ. Только backend
+владеет правилами расчёта; React отображает типизированные результаты API и не
+воспроизводит формулы. Версия релиза приложения задаётся файлом `VERSION` в
+корне репозитория.
 
 ```text
 Calculation Configuration + Reference Data + Live Sources
                          -> Effective Context -> Calculation -> JSON/XLSX
 ```
 
-## Runtime boundaries
+## Границы runtime
 
-- **Configuration** is immutable/versioned operational logic and approved
-  aircraft/scenario values.
-- **Reference Data** is immutable/versioned Routes and Airport Other Costs.
-- **Live Sources** are only SRV and Fuel Registry. Their atomic refresh changes
-  canonical tariffs/fuel prices and `data_revision`.
-- A calculation identifies its `config_version`, `reference_version` and
-  `data_revision`; Configuration/Reference activation does not change live data.
+- **Configuration** — неизменяемая версионируемая операционная логика и
+  утверждённые значения для типов ВС и сценариев.
+- **Reference Data** — неизменяемые версионируемые Routes и Airport Other Costs.
+- **Live Sources** — только SRV и Fuel Registry. Их атомарное обновление меняет
+  канонические тарифы/цены топлива и `data_revision`.
+- Расчёт содержит `config_version`, `reference_version` и `data_revision`;
+  активация Configuration или Reference Data не меняет live-данные.
 
-`refresh-all` stages both live sources and activates neither on a failure.
-Imported tariff rows precede manual rows, preserving the parity-sensitive first
-physical match for duplicate keys. Calculation rounding and M1/M2/M3 shape are
-covered by the Excel golden-parity suite.
+`refresh-all` подготавливает оба live-источника и при ошибке не активирует ни
+один. Импортированные строки тарифов предшествуют ручным, сохраняя значимый для
+parity первый физический match дублирующихся ключей. Округление расчёта и
+структура M1/M2/M3 покрыты Excel golden-parity suite.
 
-## Persistence and compatibility
+## Хранение и совместимость
 
-JsonStore is a local atomic file adapter. Until it is replaced, production is
-strictly one server, one process, one worker. The persistence contract isolates
-the calculation module from a future SQL adapter.
+JsonStore — локальный атомарный файловый адаптер. Пока он не заменён, в
+production допустимы строго один сервер, один процесс и один worker. Контракт
+хранения изолирует модуль расчёта от будущего адаптера SQL.
 
-Legacy Monitor Workbook parsing and its adapter are DEV compatibility tooling
-only. They are not registered at startup, in production source UI, source
-refresh, readiness, or the calculation lifecycle.
+Парсер Legacy Monitor Workbook и его адаптер используются только для DEV
+совместимости. Они не регистрируются при запуске, в production UI источников,
+обновлении источников, readiness или жизненном цикле расчёта.
 
-## Deferred boundaries
+## Отложенные границы
 
-МВЛ, SQL Server, corporate authentication/RBAC, and Reference Data bulk import
-are not part of v1. Authentication/RBAC is required before any network exposure
-of administrative mutation endpoints.
+МВЛ, SQL Server, corporate authentication/RBAC и массовый импорт Reference Data
+не входят в v1. Перед сетевым доступом к mutation endpoint'ам администрирования
+необходимы authentication/RBAC.

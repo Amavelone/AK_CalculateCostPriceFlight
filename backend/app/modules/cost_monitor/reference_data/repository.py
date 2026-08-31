@@ -6,7 +6,7 @@ from ..repository import CostMonitorRepository
 
 
 class ReferenceDataRepository(Protocol):
-    """Persistence operations required by the Reference Data lifecycle."""
+    """Операции хранения, необходимые жизненному циклу Reference Data."""
 
     def read_reference_state(self) -> dict[str, Any]: ...
 
@@ -22,7 +22,7 @@ class ReferenceDataRepository(Protocol):
 
 
 class JsonReferenceDataRepository:
-    """Maps reference-data lifecycle operations to the atomic JsonStore adapter."""
+    """Сопоставляет lifecycle-операции Reference Data атомарному адаптеру JsonStore."""
 
     def __init__(self, store: CostMonitorRepository) -> None:
         self._store = store

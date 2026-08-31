@@ -6,7 +6,7 @@ from ..repository import CostMonitorRepository
 
 
 class ConfigurationRepository(Protocol):
-    """Capability-oriented persistence boundary for configuration lifecycle."""
+    """Capability-oriented граница хранения для жизненного цикла Configuration."""
 
     def read_configuration_state(self) -> dict[str, Any]: ...
 
@@ -37,7 +37,7 @@ class ConfigurationRepository(Protocol):
 
 
 class JsonConfigurationRepository:
-    """Maps lifecycle capabilities to the current atomic JsonStore adapter."""
+    """Сопоставляет lifecycle-capabilities текущему атомарному адаптеру JsonStore."""
 
     def __init__(self, store: CostMonitorRepository) -> None:
         self._store = store

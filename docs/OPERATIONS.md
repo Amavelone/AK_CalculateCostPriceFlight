@@ -1,16 +1,17 @@
-# Operations
+# Эксплуатация
 
-## Requirements and environment
+## Требования и окружение
 
-CI validates Python 3.12, Node 22 and pnpm 11.19.0. Production requires explicit
-`APP_ENV=production`, `MONITOR_DATA_DIRECTORY`, `MONITOR_SOURCE_DIRECTORY`,
-`HOST`, `PORT` and `LOG_LEVEL`. Data and source directories must exist, be
-absolute and be readable/writable. `.env.example` lists non-secret settings.
+CI проверяет Python 3.12, Node 22 и pnpm 11.19.0. Для production необходимо
+явно задать `APP_ENV=production`, `MONITOR_DATA_DIRECTORY`,
+`MONITOR_SOURCE_DIRECTORY`, `HOST`, `PORT` и `LOG_LEVEL`. Директории данных и
+источников должны существовать, быть абсолютными и доступны для чтения/записи.
+В `.env.example` перечислены несекретные настройки.
 
-Development defaults are repository-local. Production never falls back to a
-developer Downloads directory.
+Значения по умолчанию для разработки находятся в репозитории. Production
+никогда не использует developer-директорию Downloads как запасной путь.
 
-## Build and start
+## Сборка и запуск
 
 ```powershell
 pnpm --dir frontend install --frozen-lockfile
@@ -20,28 +21,30 @@ Push-Location backend
 Pop-Location
 ```
 
-Production serves `/` and `/admin` from `frontend/dist`; do not use `--reload`,
-`pnpm dev`, or more than one worker while JsonStore is active.
+В production `/` и `/admin` обслуживаются из `frontend/dist`; не используйте
+`--reload`, `pnpm dev` или более одного worker, пока активен JsonStore.
 
-`/api/health` confirms that the process responds. `/api/ready` additionally
-requires a readable store, valid active Configuration and Reference Data, and
-initialized SRV/Fuel Registry data. It returns 503 until that state exists.
+`/api/health` подтверждает, что процесс отвечает. Для `/api/ready` дополнительно
+нужны читаемый store, корректные активные Configuration и Reference Data, а
+также инициализированные данные SRV/Fuel Registry. До этого состояния endpoint
+возвращает 503.
 
-## Backup, recovery and observability
+## Резервное копирование, восстановление и наблюдаемость
 
-Stop the sole application process before backup or restore. Copy the complete
-configured data directory (including `store.json`), required active source files
-and deployment settings stored outside Git. Restore the same consistent set,
-start one worker and verify `/api/ready`; this preserves versions, audit history
-and live data revision.
+Остановите единственный процесс приложения перед резервным копированием или
+восстановлением. Скопируйте всю настроенную директорию данных (включая
+`store.json`), требуемые активные файлы источников и deployment-настройки,
+хранящиеся вне Git. Восстановите тот же согласованный набор, запустите один
+worker и проверьте `/api/ready`; так сохраняются версии, audit history и
+ревизия live-данных.
 
-Request logs use text `key=value` fields with timestamp, level, endpoint, error,
-Configuration version, Reference Data version and data revision. Request bodies,
-cookies and credentials are not logged.
+Request logs используют текстовые поля `key=value`: timestamp, level, endpoint,
+ошибку, версию Configuration, версию Reference Data и revision данных. Тела
+запросов, cookies и credentials не логируются.
 
-## Security
+## Безопасность
 
-Production is same-origin and draft cookies are Secure, HttpOnly and SameSite
-Lax; HTTPS terminates before the application. This is not authorization.
-Corporate authentication/RBAC is absent and is a P0 blocker for network
-deployment, especially for `/admin` mutation APIs.
+В production применяется same-origin, а draft cookies имеют флаги Secure,
+HttpOnly и SameSite Lax; HTTPS завершается перед приложением. Это не является
+авторизацией. Corporate authentication/RBAC отсутствует и является P0-блокером
+для сетевого развёртывания, особенно для mutation API `/admin`.

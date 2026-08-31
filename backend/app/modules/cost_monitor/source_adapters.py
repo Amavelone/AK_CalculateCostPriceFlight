@@ -10,7 +10,7 @@ from .records import CostMonitorDataset, FuelPriceRecord, MonitorWorkbookData, T
 
 
 class SourceData(Protocol):
-    """Typed canonical payload produced by one module-owned physical adapter."""
+    """Типизированный канонический payload, созданный physical adapter модуля."""
 
     def apply(self, dataset: CostMonitorDataset) -> CostMonitorDataset: ...
 
@@ -56,7 +56,7 @@ class MonitorWorkbookSourceData:
 
 @dataclass(frozen=True)
 class SourceRunResult:
-    """Normalized candidate ready for lifecycle validation and atomic activation."""
+    """Нормализованный кандидат, готовый к lifecycle-validation и атомарной активации."""
 
     source_id: str
     data: SourceData
@@ -66,7 +66,7 @@ class SourceRunResult:
 
 
 class SourceAdapter(Protocol):
-    """Physical-source adapter contract; SQL adapters can implement it later."""
+    """Контракт адаптера physical source; в будущем его смогут реализовать SQL-адаптеры."""
 
     source_id: str
     parser_id: str
@@ -108,7 +108,7 @@ class FuelRegistryAdapter:
 
 @dataclass(frozen=True)
 class MonitorWorkbookAdapter:
-    """DEV compatibility adapter; its parser is imported only when explicitly used."""
+    """Адаптер DEV-совместимости; его parser импортируется только при явном использовании."""
 
     source_id: str = "monitor_workbook"
     parser_id: str = "monitor_workbook"

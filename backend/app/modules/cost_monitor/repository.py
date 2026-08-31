@@ -5,7 +5,7 @@ from typing import Any, Protocol
 
 
 class CostMonitorRepository(Protocol):
-    """Narrow module persistence boundary; SQL implementation is deferred."""
+    """Узкая граница хранения модуля; реализация SQL отложена."""
 
     def read(self) -> dict[str, Any]: ...
 

@@ -106,7 +106,7 @@ class ConfigurationServiceTests(unittest.TestCase):
         memory_store = MemoryConfigurationStore(self.calculation_state())
         service = ConfigurationService(JsonConfigurationRepository(memory_store))
         reference_service = ReferenceDataService(JsonReferenceDataRepository(memory_store))
-        # The fresh service starts with v1; recreate the draft against the same state used by API preview.
+        # Новый service начинается с v1; draft создаётся на том же state, что использует API preview.
         draft_version = service.create_draft()["version"]
         candidate = service.draft_configuration(draft_version).model_dump(mode="json")
         candidate["fuel"]["consumption_tons_per_hour"] = 3.0

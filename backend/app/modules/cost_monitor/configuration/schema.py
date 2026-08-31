@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class ConfigurationModel(BaseModel):
-    """Strict, serializable boundary for module-owned runtime configuration."""
+    """Строгая сериализуемая граница runtime-конфигурации, принадлежащей модулю."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, allow_inf_nan=False)
 
@@ -82,7 +82,7 @@ class ConditionGroup(ConfigurationModel):
 
 
 class OperationCondition(ConfigurationModel):
-    # Groups are OR-ed, clauses inside a group are AND-ed.
+    # Группы объединяются через OR, а clauses внутри одной группы — через AND.
     any_of: tuple[ConditionGroup, ...] = Field(min_length=1, max_length=8)
 
 
@@ -112,7 +112,7 @@ class CalculationOverrides(ConfigurationModel):
 
 
 class CostMonitorConfiguration(ConfigurationModel):
-    """Allowed Cost Monitor semantics; no arbitrary code or external I/O."""
+    """Разрешённая семантика Cost Monitor без произвольного кода и внешнего I/O."""
 
     schema_version: Literal["2.0"]
     fuel: FuelParameters

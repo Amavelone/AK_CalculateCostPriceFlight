@@ -16,7 +16,7 @@ from .source_files import find_active_file, find_latest_file, save_uploaded_file
 
 @dataclass(frozen=True)
 class SourceRefreshStage:
-    """Нормализованный кандидат на activation; parser не меняет active state."""
+    """Нормализованный кандидат на активацию; parser не меняет активное состояние."""
 
     source_id: str
     file_name: str
@@ -37,12 +37,18 @@ def source_by_id(state: dict[str, Any], source_id: str) -> dict[str, Any]:
 
 
 def production_source_configs(state: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return production sources in registry order, never compatibility tooling."""
+    """Возвращает production-источники в порядке registry, исключая compatibility tooling."""
 
     return [source_by_id(state, definition.id) for definition in PRODUCTION_SOURCE_DEFINITIONS]
 
 
 def stage_source_refresh(state: dict[str, Any], source_id: str, now: str) -> SourceRefreshStage:
+    """Подготавливает результат parser для последующей активации без изменения state.
+
+    Разделение подготовки и активации позволяет `refresh-all` отменить весь
+    набор, если хотя бы один production-источник не читается.
+    """
+
     source = source_by_id(state, source_id)
     path = find_latest_file(source)
     adapter = production_adapter_for_parser(str(source["parser"]))
@@ -53,13 +59,19 @@ def stage_source_refresh(state: dict[str, Any], source_id: str, now: str) -> Sou
 
 
 def activate_staged_source(state: dict[str, Any], staged: SourceRefreshStage) -> dict[str, Any]:
+    """Применяет проверенный канонический результат и помечает файл активным.
+
+    В state попадают только типизированные записи dataset, а не исходные строки
+    workbook или JSON; это сохраняет границу между adapter и calculation.
+    """
+
     source = source_by_id(state, staged.source_id)
     if staged.result.source_id != staged.source_id:
         raise ValueError(f"Нельзя активировать результат {staged.result.source_id} для {staged.source_id}")
 
-    # Physical parser result сначала применяет typed canonical dataset, и только
-    # затем dataset сериализуется в local JSON adapter. Calculation не получает
-    # raw workbook/JSON rows.
+    # Результат physical parser сначала применяется к типизированному
+    # каноническому dataset и лишь затем сериализуется в local JSON adapter.
+    # Calculation не получает raw workbook/JSON rows.
     dataset = CostMonitorDataset.from_state(state)
     staged.result.data.apply(dataset).write_to_state(state)
 

@@ -6,7 +6,7 @@ from .core.config import configure_logging, settings
 
 
 def main() -> None:
-    """Start one non-reloading worker for the JsonStore-backed runtime."""
+    """Запускает один worker без reload для runtime на базе JsonStore."""
 
     configure_logging(settings)
     uvicorn.run("app.main:app", host=settings.host, port=settings.port, reload=False, workers=1, log_config=None)

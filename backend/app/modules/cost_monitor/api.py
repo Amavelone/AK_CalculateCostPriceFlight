@@ -163,7 +163,7 @@ def health() -> dict[str, str]:
 
 @router.get("/api/ready", response_model=ReadinessResponse)
 def readiness(response: Response) -> dict[str, Any]:
-    """Return readiness only for a fully initialized production calculation state."""
+    """Возвращает readiness только для полностью инициализированного production-состояния расчёта."""
 
     checks: dict[str, dict[str, str]] = {}
     state: dict[str, Any] | None = None
@@ -651,7 +651,7 @@ def source_raw_preview(source_id: str, sheet: str | None = None) -> dict[str, An
 
 @router.post("/api/sources/{source_id}/refresh", response_model=SourceConfigResponse)
 def refresh_one_source(source_id: str) -> dict[str, Any]:
-    """Refresh one source independently, keeping the other live source intact."""
+    """Независимо обновляет один источник, сохраняя live-данные другого источника."""
 
     def operation(state: dict[str, Any]) -> dict[str, Any]:
         get_source_or_404(state, source_id)
@@ -670,17 +670,17 @@ def refresh_one_source(source_id: str) -> dict[str, Any]:
 
 @router.post("/api/sources/refresh-all", response_model=SourceRefreshAllResponse)
 def refresh_all_sources() -> dict[str, Any]:
-    """Atomically replace both production-source datasets only when both stage.
+    """Атомарно заменяет наборы production-источников, только если подготовлены оба.
 
-    A failed stage updates source status for operators but preserves every active
-    tariff and fuel record, and therefore preserves the current data revision.
+    Ошибка подготовки обновляет статус для оператора, но сохраняет действующие
+    тарифы, цены топлива и текущую ревизию данных.
     """
 
     def operation(state: dict[str, Any]) -> dict[str, Any]:
         staged = []
         failures: dict[str, str] = {}
-        # Parsers operate on an isolated candidate because a successful first
-        # stage must not leak into state if the second source cannot be staged.
+        # Parser работает с изолированным кандидатом: успешная подготовка
+        # первого источника не должна попасть в state при ошибке второго.
         candidate = copy.deepcopy(state)
         for config in production_source_configs(state):
             source_id = config["id"]

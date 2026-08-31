@@ -170,7 +170,7 @@ BASELINE_PAYLOAD: dict[str, Any] = {
 
 
 def upgrade_legacy_payload(value: Mapping[str, Any]) -> dict[str, Any]:
-    """Normalizes persisted v1 content without rewriting immutable records."""
+    """Нормализует сохранённое содержимое v1 без переписывания неизменяемых записей."""
 
     if value.get("schema_version") != "1.0":
         return dict(value)

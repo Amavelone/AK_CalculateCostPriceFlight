@@ -1,34 +1,37 @@
-# Configuration and Reference Data
+# Configuration и Reference Data
 
 ## Configuration
 
-Configuration schema `2.0` owns typed calculation parameters, approved
-aircraft multipliers and M1/M2/M3 scenario rates. Only registered variables,
-functions and operations are accepted; arbitrary code, filesystem, HTTP and
-database access are rejected.
+Схема Configuration `2.0` владеет типизированными параметрами расчёта,
+утверждёнными множителями типов ВС и ставками сценариев M1/M2/M3. Разрешены
+только зарегистрированные variables, functions и operations; произвольный код,
+доступ к файловой системе, HTTP и базе данных запрещены.
 
-Configuration versions are immutable. An administrator creates a draft, edits
-the supported typed payload, validates, previews or compares it, then activates
-or rolls back a version. Active Configuration cannot be edited directly.
+Версии Configuration неизменяемы. Администратор создаёт draft, редактирует
+поддерживаемый типизированный payload, выполняет validate, preview или compare,
+после чего активирует версию либо выполняет rollback. Активную Configuration
+нельзя редактировать напрямую.
 
 ## Reference Data
 
-Reference Data independently versions Routes and Airport Other Costs. A route
-has departure, arrival, distance and flight time; its canonical key is derived
-and unique. Airport Other Costs use a unique airport and non-negative amount.
-The v1 baseline contains 500 routes and 45 Airport Other Costs.
+Reference Data независимо версионирует Routes и Airport Other Costs. У маршрута
+есть вылет, посадка, расстояние и полётное время; его канонический ключ
+вычисляется из этих данных и уникален. Airport Other Costs используют уникальный
+аэропорт и неотрицательную сумму. Базовый набор v1 содержит 500 маршрутов и 45
+Airport Other Costs.
 
-Reference drafts have the same validate, compare, preview, activate and rollback
-lifecycle as Configuration. Reference activation is independent of Configuration
-and does not change `data_revision`. The `/admin` UI edits only an in-memory
-full draft payload before saving it; active records remain read-only.
+Draft-версии Reference Data имеют тот же жизненный цикл validate, compare,
+preview, activate и rollback, что и Configuration. Активация Reference Data
+независима от Configuration и не меняет `data_revision`. UI `/admin` до
+сохранения редактирует только in-memory полный payload draft; активные записи
+остаются доступными только для чтения.
 
-## Live source and manual data
+## Live-источники и ручные данные
 
-SRV and Fuel Registry are operational source configurations, not calculation
-Configuration. Their directory, mask, active file and refresh status may be
-managed through the source UI. Manual tariffs complement missing keys; imported
-tariffs retain priority when a key conflicts.
+SRV и Fuel Registry — операционные настройки источников, а не Calculation
+Configuration. Через UI источников можно управлять их директорией, mask,
+активным файлом и статусом обновления. Ручные тарифы дополняют отсутствующие
+ключи; при конфликте импортированные тарифы сохраняют приоритет.
 
-Bulk CSV/XLSX Reference Data import, source/audit relocation into `/admin`, and
-new calculation capabilities require a future release change.
+Массовый импорт Reference Data из CSV/XLSX, перенос source/audit в `/admin` и
+новые возможности расчёта требуют изменения будущего релиза.

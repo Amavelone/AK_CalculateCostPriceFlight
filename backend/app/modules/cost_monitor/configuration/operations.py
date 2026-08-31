@@ -9,7 +9,7 @@ from .validation import parameter_value
 
 
 class OperationExecutionError(ValueError):
-    """A validated operation cannot be executed for the supplied context."""
+    """Проверенную operation нельзя выполнить для переданного контекста."""
 
 
 @dataclass(frozen=True)
@@ -101,11 +101,11 @@ def execute_step(
     effective: EffectiveCalculationContext,
     variables: dict[str, Any],
 ) -> StepExecution:
-    """Execute one validated, data-defined calculation component.
+    """Выполняет один проверенный data-defined компонент расчёта.
 
-    This is intentionally a small interpreter over the configuration whitelist,
-    not an expression evaluator. The trace preserves resolved values and action
-    order so a completed calculation can be audited without re-executing it.
+    Это намеренно небольшой interpreter над whitelist Configuration, а не
+    expression evaluator. Trace сохраняет разрешённые значения и порядок action,
+    чтобы готовый расчёт можно было аудировать без повторного выполнения.
     """
 
     parts: dict[str, float] = {}

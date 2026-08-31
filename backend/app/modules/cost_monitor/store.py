@@ -45,7 +45,7 @@ def default_source_config(binding: SourceDefinition, source_dir: Path) -> dict[s
 
 
 def build_default_state(source_dir: Path) -> dict[str, Any]:
-    """Creates production state seeded with stable, checked-in module data."""
+    """Создаёт production-state с устойчивыми данными модуля из репозитория."""
 
     state = {
         "version": 1,
@@ -155,7 +155,7 @@ class JsonStore:
             return json.load(file)
 
     def _write(self, state: dict[str, Any]) -> None:
-        """Durably replace the complete store file after a successful mutation."""
+        """Надёжно заменяет полный файл store после успешной мутации."""
 
         self._path.parent.mkdir(parents=True, exist_ok=True)
         handle, temp_path = tempfile.mkstemp(prefix="store-", suffix=".json", dir=self._path.parent)
@@ -174,10 +174,10 @@ class JsonStore:
             return copy.deepcopy(self._read())
 
     def mutate(self, operation: Callable[[dict[str, Any]], Any]) -> Any:
-        """Run one mutation under the process-local lock and commit its full state.
+        """Выполняет мутацию под process-local lock и фиксирует полный state.
 
-        This serialization is intentionally limited to one process; deployment
-        must remain single-worker until the persistence adapter is replaced.
+        Такая сериализация рассчитана только на один процесс: до замены адаптера
+        хранения deployment должен оставаться single-worker.
         """
 
         with self._lock:

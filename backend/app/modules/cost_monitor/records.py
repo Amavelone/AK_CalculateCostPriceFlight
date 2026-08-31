@@ -12,7 +12,7 @@ def _immutable_mapping(value: Mapping[str, Any]) -> Mapping[str, Any]:
 
 @dataclass(frozen=True)
 class TariffRecord:
-    """Каноническая tariff row; physical Excel columns остаются в adapter."""
+    """Каноническая строка тарифа; physical Excel columns остаются в adapter."""
 
     airport: str
     service: str
@@ -189,7 +189,7 @@ class MonitorWorkbookData:
 
 @dataclass(frozen=True)
 class CostMonitorReferenceSnapshot:
-    """The active immutable Routes and Airport Other Costs used by calculation."""
+    """Активные неизменяемые Routes и Airport Other Costs, используемые calculation."""
 
     routes: tuple[RouteRecord, ...]
     other_costs: Mapping[str, float]
@@ -216,7 +216,7 @@ class CostMonitorReferenceSnapshot:
 
     @classmethod
     def from_legacy_state(cls, state: Mapping[str, Any]) -> CostMonitorReferenceSnapshot:
-        """Test and migration helper for the former unversioned state shape."""
+        """Вспомогательный метод для test и migration прежней неверсионируемой формы state."""
 
         return cls(
             routes=tuple(RouteRecord.from_mapping(item) for item in state.get("routes", [])),
@@ -226,7 +226,7 @@ class CostMonitorReferenceSnapshot:
 
 @dataclass(frozen=True)
 class CostMonitorDataset:
-    """Live SRV/Fuel/manual inputs consumed by the calculation engine."""
+    """Live-входы SRV/Fuel/manual, используемые calculation engine."""
 
     imported_tariffs: tuple[TariffRecord, ...]
     manual_tariffs: tuple[TariffRecord, ...]
@@ -244,7 +244,7 @@ class CostMonitorDataset:
 
     @property
     def tariffs(self) -> tuple[TariffRecord, ...]:
-        """Imported rows precede manual rows to preserve Excel first-match semantics."""
+        """Импортированные строки предшествуют ручным для сохранения Excel first-match semantics."""
 
         return self.imported_tariffs + self.manual_tariffs
 
@@ -255,10 +255,10 @@ class CostMonitorDataset:
         return replace(self, fuel_prices=prices)
 
     def with_monitor_workbook(self, workbook: MonitorWorkbookData) -> CostMonitorDataset:
-        """Compatibility-only projection used by direct parser/adapter tooling.
+        """Проекция только для compatibility tooling прямого parser/adapter.
 
-        Production source lifecycle never invokes this method. Workbook routes,
-        MВЛ markers and calculation rates remain outside the production dataset.
+        Production source lifecycle никогда не вызывает этот метод. Маршруты
+        workbook, маркеры МВЛ и ставки calculation остаются вне production dataset.
         """
         manual_tariffs = tuple(item for item in self.manual_tariffs if not item.legacy_manual) + workbook.legacy_manual_tariffs
         return replace(
@@ -267,7 +267,7 @@ class CostMonitorDataset:
         )
 
     def write_to_state(self, state: dict[str, Any]) -> None:
-        """Serializes only canonical dataset data back to the local storage adapter."""
+        """Сериализует в local storage adapter только канонические данные dataset."""
 
         state.update(
             {

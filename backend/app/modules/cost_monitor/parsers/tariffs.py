@@ -43,6 +43,13 @@ AER_RULES: dict[str, str | None] = {
 
 
 def parse_srv_tariffs(path: Path) -> tuple[list[dict[str, Any]], int, list[dict[str, Any]], str | None]:
+    """Преобразует workbook SRV в канонические тарифы согласно правилам Power Query.
+
+    Отбор услуг, единственный тариф керосина и специальные правила AER являются
+    частью Excel parity; результат сохраняет порядок строк для последующего
+    поиска первого физического совпадения.
+    """
+
     workbook = load_workbook(path, read_only=True, data_only=True)
     worksheet = workbook.active
     iterator = worksheet.iter_rows(values_only=True)

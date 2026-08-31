@@ -16,7 +16,7 @@ logger = logging.getLogger("cost_monitor.request")
 
 
 def _runtime_versions() -> tuple[int | str, int | str, int | str]:
-    """Best-effort log context: observability never changes endpoint behavior."""
+    """Формирует best-effort контекст логов, не влияющий на поведение endpoint'ов."""
 
     try:
         state = cost_monitor_api.repository.read()
@@ -35,7 +35,7 @@ def _runtime_versions() -> tuple[int | str, int | str, int | str]:
 
 
 def create_app(runtime_settings: Settings = settings) -> FastAPI:
-    """Build the FastAPI application for an explicit runtime environment."""
+    """Создаёт FastAPI-приложение для явно заданного runtime-окружения."""
 
     configure_logging(runtime_settings)
     application = FastAPI(

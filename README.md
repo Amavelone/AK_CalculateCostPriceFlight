@@ -1,42 +1,42 @@
 # Cost Monitor v1.0.0
 
-Cost Monitor calculates the cost of flight legs for operational users. It
-combines approved calculation Configuration, versioned reference data and live
-SRV/Fuel Registry sources, then returns traceable M1/M2/M3 results and JSON/XLSX
-exports.
+Cost Monitor рассчитывает себестоимость плеч рейса для операционных
+пользователей. Сервис объединяет утверждённую Configuration расчёта,
+версионируемые справочные данные и актуальные источники SRV/Fuel Registry,
+после чего возвращает прослеживаемые результаты M1/M2/M3 и выгрузки JSON/XLSX.
 
-## Supported v1 scope
+## Поддерживаемая область v1
 
-- ВВЛ flight legs, any count of legs, one optional technical stop, `ЦРТ`/`АК`
-  fuel sources and optional passenger catering.
-- Versioned Configuration and Reference Data with draft/validate/preview/
-  compare/activate/rollback lifecycle in `/admin`.
-- SRV and Fuel Registry production sources with atomic `refresh-all`.
-- Reference routes, Airport Other Costs and manual tariffs; JSON/XLSX exports.
+- Плечи ВВЛ в любом количестве, одна необязательная техническая посадка,
+  источники ГСМ `ЦРТ`/`АК` и необязательная доплата за пассажирское питание.
+- Версионируемые Configuration и Reference Data с жизненным циклом
+  draft/validate/preview/compare/activate/rollback в `/admin`.
+- Production-источники SRV и Fuel Registry с атомарной операцией `refresh-all`.
+- Справочник маршрутов, Airport Other Costs и ручные тарифы; выгрузки JSON/XLSX.
 
-МВЛ is out of scope for v1. Legacy Monitor Workbook is DEV compatibility tooling
-only and is never a production runtime source.
+МВЛ не входит в область v1. Legacy Monitor Workbook используется только как DEV
+инструмент совместимости и никогда не является production-источником runtime.
 
-## Architecture and documents
+## Архитектура и документы
 
 ```text
 Calculation Configuration + Reference Data + Live Sources
                          -> Effective Context -> Calculation
 ```
 
-- [Architecture](docs/ARCHITECTURE.md)
-- [Calculation baseline](docs/CALCULATION.md)
-- [Configuration and Reference Data](docs/CONFIGURATION.md)
-- [Operations and recovery](docs/OPERATIONS.md)
+- [Архитектура](docs/ARCHITECTURE.md)
+- [Базовые правила расчёта](docs/CALCULATION.md)
+- [Configuration и Reference Data](docs/CONFIGURATION.md)
+- [Эксплуатация и восстановление](docs/OPERATIONS.md)
 
-## Requirements and environment
+## Требования и окружение
 
-Use Python 3.12, Node 22 and pnpm 11.19.0. `.env.example` lists all non-secret
-environment variables. Production requires explicit `APP_ENV=production`, data
-and source directories, host, port and log level; it never falls back to a
-developer path.
+Используйте Python 3.12, Node 22 и pnpm 11.19.0. В `.env.example` перечислены
+все несекретные environment variables. Для production необходимы явно заданные
+`APP_ENV=production`, директории данных и источников, host, port и log level;
+сервис не использует developer-пути как запасной вариант.
 
-## Development start
+## Запуск для разработки
 
 ```powershell
 py -m venv .venv
@@ -48,10 +48,10 @@ Pop-Location
 .\.venv\Scripts\python -m uvicorn app.main:app --app-dir backend --reload --port 8000
 ```
 
-Open `http://localhost:5173`. Set `MONITOR_SOURCE_DIRECTORY` only when local
-source workbooks are available.
+Откройте `http://localhost:5173`. Указывайте `MONITOR_SOURCE_DIRECTORY` только
+когда доступны локальные исходные workbook-файлы.
 
-## Test and build
+## Тестирование и сборка
 
 ```powershell
 $env:PYTHONPATH = (Resolve-Path .\backend).Path
@@ -64,11 +64,12 @@ pnpm exec vite build
 Pop-Location
 ```
 
-The GitHub Actions workflow runs these release gates on push and pull request.
+GitHub Actions выполняет эти release-проверки при push и pull request.
 
-## Production start and routes
+## Production-запуск и маршруты
 
-Build the frontend, set every production variable from `.env.example`, then run:
+Соберите frontend, задайте все production-переменные из `.env.example`, затем
+запустите:
 
 ```powershell
 Push-Location backend
@@ -76,19 +77,22 @@ Push-Location backend
 Pop-Location
 ```
 
-FastAPI serves `/` and `/admin` from `frontend/dist`. Use no reload and exactly
-one worker while JsonStore is the persistence adapter. Routes are `/`, `/admin`,
-`/api/health`, and `/api/ready`.
+FastAPI обслуживает `/` и `/admin` из `frontend/dist`. Пока адаптером хранения
+является JsonStore, не используйте reload и запускайте ровно один worker. Доступны
+маршруты `/`, `/admin`, `/api/health` и `/api/ready`.
 
-`/api/ready` remains 503 until the store, active Configuration, active Reference
-Data and both production sources are initialized. Backup/restore, logging and
-source-operation details are in [Operations](docs/OPERATIONS.md).
+`/api/ready` возвращает 503, пока не инициализированы store, активные
+Configuration и Reference Data, а также оба production-источника. О резервном
+копировании, логировании и операциях с источниками см. [эксплуатационную
+документацию](docs/OPERATIONS.md).
 
-## Administration and limitations
+## Администрирование и ограничения
 
-`/admin` manages Configuration and Reference Data drafts; active versions are
-read-only. Source setup and manual tariffs remain in the normal application.
+`/admin` управляет draft-версиями Configuration и Reference Data; активные
+версии доступны только для чтения. Настройка источников и ручные тарифы остаются
+в основном приложении.
 
-JsonStore is limited to one server, one process and one worker until SQL Server.
-Corporate authentication/RBAC is absent: this is a P0 blocker for network
-deployment, and `/admin` route separation is not an authorization boundary.
+JsonStore ограничен одним сервером, одним процессом и одним worker до перехода
+на SQL Server. Corporate authentication/RBAC отсутствует: это P0-блокер для
+сетевого развёртывания, а разделение маршрутов `/admin` не является границей
+авторизации.
