@@ -5,7 +5,8 @@ import unittest
 from pathlib import Path
 
 from app.core.config import Settings
-from app.modules.cost_monitor.baselines import baseline_manual_tariffs, baseline_other_costs, baseline_routes
+from app.modules.cost_monitor.baselines import baseline_manual_tariffs
+from app.modules.cost_monitor.reference_data.defaults import BASELINE_REFERENCE_DATA
 from app.modules.cost_monitor.repository import CostMonitorRepository
 from app.modules.cost_monitor.store import JsonStore
 
@@ -17,16 +18,19 @@ class JsonStoreTests(unittest.TestCase):
             settings = Settings(project_root=root, data_dir=root / "data", default_source_dir=root / "sources")
             state = JsonStore(settings).read()
 
-        self.assertEqual(state["routes"], baseline_routes())
-        self.assertEqual(state["other_costs"], baseline_other_costs())
+        reference = state["reference_data_versions"][0]["reference_data"]
+        self.assertEqual(reference, BASELINE_REFERENCE_DATA.model_dump(mode="json"))
         self.assertEqual(state["manual_tariffs"], baseline_manual_tariffs())
-        self.assertEqual(len(state["routes"]), 500)
-        self.assertEqual(len(state["other_costs"]), 45)
+        self.assertEqual(len(reference["routes"]), 500)
+        self.assertEqual(len(reference["airport_other_costs"]), 45)
         self.assertEqual(len(state["manual_tariffs"]), 10)
         self.assertEqual([item["airport"] for item in state["manual_tariffs"][:2]], ["=EL", "=EL"])
         self.assertNotIn("international_airports", state)
         self.assertNotIn("aircraft_multipliers", state)
         self.assertNotIn("scenario_rates", state)
+        self.assertNotIn("routes", state)
+        self.assertNotIn("other_costs", state)
+        self.assertEqual(state["active_reference_data_version"], 1)
 
     def test_json_store_implements_module_repository_audit_and_revision_boundary(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -77,7 +81,6 @@ class JsonStoreTests(unittest.TestCase):
 
             def create_legacy_state(state: dict) -> None:
                 state["imported_tariffs"] = [{"airport": "AAA", "service": "ВОДА", "rate": 100}]
-                state["routes"] = [{"key": "AAA-BBB", "flight_time": 1, "distance": 100}]
                 state["source_configs"][0]["last_updated"] = "2026-08-28T10:00:00+00:00"
                 state.pop("data_revision", None)
                 state.pop("data_updated_at", None)
@@ -147,6 +150,13 @@ class JsonStoreTests(unittest.TestCase):
             store = JsonStore(settings)
 
             def create_legacy_state(state: dict) -> None:
+                for key in (
+                    "reference_data_versions",
+                    "reference_data_drafts",
+                    "active_reference_data_version",
+                    "next_reference_data_version",
+                ):
+                    state.pop(key, None)
                 state["routes"] = [{"key": "CUSTOM-ROUTE", "flight_time": 1, "distance": 2}]
                 state["other_costs"] = {"CUSTOM": 123.0}
                 state["manual_tariffs"] = [
@@ -160,8 +170,9 @@ class JsonStoreTests(unittest.TestCase):
             store.mutate(create_legacy_state)
             migrated = JsonStore(settings).read()
 
-        self.assertEqual(migrated["routes"], [{"key": "CUSTOM-ROUTE", "flight_time": 1, "distance": 2}])
-        self.assertEqual(migrated["other_costs"], {"CUSTOM": 123.0})
+        reference = migrated["reference_data_versions"][0]["reference_data"]
+        self.assertEqual(reference["routes"], [{"departure": "CUSTOM", "arrival": "ROUTE", "flight_time": 1.0, "distance": 2.0, "source_row": None}])
+        self.assertEqual(reference["airport_other_costs"], [{"airport": "CUSTOM", "amount": 123.0}])
         manual_by_key = {(item["airport"], item["service"]): item for item in migrated["manual_tariffs"]}
         self.assertEqual(len(manual_by_key), 10)
         self.assertEqual(manual_by_key[("=EL", "КЕРОСИН")]["rate"], 999.0)
@@ -173,6 +184,33 @@ class JsonStoreTests(unittest.TestCase):
         self.assertNotIn("international_airports", migrated)
         self.assertNotIn("aircraft_multipliers", migrated)
         self.assertNotIn("scenario_rates", migrated)
+        self.assertNotIn("routes", migrated)
+        self.assertNotIn("other_costs", migrated)
+
+    def test_reference_migration_seeds_only_empty_legacy_catalog(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            settings = Settings(project_root=root, data_dir=root / "data", default_source_dir=root / "sources")
+            store = JsonStore(settings)
+
+            def create_partial_legacy_state(state: dict) -> None:
+                for key in (
+                    "reference_data_versions",
+                    "reference_data_drafts",
+                    "active_reference_data_version",
+                    "next_reference_data_version",
+                ):
+                    state.pop(key, None)
+                state["routes"] = [{"key": "CUSTOM-ONLY", "flight_time": 1, "distance": 2}]
+                state["other_costs"] = {}
+
+            store.mutate(create_partial_legacy_state)
+            migrated = JsonStore(settings).read()
+
+        reference = migrated["reference_data_versions"][0]["reference_data"]
+        self.assertEqual(reference["routes"][0]["departure"], "CUSTOM")
+        self.assertEqual(reference["routes"][0]["arrival"], "ONLY")
+        self.assertEqual(len(reference["airport_other_costs"]), 45)
 
 
 if __name__ == "__main__":

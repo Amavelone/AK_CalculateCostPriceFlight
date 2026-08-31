@@ -4,7 +4,7 @@ import unittest
 
 from app.modules.cost_monitor.calculation import calculate
 from app.modules.cost_monitor.configuration import BASELINE_CONFIGURATION, validate_configuration
-from app.modules.cost_monitor.records import CostMonitorDataset
+from app.modules.cost_monitor.records import CostMonitorDataset, CostMonitorReferenceSnapshot
 from app.modules.cost_monitor.schemas import CalculationRequest
 
 
@@ -13,7 +13,12 @@ class CalculatorTests(unittest.TestCase):
         configuration_payload = BASELINE_CONFIGURATION.model_dump(mode="json")
         configuration_payload["overrides"]["aircraft_multipliers"] = {"738": 1}
         configuration_payload["overrides"]["scenario_rates"] = {"ГБ 2026": {"738": [10, 20, 30]}}
-        return calculate(CostMonitorDataset.from_state(state), request, validate_configuration(configuration_payload))
+        return calculate(
+            CostMonitorDataset.from_state(state),
+            request,
+            validate_configuration(configuration_payload),
+            reference_data=CostMonitorReferenceSnapshot.from_legacy_state(state),
+        )
 
     def base_state(self) -> dict:
         return {
@@ -80,6 +85,7 @@ class CalculatorTests(unittest.TestCase):
 
         self.assertEqual(result["data_snapshot"]["revision"], 12)
         self.assertEqual(result["config_version"], 1)
+        self.assertEqual(result["reference_version"], 1)
         self.assertEqual(result["trace"]["data_revision"], 12)
         self.assertEqual(
             {step["stage"] for step in result["trace"]["legs"][0]["steps"]},

@@ -11,7 +11,7 @@ from app.modules.cost_monitor.configuration.definition import (
 )
 from app.modules.cost_monitor.configuration.functions import ALLOWED_PRIMITIVE_NAMES
 from app.modules.cost_monitor.configuration.variables import REGISTERED_VARIABLE_NAMES
-from app.modules.cost_monitor.records import CostMonitorDataset
+from app.modules.cost_monitor.records import CostMonitorDataset, CostMonitorReferenceSnapshot
 from app.modules.cost_monitor.schemas import CalculationRequest
 from app.modules.cost_monitor.store import build_default_state
 from pydantic import ValidationError
@@ -130,8 +130,9 @@ class ConfigurationTests(unittest.TestCase):
         custom = validate_configuration(custom_payload)
 
         dataset = CostMonitorDataset.from_state(state)
-        baseline_result = calculate(dataset, request)
-        custom_result = calculate(dataset, request, custom)
+        reference = CostMonitorReferenceSnapshot.from_legacy_state(state)
+        baseline_result = calculate(dataset, request, reference_data=reference)
+        custom_result = calculate(dataset, request, custom, reference_data=reference)
 
         self.assertEqual(baseline_result["legs"][0]["components"]["fuel"], 648.0)
         self.assertEqual(custom_result["legs"][0]["components"]["fuel"], 720.0)
@@ -152,7 +153,11 @@ class ConfigurationTests(unittest.TestCase):
             {"legs": [{"id": "one", "departure": "AAA", "arrival": "BBB", "aircraft": "738"}]}
         )
 
-        result = calculate(CostMonitorDataset.from_state(state), request)
+        result = calculate(
+            CostMonitorDataset.from_state(state),
+            request,
+            reference_data=CostMonitorReferenceSnapshot.from_legacy_state(state),
+        )
 
         self.assertEqual([source["id"] for source in state["source_configs"]], ["srv", "fuel_registry"])
         self.assertEqual(result["legs"][0]["route"], "AAA-BBB")

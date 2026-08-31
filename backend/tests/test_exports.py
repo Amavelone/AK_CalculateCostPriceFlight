@@ -6,7 +6,7 @@ from io import BytesIO
 
 from app.modules.cost_monitor.calculation import calculate
 from app.modules.cost_monitor.exports import build_export_snapshot, json_bytes, xlsx_bytes
-from app.modules.cost_monitor.records import CostMonitorDataset
+from app.modules.cost_monitor.records import CostMonitorDataset, CostMonitorReferenceSnapshot
 from app.modules.cost_monitor.schemas import CalculationRequest
 from openpyxl import load_workbook
 
@@ -37,7 +37,12 @@ class ExportTests(unittest.TestCase):
 
     def test_snapshot_keeps_inputs_results_and_all_component_details(self) -> None:
         request = self.request()
-        result = calculate(CostMonitorDataset.from_state(self.state()), request)
+        state = self.state()
+        result = calculate(
+            CostMonitorDataset.from_state(state),
+            request,
+            reference_data=CostMonitorReferenceSnapshot.from_legacy_state(state),
+        )
         snapshot = build_export_snapshot(request, result)
 
         self.assertEqual(snapshot["schema_version"], "1.0")
@@ -54,7 +59,12 @@ class ExportTests(unittest.TestCase):
 
     def test_json_and_xlsx_package_the_same_snapshot(self) -> None:
         request = self.request()
-        result = calculate(CostMonitorDataset.from_state(self.state()), request)
+        state = self.state()
+        result = calculate(
+            CostMonitorDataset.from_state(state),
+            request,
+            reference_data=CostMonitorReferenceSnapshot.from_legacy_state(state),
+        )
         snapshot = build_export_snapshot(request, result)
 
         loaded_json = json.loads(json_bytes(snapshot).decode("utf-8"))

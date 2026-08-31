@@ -31,6 +31,8 @@ class EffectiveCalculationContext:
     configuration: CostMonitorConfiguration
     config_version: int
     configuration_state: str
+    reference_version: int
+    reference_state: str
     tariff_index: dict[str, TariffRecord]
 
     @property

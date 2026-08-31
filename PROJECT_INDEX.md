@@ -23,26 +23,30 @@ Frontend:
 ### Cost Monitor feature
 
 - `backend/app/modules/cost_monitor/api.py` — feature router, JSON store
-  composition, health/dashboard, calculation/options, user drafts, versioned
-  configuration lifecycle, exports, sources/upload/refresh/preview, tariffs,
-  routes и audit.
+  composition, health/dashboard, calculation/options, user drafts, independent
+  versioned Configuration and Reference Data lifecycles, exports,
+  sources/upload/refresh/preview, tariffs, routes и audit.
 - `backend/app/modules/cost_monitor/schemas.py` — request DTO и явный
   `CalculationResponse` contract с diagnostics/status для `/api/calculations`.
-- `backend/app/modules/cost_monitor/records.py` — immutable canonical records
-  и `CostMonitorDataset`: source-agnostic граница local state → calculation
-  engine, сохраняющая physical first-match order.
+- `backend/app/modules/cost_monitor/records.py` — immutable canonical records,
+  live `CostMonitorDataset` и separate `CostMonitorReferenceSnapshot`:
+  calculation получает активные live/config/reference snapshots, сохраняя
+  physical first-match order.
 - `backend/app/modules/cost_monitor/catalog.py` — нормализация ключей и stable
   imported-before-manual tariff view shared by calculation and source import.
 - `backend/app/modules/cost_monitor/source_adapters.py` — отдельные production
   adapters для SRV/Fuel Registry и compatibility adapter для Legacy Monitor
   Workbook; физические Excel bindings не проникают в calculation.
-- `backend/app/modules/cost_monitor/baselines.py` и `baselines/*.json` —
-  проверяемые one-time migration seeds: 500 ВВЛ routes, 45 Airport Other Costs
-  и 10 manual tariffs из утверждённой legacy-книги. Это не runtime workbook
-  binding и не будущий Reference Data lifecycle.
+- `backend/app/modules/cost_monitor/reference_data/` — typed schema, checked-in
+  `defaults/` (500 ВВЛ routes и 45 Airport Other Costs), validation,
+  JsonStore repository и lifecycle service. Git seeds не переписываются из
+  runtime edits; active version/drafts/audit остаются module-local.
+- `backend/app/modules/cost_monitor/baselines.py` и `baselines/manual_tariffs.json`
+  — one-time seed только для 10 manual tariffs из утверждённой legacy-книги.
 - `backend/app/modules/cost_monitor/store.py` и `repository.py` — local JSON
   implementation и узкий persistence contract для read/mutate/audit/data
-  revision; будущий SQL Server должен заменить implementation, а не calculation.
+  revision; versioned Reference Data хранится независимо и его activation не
+  меняет `data_revision`.
 - `backend/app/modules/cost_monitor/configuration/` — schema `2.0`, module
   definition, effective context, typed operation executor и capability-oriented
   JSON lifecycle: immutable versions, drafts, validate/preview/compare/activate/
@@ -108,6 +112,9 @@ Frontend:
   зарегистрированные capabilities и инъекция validated configuration в расчёт.
 - `backend/tests/test_configuration_service.py` — lifecycle v1/draft/validate/
   compare/preview/activate/rollback и изоляция configuration от user drafts.
+- `backend/tests/test_reference_data.py` — typed reference payload validation,
+  immutable active snapshot, draft/compare/preview/activate/rollback, audit и
+  независимость `config_version`/`reference_version`/`data_revision`.
 - `backend/tests/test_excel_parity.py` и
   `backend/tests/fixtures/excel_cost_monitor_baseline.json` — Excel-owned
   пяти-плечевой golden master и calculation/export shape.
@@ -116,7 +123,7 @@ Frontend:
 - `ruff.toml` — минимальный backend lint gate.
 - Backend: `$env:PYTHONPATH=(Resolve-Path .\backend).Path; .\.venv\Scripts\python -m unittest discover -s .\backend\tests -v`.
 - Frontend: `cd frontend; pnpm build` (strict TypeScript + Vite production build).
-- Текущий полный набор: 51 backend tests; `\.venv\Scripts\ruff check backend`.
+- Текущий полный набор: 54 backend tests; `\.venv\Scripts\ruff check backend`.
 
 ## Documentation and analysis
 
@@ -172,9 +179,10 @@ Frontend:
   отсутствуют в production dataset/calculation; parser `Признак МВЛ` остаётся
   только DEV compatibility tooling.
 - Configuration v1 — единственный production owner aircraft multipliers и
-  M1/M2/M3 scenario rates. Routes, Airport Other Costs и manual tariff seed
-  — module-owned baseline data; их отдельный admin/version lifecycle deferred
-  to Iteration 3.
+  M1/M2/M3 scenario rates. Active Reference Data — единственный production
+  owner Routes и Airport Other Costs; его lifecycle API независим от
+  Configuration и live `data_revision`. UI и построчный CRUD deferred to
+  Iteration 4.
 - Physical Excel names принадлежат module-local adapters; calculation получает
   только `CostMonitorDataset` и не зависит от JSON, filesystem или будущего SQL.
 - Активная ветка архитектурной инициативы — `feature/module-architecture`.

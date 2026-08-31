@@ -66,6 +66,8 @@ def build_export_snapshot(request: CalculationRequest, result: dict[str, Any]) -
         "calculation": {
             "config_version": result["config_version"],
             "configuration_state": result["configuration_state"],
+            "reference_version": result["reference_version"],
+            "reference_state": result["reference_state"],
             "data_snapshot": result["data_snapshot"],
             "configuration": request.settings.model_dump(),
             "legs": legs,
@@ -296,6 +298,8 @@ def _write_settings_sheet(sheet: Any, snapshot: dict[str, Any]) -> None:
         ("Дата и время расчёта (UTC)", snapshot["exported_at"]),
         ("Версия configuration", snapshot["calculation"]["config_version"]),
         ("Состояние configuration", snapshot["calculation"]["configuration_state"]),
+        ("Версия Reference Data", snapshot["calculation"]["reference_version"]),
+        ("Состояние Reference Data", snapshot["calculation"]["reference_state"]),
         ("Ревизия данных", snapshot["calculation"]["data_snapshot"]["revision"]),
         ("Сценарий ЛЧ", configuration["scenario"]),
         ("Источник ГСМ", configuration["fuel_source"]),
@@ -321,9 +325,9 @@ def _write_settings_sheet(sheet: Any, snapshot: dict[str, Any]) -> None:
         sheet.merge_cells(start_row=sheet.max_row, start_column=1, end_row=sheet.max_row, end_column=2)
         sheet.cell(sheet.max_row, 1).alignment = Alignment(wrap_text=True, vertical="top")
     for row_index in range(2, warning_start):
-        if row_index in (13, 14):
+        if row_index in (14, 15):
             sheet.cell(row_index, 2).number_format = DECIMAL_FORMAT
-        if row_index in (15, 16, 17):
+        if row_index in (16, 17, 18):
             sheet.cell(row_index, 2).number_format = CURRENCY_FORMAT
     sheet.column_dimensions["A"].width = 33
     sheet.column_dimensions["B"].width = 58
@@ -332,7 +336,7 @@ def _write_settings_sheet(sheet: Any, snapshot: dict[str, Any]) -> None:
 def _write_trace_sheet(sheet: Any, snapshot: dict[str, Any]) -> None:
     """Экспортирует structured trace без повторного выполнения calculation."""
 
-    headers = ["Версия configuration", "Ревизия данных", "Плечо", "Этап", "Компонент", "Операция", "Значения"]
+    headers = ["Версия configuration", "Версия Reference Data", "Ревизия данных", "Плечо", "Этап", "Компонент", "Операция", "Значения"]
     sheet.append(headers)
     sheet.sheet_view.showGridLines = False
     sheet.freeze_panes = "A2"
@@ -344,6 +348,7 @@ def _write_trace_sheet(sheet: Any, snapshot: dict[str, Any]) -> None:
             sheet.append(
                 [
                     trace["config_version"],
+                    trace["reference_version"],
                     trace["data_revision"],
                     leg["leg_id"],
                     step["stage"],
@@ -353,9 +358,9 @@ def _write_trace_sheet(sheet: Any, snapshot: dict[str, Any]) -> None:
                 ]
             )
     if sheet.max_row == 1:
-        sheet.append([trace["config_version"], trace["data_revision"], None, "result", "calculation", None, "Нет плеч"])
-    sheet.auto_filter.ref = f"A1:G{sheet.max_row}"
-    for column, width in enumerate([22, 18, 18, 15, 18, 22, 80], start=1):
+        sheet.append([trace["config_version"], trace["reference_version"], trace["data_revision"], None, "result", "calculation", None, "Нет плеч"])
+    sheet.auto_filter.ref = f"A1:H{sheet.max_row}"
+    for column, width in enumerate([22, 22, 18, 18, 15, 18, 22, 80], start=1):
         sheet.column_dimensions[get_column_letter(column)].width = width
     for row in sheet.iter_rows(min_row=2):
-        row[6].alignment = Alignment(wrap_text=True, vertical="top")
+        row[7].alignment = Alignment(wrap_text=True, vertical="top")

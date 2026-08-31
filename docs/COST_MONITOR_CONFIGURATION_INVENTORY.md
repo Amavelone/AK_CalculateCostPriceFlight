@@ -2,13 +2,15 @@
 
 ## Статус и назначение
 
-**Iteration:** Release Iteration 2 — Legacy Workbook Ownership Migration.
+**Iteration:** Release Iteration 3 — Versioned Reference Data.
 **Статус:** active configuration schema `2.0` содержит typed parameters,
 operation parts, safe conditions/lookups и versioned configuration-owned
 aircraft/scenario values.
 ANO, Catering и VAT выполняются через Cost Monitor-owned operation executor.
-Отдельный `/admin` поддерживает Create Draft → Edit → Validate → Preview /
-Compare → Activate и rollback; root Cost Monitor не содержит admin UI.
+Configuration и Reference Data имеют независимые immutable active versions,
+draft/validate/compare/preview/activate/rollback API. Отдельный `/admin`
+сейчас управляет только Configuration; Reference Data UI и построчный CRUD
+отложены до Iteration 4.
 
 Документ фиксирует фактические правила foundation-версии и их текущее место
 ответственности. Typed baseline воспроизводит прежние Python/Excel значения и
@@ -61,11 +63,11 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 | DT-01 | Тарифы SRV | `7480_srv*.xlsx` → `parse_srv_tariffs` | Ставки ГСМ, НО, АНО; physical row order сохраняется. |
 | DT-02 | Ручные тарифы и legacy `ЦРТ+` | API/manual JSON + one-time `baselines/manual_tariffs.json` seed | Дополняют отсутствующие ключи и отображают conflict; workbook parser только DEV compatibility. |
 | DT-03 | Цена топлива АК | `реестр*.xlsx` + курс ЦБ → `parse_fuel_registry` | Цена на аэропорт вылета для `fuel_source=АК`. |
-| DT-04 | Маршрут: distance и flight time | checked-in `baselines/routes.json` (500 rows) | Lookup маршрута, топливо, АНО, margins; lifecycle Reference Data deferred to Iteration 3. |
+| DT-04 | Маршрут: distance и flight time | `reference_data/defaults/routes.json` → active Reference version (500-row seed) | Lookup маршрута, топливо, АНО, margins; active snapshot immutable до activation следующей версии. |
 | DT-05 | Признак международного аэропорта | `Признак МВЛ` → compatibility monitor adapter | DEV parity/migration only; production ВВЛ invariant не читает это значение. |
 | DT-06 | Aircraft multiplier | Configuration v1 baseline overrides | Airport part АНО и связанные НО объёмы. |
 | DT-07 | Scenario M1/M2/M3 rates | Configuration v1 baseline overrides | Margin по сценарию и типу ВС. |
-| DT-08 | Other costs by airport | checked-in `baselines/airport_other_costs.json` (45 rows) | Строка `ПРОЧЕЕ` normal ground block; lifecycle Reference Data deferred to Iteration 3. |
+| DT-08 | Other costs by airport | `reference_data/defaults/airport_other_costs.json` → active Reference version (45-row seed) | Строка `ПРОЧЕЕ` normal ground block; independent lifecycle не меняет live data revision. |
 | DT-09 | Dataset identity, active/uploaded file, source status/audit | local `JsonStore` | Операционная метаинформация; не является бизнес-формулой. |
 
 ## Ownership matrix
@@ -79,7 +81,7 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 | Aircraft multipliers | `CONFIGURATION` | Active Configuration v1 is the sole production owner. |
 | Scenario M1/M2/M3 rates | `CONFIGURATION` | Active Configuration v1 is the sole production owner. |
 | Fuel price and ground services | `DATA` | Canonical live/manual tariff dataset. |
-| Routes and Airport Other Costs | `DATA` | Checked-in baseline seed preserves existing populated JsonStore values; independent lifecycle deferred to Iteration 3. |
+| Routes and Airport Other Costs | `REFERENCE_DATA` | Active immutable version is calculation owner; checked-in seed fills fresh/empty store, populated legacy state migrates into v1 without overwrite. |
 | Source masks and active files | `SOURCE_CONFIGURATION` | Source lifecycle only; not a calculation rule. |
 | Lookup policy, registered variables/operations, DTO shape | `CODE_INVARIANT` | Deploy required to change capability boundary. |
 | First-match, fallback, rounding sequence | `LEGACY_PARITY` | Preserved unless business methodology changes. |

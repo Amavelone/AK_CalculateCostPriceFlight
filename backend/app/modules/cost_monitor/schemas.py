@@ -5,6 +5,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, field_validator
 
 from .configuration.schema import CostMonitorConfiguration
+from .reference_data.schema import CostMonitorReferenceData
 
 
 class LegInput(BaseModel):
@@ -102,6 +103,10 @@ class ConfigurationDraftUpdate(BaseModel):
     configuration: CostMonitorConfiguration
 
 
+class ReferenceDataDraftUpdate(BaseModel):
+    reference_data: CostMonitorReferenceData
+
+
 class ConfigurationVersionResponse(BaseModel):
     version: int
     state: Literal["active", "inactive"]
@@ -120,6 +125,26 @@ class ConfigurationDraftResponse(BaseModel):
     validation_status: Literal["valid"]
     validated_at: str | None = None
     configuration: CostMonitorConfiguration
+
+
+class ReferenceDataVersionResponse(BaseModel):
+    version: int
+    state: Literal["active", "inactive"]
+    created_at: str
+    activated_at: str | None
+    validation_status: Literal["valid"]
+    reference_data: CostMonitorReferenceData | None = None
+
+
+class ReferenceDataDraftResponse(BaseModel):
+    version: int
+    state: Literal["draft"]
+    base_version: int
+    created_at: str
+    updated_at: str
+    validation_status: Literal["valid"]
+    validated_at: str | None = None
+    reference_data: CostMonitorReferenceData
 
 
 class ConfigurationComparisonChange(BaseModel):
@@ -151,6 +176,20 @@ class ConfigurationCompareResponse(BaseModel):
     left: ConfigurationReferenceResponse
     right: ConfigurationReferenceResponse
     changes: list[ConfigurationComparisonChange]
+
+
+class ReferenceDataComparisonChange(BaseModel):
+    path: str
+    before: Any
+    after: Any
+    kind: Literal["record_added", "record_removed", "record_changed"]
+    summary: str
+
+
+class ReferenceDataCompareResponse(BaseModel):
+    left: ConfigurationReferenceResponse
+    right: ConfigurationReferenceResponse
+    changes: list[ReferenceDataComparisonChange]
 
 
 class DetailRow(BaseModel):
@@ -206,6 +245,7 @@ class DataSnapshotResponse(BaseModel):
     manual_tariffs: int
     fuel_prices: int
     routes: int
+    reference_version: int
 
 
 class CalculationTraceStep(BaseModel):
@@ -224,6 +264,8 @@ class CalculationTrace(BaseModel):
     config_version: int
     configuration_state: Literal["active", "draft"]
     data_revision: int
+    reference_version: int
+    reference_state: Literal["active", "draft"]
     legs: list[CalculationTraceLeg]
 
 
@@ -237,6 +279,8 @@ class CalculationResponse(BaseModel):
     data_snapshot: DataSnapshotResponse
     config_version: int
     configuration_state: Literal["active", "draft"]
+    reference_version: int
+    reference_state: Literal["active", "draft"]
     trace: CalculationTrace
 
 

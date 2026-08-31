@@ -18,14 +18,6 @@ def _records(name: str) -> list[dict[str, Any]]:
     return copy.deepcopy(payload["records"])
 
 
-def baseline_routes() -> list[dict[str, Any]]:
-    return _records("routes.json")
-
-
-def baseline_other_costs() -> dict[str, float]:
-    return {str(item["airport"]): float(item["amount"]) for item in _records("airport_other_costs.json")}
-
-
 def baseline_manual_tariffs() -> list[dict[str, Any]]:
     return _records("manual_tariffs.json")
 
@@ -35,11 +27,6 @@ def migrate_legacy_workbook_data(state: dict[str, Any]) -> bool:
 
     if state.get(_WORKBOOK_MIGRATION_MARKER):
         return False
-
-    if not state.get("routes"):
-        state["routes"] = baseline_routes()
-    if not state.get("other_costs"):
-        state["other_costs"] = baseline_other_costs()
 
     manual_tariffs = []
     manual_keys: set[tuple[str, str]] = set()
@@ -65,7 +52,5 @@ def migrate_legacy_workbook_data(state: dict[str, Any]) -> bool:
 
 __all__ = [
     "baseline_manual_tariffs",
-    "baseline_other_costs",
-    "baseline_routes",
     "migrate_legacy_workbook_data",
 ]

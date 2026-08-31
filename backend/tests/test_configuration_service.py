@@ -12,6 +12,8 @@ from app.modules.cost_monitor.configuration import (
     ConfigurationValidationError,
     JsonConfigurationRepository,
 )
+from app.modules.cost_monitor.reference_data import ReferenceDataService
+from app.modules.cost_monitor.reference_data.repository import JsonReferenceDataRepository
 from app.modules.cost_monitor.schemas import CalculationRequest
 from app.modules.cost_monitor.store import build_default_state, utc_now
 from fastapi import HTTPException
@@ -57,7 +59,6 @@ class ConfigurationServiceTests(unittest.TestCase):
         state = self.store.read()
         state.update(
             {
-                "routes": [{"key": "AAA-BBB", "flight_time": 2, "distance": 100}],
                 "imported_tariffs": [
                     {"airport": "AAA", "service": "КЕРОСИН", "rate": 100},
                     {"airport": "AAA", "service": "ЗАПРАВКА ВС", "rate": 20},
@@ -65,6 +66,11 @@ class ConfigurationServiceTests(unittest.TestCase):
                 ],
             }
         )
+        state["reference_data_versions"][0]["reference_data"] = {
+            "schema_version": "1.0",
+            "routes": [{"departure": "AAA", "arrival": "BBB", "flight_time": 2, "distance": 100}],
+            "airport_other_costs": [],
+        }
         return state
 
     def test_draft_isolated_validated_compared_and_activated(self) -> None:
@@ -99,6 +105,7 @@ class ConfigurationServiceTests(unittest.TestCase):
     def test_preview_does_not_activate_and_rollback_reuses_immutable_version(self) -> None:
         memory_store = MemoryConfigurationStore(self.calculation_state())
         service = ConfigurationService(JsonConfigurationRepository(memory_store))
+        reference_service = ReferenceDataService(JsonReferenceDataRepository(memory_store))
         # The fresh service starts with v1; recreate the draft against the same state used by API preview.
         draft_version = service.create_draft()["version"]
         candidate = service.draft_configuration(draft_version).model_dump(mode="json")
@@ -108,6 +115,7 @@ class ConfigurationServiceTests(unittest.TestCase):
         with (
             patch.object(cost_api, "repository", memory_store),
             patch.object(cost_api, "configuration_service", service),
+            patch.object(cost_api, "reference_data_service", reference_service),
         ):
             preview = cost_api.preview_configuration_draft(draft_version, self.request())
             self.assertEqual(preview["configuration_state"], "draft")
@@ -129,6 +137,7 @@ class ConfigurationServiceTests(unittest.TestCase):
     def test_ano_parameter_and_catering_composition_preview_activate_and_rollback(self) -> None:
         memory_store = MemoryConfigurationStore(self.calculation_state())
         service = ConfigurationService(JsonConfigurationRepository(memory_store))
+        reference_service = ReferenceDataService(JsonReferenceDataRepository(memory_store))
         draft = service.create_draft()
         candidate = draft["configuration"]
         candidate["overrides"]["aircraft_multipliers"] = {"738": 1}
@@ -165,6 +174,7 @@ class ConfigurationServiceTests(unittest.TestCase):
         with (
             patch.object(cost_api, "repository", memory_store),
             patch.object(cost_api, "configuration_service", service),
+            patch.object(cost_api, "reference_data_service", reference_service),
         ):
             comparison = cost_api.preview_configuration_comparison(draft["version"], request)
             self.assertEqual(comparison["active"]["legs"][0]["components"]["catering"], 14000)
@@ -188,6 +198,7 @@ class ConfigurationServiceTests(unittest.TestCase):
     def test_configuration_rates_are_effective_and_trace_configuration_owner(self) -> None:
         memory_store = MemoryConfigurationStore(self.calculation_state())
         service = ConfigurationService(JsonConfigurationRepository(memory_store))
+        reference_service = ReferenceDataService(JsonReferenceDataRepository(memory_store))
         draft = service.create_draft()
         candidate = draft["configuration"]
         candidate["overrides"]["aircraft_multipliers"]["738"] = 1.5
@@ -197,6 +208,7 @@ class ConfigurationServiceTests(unittest.TestCase):
         with (
             patch.object(cost_api, "repository", memory_store),
             patch.object(cost_api, "configuration_service", service),
+            patch.object(cost_api, "reference_data_service", reference_service),
         ):
             preview = cost_api.preview_configuration_draft(draft["version"], self.request())
 

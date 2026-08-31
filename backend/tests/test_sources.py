@@ -129,7 +129,6 @@ class SourceParserCharacterizationTests(unittest.TestCase):
         state = SourceParserCharacterizationTests.empty_dataset_state()
         state["manual_tariffs"] = [{"id": "manual-1", "airport": "KJA", "service": "ВОДА", "rate": 100, "source": "manual"}]
         adapter_run.data.apply(CostMonitorDataset.from_state(state)).write_to_state(state)
-        self.assertEqual(state["routes"][0]["key"], "KJA-OVB")
         self.assertEqual([item["id"] for item in state["manual_tariffs"]], ["manual-1", "legacy-2"])
         self.assertEqual(state["manual_tariffs"][1]["legacy_manual"], True)
 
@@ -225,7 +224,7 @@ class WorkbookPreviewTests(unittest.TestCase):
             CostMonitorDataset.from_state(state)
         ).write_to_state(state)
 
-        self.assertEqual(state["routes"], [])
+        self.assertEqual(state["routes"], [{"key": "OLD-OLD"}])
 
     def test_srv_adapter_normalizes_and_round_trips_canonical_data(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

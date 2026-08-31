@@ -188,14 +188,49 @@ class MonitorWorkbookData:
 
 
 @dataclass(frozen=True)
+class CostMonitorReferenceSnapshot:
+    """The active immutable Routes and Airport Other Costs used by calculation."""
+
+    routes: tuple[RouteRecord, ...]
+    other_costs: Mapping[str, float]
+
+    @classmethod
+    def from_reference_data(cls, value: Mapping[str, Any]) -> CostMonitorReferenceSnapshot:
+        routes = tuple(
+            RouteRecord(
+                key=f"{item['departure']}-{item['arrival']}",
+                departure=str(item["departure"]),
+                arrival=str(item["arrival"]),
+                distance=float(item["distance"]),
+                flight_time=float(item["flight_time"]),
+                source_row=int(item["source_row"]) if item.get("source_row") is not None else None,
+            )
+            for item in value.get("routes", [])
+        )
+        return cls(
+            routes=routes,
+            other_costs=_immutable_mapping(
+                {str(item["airport"]): float(item["amount"]) for item in value.get("airport_other_costs", [])}
+            ),
+        )
+
+    @classmethod
+    def from_legacy_state(cls, state: Mapping[str, Any]) -> CostMonitorReferenceSnapshot:
+        """Test and migration helper for the former unversioned state shape."""
+
+        return cls(
+            routes=tuple(RouteRecord.from_mapping(item) for item in state.get("routes", [])),
+            other_costs=_immutable_mapping({str(key): float(amount) for key, amount in state.get("other_costs", {}).items()}),
+        )
+
+
+@dataclass(frozen=True)
 class CostMonitorDataset:
-    """Live and stable reference inputs consumed by the calculation engine."""
+    """Live SRV/Fuel/manual inputs consumed by the calculation engine."""
 
     imported_tariffs: tuple[TariffRecord, ...]
     manual_tariffs: tuple[TariffRecord, ...]
     fuel_prices: tuple[FuelPriceRecord, ...]
-    routes: tuple[RouteRecord, ...]
-    other_costs: Mapping[str, float]
     data_revision: int = 0
 
     @classmethod
@@ -204,8 +239,6 @@ class CostMonitorDataset:
             imported_tariffs=tuple(TariffRecord.from_mapping(item) for item in state.get("imported_tariffs", [])),
             manual_tariffs=tuple(TariffRecord.from_mapping(item) for item in state.get("manual_tariffs", [])),
             fuel_prices=tuple(FuelPriceRecord.from_mapping(item) for item in state.get("fuel_prices", [])),
-            routes=tuple(RouteRecord.from_mapping(item) for item in state.get("routes", [])),
-            other_costs=_immutable_mapping({str(key): float(amount) for key, amount in state.get("other_costs", {}).items()}),
             data_revision=int(state.get("data_revision", 0)),
         )
 
@@ -224,15 +257,12 @@ class CostMonitorDataset:
     def with_monitor_workbook(self, workbook: MonitorWorkbookData) -> CostMonitorDataset:
         """Compatibility-only projection used by direct parser/adapter tooling.
 
-        Production source lifecycle never invokes this method. The workbook's
-        MВЛ marker and calculation rates intentionally remain outside the
-        production dataset.
+        Production source lifecycle never invokes this method. Workbook routes,
+        MВЛ markers and calculation rates remain outside the production dataset.
         """
         manual_tariffs = tuple(item for item in self.manual_tariffs if not item.legacy_manual) + workbook.legacy_manual_tariffs
         return replace(
             self,
-            routes=workbook.routes,
-            other_costs=workbook.other_costs,
             manual_tariffs=manual_tariffs,
         )
 
@@ -244,7 +274,5 @@ class CostMonitorDataset:
                 "imported_tariffs": [tariff.to_mapping() for tariff in self.imported_tariffs],
                 "manual_tariffs": [tariff.to_mapping() for tariff in self.manual_tariffs],
                 "fuel_prices": [price.to_mapping() for price in self.fuel_prices],
-                "routes": [route.to_mapping() for route in self.routes],
-                "other_costs": dict(self.other_costs),
             }
         )

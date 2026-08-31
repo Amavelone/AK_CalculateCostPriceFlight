@@ -21,7 +21,14 @@ from .configuration.definition import LOOKUP_ARGUMENTS, REGISTERED_PARAMETER_PAT
 from .configuration.functions import ALLOWED_PRIMITIVES
 from .configuration.variables import REGISTERED_VARIABLES
 from .exports import build_export_snapshot, export_filename, json_bytes, xlsx_bytes
-from .records import CostMonitorDataset
+from .records import CostMonitorDataset, CostMonitorReferenceSnapshot
+from .reference_data import (
+    ReferenceDataConflictError,
+    ReferenceDataNotFoundError,
+    ReferenceDataService,
+    ReferenceDataValidationError,
+)
+from .reference_data.repository import JsonReferenceDataRepository
 from .repository import CostMonitorRepository
 from .schemas import (
     CalculationRequest,
@@ -34,6 +41,10 @@ from .schemas import (
     ConfigurationVersionResponse,
     DraftPayload,
     ManualTariffInput,
+    ReferenceDataCompareResponse,
+    ReferenceDataDraftResponse,
+    ReferenceDataDraftUpdate,
+    ReferenceDataVersionResponse,
     SourceConfigResponse,
     SourceConfigUpdate,
     SourcePreviewResponse,
@@ -56,6 +67,7 @@ from .store import JsonStore, utc_now
 router = APIRouter()
 repository: CostMonitorRepository = JsonStore(settings)
 configuration_service = ConfigurationService(JsonConfigurationRepository(repository))
+reference_data_service = ReferenceDataService(JsonReferenceDataRepository(repository))
 COOKIE_NAME = "cost_monitor_draft"
 
 
@@ -105,6 +117,44 @@ def configuration_error_to_http(error: Exception) -> HTTPException:
     return HTTPException(status_code=500, detail="Не удалось обработать configuration")
 
 
+def reference_data_error_to_http(error: Exception) -> HTTPException:
+    if isinstance(error, ReferenceDataNotFoundError):
+        return HTTPException(status_code=404, detail=str(error))
+    if isinstance(error, ReferenceDataConflictError):
+        return HTTPException(status_code=409, detail=str(error))
+    if isinstance(error, ReferenceDataValidationError):
+        return HTTPException(status_code=422, detail=str(error))
+    return HTTPException(status_code=500, detail="Не удалось обработать Reference Data")
+
+
+def reference_snapshot(reference: dict[str, Any]) -> CostMonitorReferenceSnapshot:
+    return CostMonitorReferenceSnapshot.from_reference_data(reference["reference_data"].model_dump(mode="json"))
+
+
+def calculation_difference(active_result: dict[str, Any], draft_result: dict[str, Any]) -> dict[str, Any]:
+    leg_differences: dict[str, dict[str, float]] = {}
+    active_legs = {leg["id"]: leg for leg in active_result["legs"]}
+    for draft_leg in draft_result["legs"]:
+        active_leg = active_legs.get(draft_leg["id"])
+        if active_leg is None:
+            continue
+        leg_differences[draft_leg["id"]] = {
+            component: round(
+                float(draft_leg["components"].get(component, 0.0))
+                - float(active_leg["components"].get(component, 0.0)),
+                2,
+            )
+            for component in sorted(set(active_leg["components"]) | set(draft_leg["components"]))
+        }
+    return {
+        "total": {
+            level: round(float(draft_result["total"][level]) - float(active_result["total"][level]), 2)
+            for level in ("m1", "m2", "m3")
+        },
+        "legs": leg_differences,
+    }
+
+
 @router.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -113,13 +163,14 @@ def health() -> dict[str, str]:
 @router.get("/api/dashboard")
 def dashboard() -> dict[str, Any]:
     state = repository.read()
+    reference = reference_data_service.active()
     return {
         "sources": state["source_configs"],
         "stats": {
             "tariffs": len(state["imported_tariffs"]),
             "manual_tariffs": len(state["manual_tariffs"]),
             "fuel_prices": len(state["fuel_prices"]),
-            "routes": len(state["routes"]),
+            "routes": len(reference["reference_data"].routes),
         },
         "data_revision": state.get("data_revision", 0),
         "data_updated_at": state.get("data_updated_at"),
@@ -165,7 +216,17 @@ def save_current_draft(payload: DraftPayload, request: Request, response: Respon
 @router.post("/api/calculations", response_model=CalculationResponse)
 def calculate_cost(payload: CalculationRequest) -> dict[str, Any]:
     active = configuration_service.active()
-    return calculate(CostMonitorDataset.from_state(repository.read()), payload, active["configuration"], active["version"], active["state"])
+    reference = reference_data_service.active()
+    return calculate(
+        CostMonitorDataset.from_state(repository.read()),
+        payload,
+        active["configuration"],
+        active["version"],
+        active["state"],
+        reference_snapshot(reference),
+        reference["version"],
+        reference["state"],
+    )
 
 
 @router.post("/api/exports/{file_format}")
@@ -179,7 +240,17 @@ def export_calculation(file_format: str, payload: CalculationRequest) -> Respons
     if file_format not in {"json", "xlsx"}:
         raise HTTPException(status_code=404, detail="Формат выгрузки не поддерживается")
     active = configuration_service.active()
-    result = calculate(CostMonitorDataset.from_state(repository.read()), payload, active["configuration"], active["version"], active["state"])
+    reference = reference_data_service.active()
+    result = calculate(
+        CostMonitorDataset.from_state(repository.read()),
+        payload,
+        active["configuration"],
+        active["version"],
+        active["state"],
+        reference_snapshot(reference),
+        reference["version"],
+        reference["state"],
+    )
     snapshot = build_export_snapshot(payload, result)
     content = json_bytes(snapshot) if file_format == "json" else xlsx_bytes(snapshot)
     media_type = "application/json; charset=utf-8" if file_format == "json" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -278,7 +349,17 @@ def compare_configuration_versions(left_version: int, right_version: int) -> dic
 def preview_configuration_draft(version: int, payload: CalculationRequest) -> dict[str, Any]:
     try:
         configuration = configuration_service.draft_configuration(version)
-        return calculate(CostMonitorDataset.from_state(repository.read()), payload, configuration, version, "draft")
+        reference = reference_data_service.active()
+        return calculate(
+            CostMonitorDataset.from_state(repository.read()),
+            payload,
+            configuration,
+            version,
+            "draft",
+            reference_snapshot(reference),
+            reference["version"],
+            reference["state"],
+        )
     except Exception as error:
         raise configuration_error_to_http(error) from error
 
@@ -292,6 +373,8 @@ def preview_configuration_comparison(version: int, payload: CalculationRequest) 
         state = repository.read()
         dataset = CostMonitorDataset.from_state(state)
         active = configuration_service.active()
+        reference = reference_data_service.active()
+        active_reference = reference_snapshot(reference)
         draft_configuration = configuration_service.draft_configuration(version)
         active_result = calculate(
             dataset,
@@ -299,32 +382,24 @@ def preview_configuration_comparison(version: int, payload: CalculationRequest) 
             active["configuration"],
             active["version"],
             "active",
+            active_reference,
+            reference["version"],
+            reference["state"],
         )
-        draft_result = calculate(dataset, payload, draft_configuration, version, "draft")
-        leg_differences: dict[str, dict[str, float]] = {}
-        active_legs = {leg["id"]: leg for leg in active_result["legs"]}
-        for draft_leg in draft_result["legs"]:
-            active_leg = active_legs.get(draft_leg["id"])
-            if active_leg is None:
-                continue
-            leg_differences[draft_leg["id"]] = {
-                component: round(
-                    float(draft_leg["components"].get(component, 0.0))
-                    - float(active_leg["components"].get(component, 0.0)),
-                    2,
-                )
-                for component in sorted(set(active_leg["components"]) | set(draft_leg["components"]))
-            }
+        draft_result = calculate(
+            dataset,
+            payload,
+            draft_configuration,
+            version,
+            "draft",
+            active_reference,
+            reference["version"],
+            reference["state"],
+        )
         return {
             "active": active_result,
             "draft": draft_result,
-            "difference": {
-                "total": {
-                    level: round(float(draft_result["total"][level]) - float(active_result["total"][level]), 2)
-                    for level in ("m1", "m2", "m3")
-                },
-                "legs": leg_differences,
-            },
+            "difference": calculation_difference(active_result, draft_result),
         }
     except Exception as error:
         raise configuration_error_to_http(error) from error
@@ -344,6 +419,136 @@ def rollback_configuration(version: int) -> dict[str, Any]:
         return configuration_service.rollback(version)
     except Exception as error:
         raise configuration_error_to_http(error) from error
+
+
+@router.get("/api/reference-data/active", response_model=ReferenceDataVersionResponse)
+def active_reference_data() -> dict[str, Any]:
+    try:
+        active = reference_data_service.active()
+        active["reference_data"] = active["reference_data"].model_dump(mode="json")
+        return active
+    except Exception as error:
+        raise reference_data_error_to_http(error) from error
+
+
+@router.get("/api/reference-data/versions", response_model=list[ReferenceDataVersionResponse])
+def list_reference_data_versions() -> list[dict[str, Any]]:
+    try:
+        return reference_data_service.list_versions()
+    except Exception as error:
+        raise reference_data_error_to_http(error) from error
+
+
+@router.post("/api/reference-data/drafts", response_model=ReferenceDataDraftResponse, status_code=201)
+def create_reference_data_draft() -> dict[str, Any]:
+    try:
+        return reference_data_service.create_draft()
+    except Exception as error:
+        raise reference_data_error_to_http(error) from error
+
+
+@router.get("/api/reference-data/drafts/{version}", response_model=ReferenceDataDraftResponse)
+def get_reference_data_draft(version: int) -> dict[str, Any]:
+    try:
+        return reference_data_service.draft(version)
+    except Exception as error:
+        raise reference_data_error_to_http(error) from error
+
+
+@router.put("/api/reference-data/drafts/{version}", response_model=ReferenceDataDraftResponse)
+def update_reference_data_draft(version: int, payload: ReferenceDataDraftUpdate) -> dict[str, Any]:
+    try:
+        return reference_data_service.update_draft(version, payload.reference_data.model_dump(mode="json"))
+    except Exception as error:
+        raise reference_data_error_to_http(error) from error
+
+
+@router.post("/api/reference-data/drafts/{version}/validate", response_model=ReferenceDataDraftResponse)
+def validate_reference_data_draft(version: int) -> dict[str, Any]:
+    try:
+        return reference_data_service.validate_draft(version)
+    except Exception as error:
+        raise reference_data_error_to_http(error) from error
+
+
+@router.get("/api/reference-data/compare/{left_version}/{right_version}", response_model=ReferenceDataCompareResponse)
+def compare_reference_data_versions(left_version: int, right_version: int) -> dict[str, Any]:
+    try:
+        return reference_data_service.compare(left_version, right_version)
+    except Exception as error:
+        raise reference_data_error_to_http(error) from error
+
+
+@router.post("/api/reference-data/drafts/{version}/preview", response_model=CalculationResponse)
+def preview_reference_data_draft(version: int, payload: CalculationRequest) -> dict[str, Any]:
+    try:
+        active_configuration = configuration_service.active()
+        draft_reference = reference_data_service.draft_data(version)
+        return calculate(
+            CostMonitorDataset.from_state(repository.read()),
+            payload,
+            active_configuration["configuration"],
+            active_configuration["version"],
+            active_configuration["state"],
+            CostMonitorReferenceSnapshot.from_reference_data(draft_reference.model_dump(mode="json")),
+            version,
+            "draft",
+        )
+    except Exception as error:
+        raise reference_data_error_to_http(error) from error
+
+
+@router.post("/api/reference-data/drafts/{version}/preview-comparison", response_model=ConfigurationPreviewComparisonResponse)
+def preview_reference_data_comparison(version: int, payload: CalculationRequest) -> dict[str, Any]:
+    try:
+        state = repository.read()
+        dataset = CostMonitorDataset.from_state(state)
+        active_configuration = configuration_service.active()
+        active_reference = reference_data_service.active()
+        draft_reference = reference_data_service.draft_data(version)
+        active_result = calculate(
+            dataset,
+            payload,
+            active_configuration["configuration"],
+            active_configuration["version"],
+            active_configuration["state"],
+            reference_snapshot(active_reference),
+            active_reference["version"],
+            active_reference["state"],
+        )
+        draft_result = calculate(
+            dataset,
+            payload,
+            active_configuration["configuration"],
+            active_configuration["version"],
+            active_configuration["state"],
+            CostMonitorReferenceSnapshot.from_reference_data(draft_reference.model_dump(mode="json")),
+            version,
+            "draft",
+        )
+        return {
+            "active": active_result,
+            "draft": draft_result,
+            "difference": calculation_difference(active_result, draft_result),
+        }
+    except Exception as error:
+        raise reference_data_error_to_http(error) from error
+
+
+@router.post("/api/reference-data/drafts/{version}/activate", response_model=ReferenceDataVersionResponse)
+def activate_reference_data_draft(version: int) -> dict[str, Any]:
+    try:
+        return reference_data_service.activate(version)
+    except Exception as error:
+        raise reference_data_error_to_http(error) from error
+
+
+@router.post("/api/reference-data/rollback/{version}", response_model=ReferenceDataVersionResponse)
+def rollback_reference_data(version: int) -> dict[str, Any]:
+    try:
+        return reference_data_service.rollback(version)
+    except Exception as error:
+        raise reference_data_error_to_http(error) from error
 
 
 @router.get("/api/sources", response_model=list[SourceConfigResponse])
@@ -516,7 +721,11 @@ def delete_manual_tariff(tariff_id: str) -> Response:
 
 @router.get("/api/routes")
 def list_routes(query: str = "") -> list[dict[str, Any]]:
-    routes = repository.read()["routes"]
+    reference = reference_data_service.active()["reference_data"]
+    routes = [
+        {"key": route.key, **route.model_dump(mode="json")}
+        for route in reference.routes
+    ]
     phrase = query.strip().upper()
     filtered = [route for route in routes if not phrase or phrase in route["key"]]
     return filtered[:50]

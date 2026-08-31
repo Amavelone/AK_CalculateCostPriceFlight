@@ -70,6 +70,12 @@ and manual tariffs seed a fresh JsonStore. Calculation Configuration v1 owns
 the approved aircraft multipliers and M1/M2/M3 scenario rates. Production
 calculation is a ВВЛ-only contour and never reads the workbook.
 
+**Выполнено в Iteration 3:** Routes и Airport Other Costs получили независимый
+module-local version lifecycle: immutable active Reference Data, drafts,
+validation, compare/preview, activate/rollback и audit. Calculation/export
+identity содержит `config_version`, `reference_version` и `data_revision`;
+Reference activation не изменяет live data revision.
+
 ```text
 Release v1
     ├── Calculation Configuration
@@ -160,9 +166,10 @@ Production больше не получает их из Monitor Workbook.
 
 > **Module-owned Reference Data → Airport Other Costs**
 
-Iteration 2 seed-ит 45 значений только для пустого legacy/fresh JsonStore;
-существующие значения не перезаписываются. Независимый version lifecycle и
-admin boundary для Reference Data — scope Iteration 3, не текущей реализации.
+Fresh/empty JsonStore получает 45 значений из Git seed; populated legacy state
+мигрируется в active Reference v1 без overwrite. Lifecycle API уже независим
+от Configuration; Reference Data admin UI и построчное редактирование — scope
+Iteration 4.
 
 ---
 
@@ -237,11 +244,11 @@ backend/app/modules/cost_monitor/
 │
 ├── reference_data/
 │   ├── schema.py
-│   ├── definition.py
 │   ├── defaults/
 │   │   ├── routes.json
 │   │   └── airport_other_costs.json
-│   ├── validation.py
+│   ├── defaults.py
+│   ├── schema.py
 │   ├── repository.py
 │   └── service.py
 │
@@ -264,9 +271,10 @@ Configuration != Reference Data != Live Sources
 # 8. Baseline Reference Data
 
 В repository хранится утверждённый baseline внутренних справочников. В
-Iteration 2 это human-readable JSON artifacts с schema/source/date metadata:
-500 Routes и 45 Airport Other Costs; internal manual tariff seed содержит 10
-строк. Их независимая версия и activation lifecycle остаются Iteration 3.
+Это human-readable JSON artifacts с schema/source/date metadata: 500 Routes и
+45 Airport Other Costs; internal manual tariff seed содержит 10 строк. Они
+seed-ят fresh/empty store либо один раз мигрируют populated legacy values в
+immutable active Reference v1.
 
 Например:
 
@@ -294,7 +302,9 @@ reference_data/defaults/routes.json
 
 Baseline-файлы являются seed и хранятся в Git.
 
-Admin editing не должен переписывать эти Git-файлы.
+Runtime editing не переписывает эти Git-файлы. Reference Data lifecycle API
+использует full typed payload; per-row admin UI и bulk import не входят в
+Iteration 3.
 
 ---
 
@@ -324,7 +334,9 @@ Rollback
 
 Active version immutable.
 
-Текущая реализация может использовать `JsonStore`; позже storage adapter может перейти на SQL Server.
+Текущая реализация использует `JsonStore`: `reference_data_versions`,
+`reference_data_drafts`, active pointer, next version и audit events. Позже
+storage adapter может перейти на SQL Server.
 
 ---
 

@@ -1,5 +1,31 @@
 # Project Changelog
 
+## 2026-08-31 — Release Iteration 3: versioned cost monitor reference data
+
+### Изменено
+
+- Routes и Airport Other Costs вынесены в module-local `reference_data/` с
+  typed schema, validation, checked-in JSON defaults и JsonStore lifecycle.
+  Fresh store seed-ится Reference v1; legacy top-level `routes`/`other_costs`
+  мигрируются в immutable v1 snapshot и удаляются из production live state.
+- Добавлены independent active versions, drafts, validation, compare, preview,
+  activate, rollback и audit. Runtime calculation читает только active
+  Reference Data вместе с active Configuration и live dataset; activation/
+  rollback Reference Data не меняют `data_revision`.
+- Calculation/API/trace/JSON/XLSX exports теперь явно несут
+  `reference_version` и `reference_state`. Configuration и Reference previews
+  изолированы: каждый draft вычисляется с active версией другой границы.
+- Git baseline artifacts перемещены в `reference_data/defaults/`; runtime edits
+  никогда не переписывают их. Reference Data UI, per-row endpoints и bulk
+  import остаются scope Iteration 4.
+
+### Проверка
+
+- Добавлены проверки Reference Data seed/migration, typed validation,
+  immutable active version, lifecycle/audit, preview/rollback и сохранения
+  `config_version`/`data_revision`; DEV workbook parser/adapter coverage
+  сохранено.
+
 ## 2026-08-31 — Release Iteration 2: migrate legacy workbook ownership
 
 ### Изменено

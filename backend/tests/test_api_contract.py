@@ -31,6 +31,17 @@ EXPECTED_OPERATIONS = {
     ("POST", "/api/configuration/drafts/{version}/preview-comparison"),
     ("POST", "/api/configuration/drafts/{version}/activate"),
     ("POST", "/api/configuration/rollback/{version}"),
+    ("GET", "/api/reference-data/active"),
+    ("GET", "/api/reference-data/versions"),
+    ("POST", "/api/reference-data/drafts"),
+    ("GET", "/api/reference-data/drafts/{version}"),
+    ("PUT", "/api/reference-data/drafts/{version}"),
+    ("POST", "/api/reference-data/drafts/{version}/validate"),
+    ("GET", "/api/reference-data/compare/{left_version}/{right_version}"),
+    ("POST", "/api/reference-data/drafts/{version}/preview"),
+    ("POST", "/api/reference-data/drafts/{version}/preview-comparison"),
+    ("POST", "/api/reference-data/drafts/{version}/activate"),
+    ("POST", "/api/reference-data/rollback/{version}"),
     ("GET", "/api/sources"),
     ("PUT", "/api/sources/{source_id}"),
     ("GET", "/api/sources/{source_id}/preview"),
@@ -92,7 +103,9 @@ class ApiContractTests(unittest.TestCase):
         state["data_revision"] = 4
         state["imported_tariffs"] = [{"airport": "OLD", "service": "ВОДА", "rate": 1}]
         state["fuel_prices"] = [{"airport": "OLD", "price": 1}]
-        state["routes"] = [{"key": "OLD-OLD", "flight_time": 1, "distance": 1}]
+        state["reference_data_versions"][0]["reference_data"]["routes"] = [
+            {"departure": "OLD", "arrival": "OLD", "flight_time": 1, "distance": 1, "source_row": None}
+        ]
         memory_store = MemoryStore(state)
         staged_source_ids: list[str] = []
 
@@ -120,7 +133,10 @@ class ApiContractTests(unittest.TestCase):
         self.assertEqual(failed["last_status"], "error")
         self.assertEqual(memory_store.state["data_revision"], 4)
         self.assertEqual(memory_store.state["imported_tariffs"][0]["airport"], "OLD")
-        self.assertEqual(memory_store.state["routes"][0]["key"], "OLD-OLD")
+        self.assertEqual(
+            memory_store.state["reference_data_versions"][0]["reference_data"]["routes"][0]["departure"],
+            "OLD",
+        )
         self.assertEqual(memory_store.state["fuel_prices"][0]["airport"], "OLD")
         self.assertEqual(staged_source_ids, ["srv", "fuel_registry"])
         self.assertEqual([source["id"] for source in response["sources"]], ["srv", "fuel_registry"])

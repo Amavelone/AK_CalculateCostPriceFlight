@@ -49,9 +49,18 @@ export interface CalculationResult {
   }>
   total: Record<string, number>
   warnings: string[]
-  data_snapshot: Record<string, number>
+  data_snapshot: {
+    revision: number
+    tariffs: number
+    manual_tariffs: number
+    fuel_prices: number
+    routes: number
+    reference_version: number
+  }
   config_version: number
   configuration_state: 'active' | 'draft'
+  reference_version: number
+  reference_state: 'active' | 'draft'
   trace: CalculationTrace
 }
 
@@ -66,6 +75,8 @@ export interface CalculationTrace {
   config_version: number
   configuration_state: 'active' | 'draft'
   data_revision: number
+  reference_version: number
+  reference_state: 'active' | 'draft'
   legs: Array<{ leg_id: string; steps: CalculationTraceStep[] }>
 }
 

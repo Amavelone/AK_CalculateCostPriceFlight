@@ -7,7 +7,7 @@ from typing import Any
 
 from app.modules.cost_monitor.calculation import calculate
 from app.modules.cost_monitor.exports import build_export_snapshot
-from app.modules.cost_monitor.records import CostMonitorDataset
+from app.modules.cost_monitor.records import CostMonitorDataset, CostMonitorReferenceSnapshot
 from app.modules.cost_monitor.schemas import CalculationRequest
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "excel_cost_monitor_baseline.json"
@@ -39,7 +39,12 @@ class ExcelParityTests(unittest.TestCase):
     def setUp(self) -> None:
         self.fixture = load_fixture()
         self.request = CalculationRequest.model_validate(self.fixture["request"])
-        self.result = calculate(CostMonitorDataset.from_state(build_state(self.fixture)), self.request)
+        self.state = build_state(self.fixture)
+        self.result = calculate(
+            CostMonitorDataset.from_state(self.state),
+            self.request,
+            reference_data=CostMonitorReferenceSnapshot.from_legacy_state(self.state),
+        )
 
     def test_approved_five_leg_scenario_matches_excel_cached_values(self) -> None:
         expected_legs = self.fixture["expected_excel_rows"]
@@ -75,7 +80,11 @@ class ExcelParityTests(unittest.TestCase):
         state_with_legacy_source = build_state(self.fixture)
         state_with_legacy_source["source_configs"] = [{"id": "obsolete", "parser": "unsupported"}]
 
-        result_with_legacy_source = calculate(CostMonitorDataset.from_state(state_with_legacy_source), self.request)
+        result_with_legacy_source = calculate(
+            CostMonitorDataset.from_state(state_with_legacy_source),
+            self.request,
+            reference_data=CostMonitorReferenceSnapshot.from_legacy_state(state_with_legacy_source),
+        )
 
         self.assertEqual(
             {key: value for key, value in result_with_legacy_source.items() if key != "calculated_at"},
@@ -95,6 +104,8 @@ class ExcelParityTests(unittest.TestCase):
                 "data_snapshot",
                 "config_version",
                 "configuration_state",
+                "reference_version",
+                "reference_state",
                 "trace",
             },
         )
@@ -124,10 +135,11 @@ class ExcelParityTests(unittest.TestCase):
         self.assertEqual(set(snapshot), {"schema_version", "exported_at", "calculation"})
         self.assertEqual(
             set(snapshot["calculation"]),
-            {"config_version", "configuration_state", "data_snapshot", "configuration", "legs", "totals", "warnings", "trace"},
+            {"config_version", "configuration_state", "reference_version", "reference_state", "data_snapshot", "configuration", "legs", "totals", "warnings", "trace"},
         )
         self.assertEqual(snapshot["schema_version"], "1.0")
         self.assertEqual(snapshot["calculation"]["config_version"], 1)
+        self.assertEqual(snapshot["calculation"]["reference_version"], 1)
         self.assertEqual(snapshot["calculation"]["trace"]["data_revision"], 1)
 
 

@@ -11,12 +11,13 @@ from pathlib import Path
 from typing import Any
 
 from ...core.config import Settings
-from .baselines import baseline_manual_tariffs, baseline_other_costs, baseline_routes, migrate_legacy_workbook_data
+from .baselines import baseline_manual_tariffs, migrate_legacy_workbook_data
 from .configuration.definition import (
     PRODUCTION_SOURCE_DEFINITIONS,
     SourceDefinition,
 )
 from .configuration.service import ensure_configuration_state, ensure_release_configuration_ownership
+from .reference_data.service import ensure_reference_data_state
 
 
 def utc_now() -> str:
@@ -57,14 +58,13 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
         "imported_tariffs": [],
         "manual_tariffs": baseline_manual_tariffs(),
         "fuel_prices": [],
-        "routes": baseline_routes(),
-        "other_costs": baseline_other_costs(),
         "release_v1_workbook_ownership_migrated": True,
         "drafts": {},
         "audit_log": [],
     }
     ensure_configuration_state(state, state["created_at"])
     ensure_release_configuration_ownership(state)
+    ensure_reference_data_state(state, state["created_at"])
     return state
 
 
@@ -143,6 +143,9 @@ class JsonStore:
                 changed = True
             if migrate_legacy_workbook_data(state):
                 self.append_audit(state, "legacy_workbook_ownership_migrated", "stable baseline data seeded")
+                changed = True
+            if ensure_reference_data_state(state):
+                self.append_audit(state, "reference_data_v1_migrated", "routes and airport other costs versioned")
                 changed = True
             if changed:
                 self._write(state)

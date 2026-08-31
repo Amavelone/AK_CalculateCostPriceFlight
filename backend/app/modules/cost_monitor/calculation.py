@@ -12,7 +12,7 @@ from .configuration import (
     EffectiveCalculationContext,
     execute_step,
 )
-from .records import CostMonitorDataset, RouteRecord, TariffRecord
+from .records import CostMonitorDataset, CostMonitorReferenceSnapshot, RouteRecord, TariffRecord
 from .schemas import CalculationRequest, LegInput
 
 
@@ -65,7 +65,7 @@ class LegContext:
 
 
 def resolve_leg_context(
-    dataset: CostMonitorDataset,
+    reference_data: CostMonitorReferenceSnapshot,
     leg: LegInput,
     request: CalculationRequest,
     configuration: CostMonitorConfiguration,
@@ -76,7 +76,7 @@ def resolve_leg_context(
     arrival = normalize_key(leg.arrival)
     route_key = f"{departure}-{arrival}"
     routes: dict[str, RouteRecord] = {}
-    for candidate in dataset.routes:
+    for candidate in reference_data.routes:
         routes.setdefault(candidate.key, candidate)
     route = routes.get(route_key)
     warnings: list[str] = []
@@ -147,6 +147,7 @@ def add_service(
 
 def calculate_ground(
     dataset: CostMonitorDataset,
+    reference_data: CostMonitorReferenceSnapshot,
     leg: LegInput,
     tariff_index: dict[str, TariffRecord],
     is_techstop: bool,
@@ -241,7 +242,7 @@ def calculate_ground(
     ground += add_service(details, tariff_index, diagnostics, departure, "БОРТПИТАНИЕ", 1)
     ground += add_service(details, tariff_index, diagnostics, arrival, "СЛИВ ВОДЫ", 1)
 
-    other = float(dataset.other_costs.get(departure, 0.0))
+    other = float(reference_data.other_costs.get(departure, 0.0))
     if other:
         details.append(
             {"airport": departure, "service": "ПРОЧЕЕ", "rate": other, "volume": 1, "divisor": 1, "amount": other}
@@ -252,13 +253,14 @@ def calculate_ground(
 
 def calculate_leg(
     dataset: CostMonitorDataset,
+    reference_data: CostMonitorReferenceSnapshot,
     leg: LegInput,
     request: CalculationRequest,
     tariff_index: dict[str, TariffRecord],
     effective: EffectiveCalculationContext,
 ) -> dict[str, Any]:
     configuration = effective.configuration
-    context, warnings = resolve_leg_context(dataset, leg, request, configuration)
+    context, warnings = resolve_leg_context(reference_data, leg, request, configuration)
     departure = context.departure
     arrival = context.arrival
     route_key = context.route_key
@@ -334,6 +336,7 @@ def calculate_leg(
 
     ground, ground_detail, ground_diagnostics = calculate_ground(
         dataset,
+        reference_data,
         leg,
         tariff_index,
         is_techstop,
@@ -519,6 +522,7 @@ def calculate_leg(
                 "flight_time": flight_time,
                 "distance": distance,
                 "line_type": line_type,
+                "reference_version": effective.reference_version,
             },
         },
     ]
@@ -669,16 +673,27 @@ def calculate(
     configuration: CostMonitorConfiguration = BASELINE_CONFIGURATION,
     config_version: int = 1,
     configuration_state: str = "active",
+    reference_data: CostMonitorReferenceSnapshot | None = None,
+    reference_version: int = 1,
+    reference_state: str = "active",
 ) -> dict[str, Any]:
+    if reference_data is None:
+        from .reference_data.defaults import BASELINE_REFERENCE_DATA
+
+        reference_data = CostMonitorReferenceSnapshot.from_reference_data(
+            BASELINE_REFERENCE_DATA.model_dump(mode="json")
+        )
     tariff_index = build_tariff_index(dataset)
     effective = EffectiveCalculationContext(
         dataset=dataset,
         configuration=configuration,
         config_version=config_version,
         configuration_state=configuration_state,
+        reference_version=reference_version,
+        reference_state=reference_state,
         tariff_index=tariff_index,
     )
-    legs = [calculate_leg(dataset, leg, request, tariff_index, effective) for leg in request.legs]
+    legs = [calculate_leg(dataset, reference_data, leg, request, tariff_index, effective) for leg in request.legs]
     total = {
         level: round_currency(sum(item["_raw_totals"][level] for item in legs))
         for level in ("m1", "m2", "m3")
@@ -701,14 +716,19 @@ def calculate(
             "tariffs": len(dataset.imported_tariffs),
             "manual_tariffs": len(dataset.manual_tariffs),
             "fuel_prices": len(dataset.fuel_prices),
-            "routes": len(dataset.routes),
+            "routes": len(reference_data.routes),
+            "reference_version": reference_version,
         },
         "config_version": config_version,
         "configuration_state": configuration_state,
+        "reference_version": reference_version,
+        "reference_state": reference_state,
         "trace": {
             "config_version": config_version,
             "configuration_state": configuration_state,
             "data_revision": dataset.data_revision,
+            "reference_version": reference_version,
+            "reference_state": reference_state,
             "legs": trace_legs,
         },
     }
