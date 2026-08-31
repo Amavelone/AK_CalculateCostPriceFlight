@@ -60,6 +60,11 @@ Config / Reference / Code changes
 
 Release-ветка должна быть независима от Monitor Workbook как runtime source.
 
+**Выполнено в Iteration 1:** release runtime регистрирует только SRV и Fuel
+Registry. Workbook parser/adapter остаются отдельным compatibility tooling для
+DEV parity и migration, но отсутствуют в startup, persisted production source
+configuration, source UI и `refresh-all`.
+
 ```text
 Release v1
     ├── Calculation Configuration
@@ -974,5 +979,4 @@ architecture audit history
 project indexing files
 conversation-derived notes
 ```
-
 

@@ -8,18 +8,21 @@ from pathlib import Path
 from unittest.mock import patch
 
 from app.modules.cost_monitor.catalog import tariffs_for_view
+from app.modules.cost_monitor.parsers import parse_monitor_workbook
 from app.modules.cost_monitor.records import CostMonitorDataset, MonitorWorkbookData
-from app.modules.cost_monitor.source_adapters import MonitorWorkbookSourceData, SourceRunResult, adapter_for_parser
+from app.modules.cost_monitor.source_adapters import (
+    MonitorWorkbookSourceData,
+    compatibility_adapter_for_parser,
+    production_adapter_for_parser,
+)
 from app.modules.cost_monitor.sources import (
-    SourceRefreshStage,
-    activate_staged_source,
     fetch_usd_rate,
     mark_source_error,
     parse_fuel_registry,
-    parse_monitor_workbook,
     parse_srv_tariffs,
     refresh_source,
     save_uploaded_file,
+    source_by_id,
     workbook_preview,
 )
 from openpyxl import Workbook
@@ -41,7 +44,7 @@ class SourceParserCharacterizationTests(unittest.TestCase):
             workbook.save(path)
 
             tariffs, rows_read, preview, note = parse_srv_tariffs(path)
-            adapter_run = adapter_for_parser("srv_tariffs").load(path)
+            adapter_run = production_adapter_for_parser("srv_tariffs").load(path)
 
         self.assertEqual(rows_read, 6)
         self.assertEqual([(row["service"], row["rate"]) for row in tariffs], [("ВОДА", 100.0), ("КЕРОСИН", 90.0), ("ВОДА", 150.0)])
@@ -62,7 +65,7 @@ class SourceParserCharacterizationTests(unittest.TestCase):
 
             with patch("app.modules.cost_monitor.parsers.fuel.fetch_usd_rate", return_value=(100.0, "тестовый курс")):
                 prices, rows_read, preview, note = parse_fuel_registry(path)
-                adapter_run = adapter_for_parser("fuel_registry").load(path)
+                adapter_run = production_adapter_for_parser("fuel_registry").load(path)
 
         self.assertEqual(rows_read, 2)
         self.assertEqual(prices[0]["airport"], "KJA")
@@ -109,7 +112,7 @@ class SourceParserCharacterizationTests(unittest.TestCase):
             workbook.save(path)
 
             result, rows_read, preview, note = parse_monitor_workbook(path)
-            adapter_run = adapter_for_parser("monitor_workbook").load(path)
+            adapter_run = compatibility_adapter_for_parser("monitor_workbook").load(path)
 
         self.assertEqual(rows_read, 1)
         self.assertEqual(result["routes"][0]["flight_time"], 1.5)
@@ -215,9 +218,8 @@ class WorkbookPreviewTests(unittest.TestCase):
         self.assertTrue(metadata.timestamp)
         self.assertIn("резервное значение 95 RUB/USD", metadata.note)
 
-    def test_empty_workbook_sections_replace_previous_values(self) -> None:
+    def test_compatibility_adapter_can_apply_empty_workbook_sections(self) -> None:
         state = {
-            "source_configs": [{"id": "monitor_workbook"}],
             "manual_tariffs": [],
             "routes": [{"key": "OLD-OLD"}],
             "international_airports": {"OLD": True},
@@ -225,23 +227,9 @@ class WorkbookPreviewTests(unittest.TestCase):
             "aircraft_multipliers": {"738": 1.0},
             "scenario_rates": {"Old": {"738": [1, 2, 3]}},
         }
-        staged = SourceRefreshStage(
-            "monitor_workbook",
-            "fresh.xlsx",
-            SourceRunResult(
-                "monitor_workbook",
-                MonitorWorkbookSourceData(MonitorWorkbookData.from_mapping({})),
-                0,
-                [],
-                None,
-            ),
-            0,
-            [],
-            None,
-            "2026-08-30T00:00:00+00:00",
-        )
-
-        activate_staged_source(state, staged)
+        MonitorWorkbookSourceData(MonitorWorkbookData.from_mapping({})).apply(
+            CostMonitorDataset.from_state(state)
+        ).write_to_state(state)
 
         self.assertEqual(state["aircraft_multipliers"], {})
         self.assertEqual(state["scenario_rates"], {})
@@ -256,7 +244,7 @@ class WorkbookPreviewTests(unittest.TestCase):
             worksheet.append(["KJA", "КЕРОСИН", "738", 90, "т", "2026-02-01", "2026-12-31", "Тест"])
             workbook.save(path)
 
-            run = adapter_for_parser("srv_tariffs").load(path)
+            run = production_adapter_for_parser("srv_tariffs").load(path)
 
         self.assertEqual(run.source_id, "srv")
         self.assertEqual(run.data.rows_loaded, 1)
@@ -264,6 +252,14 @@ class WorkbookPreviewTests(unittest.TestCase):
         run.data.apply(CostMonitorDataset.from_state(state)).write_to_state(state)
         self.assertEqual(state["imported_tariffs"][0]["airport"], "KJA")
         self.assertEqual(state["imported_tariffs"][0]["rate"], 90.0)
+
+    def test_production_adapter_lookup_rejects_compatibility_workbook(self) -> None:
+        with self.assertRaisesRegex(ValueError, "production source adapter"):
+            production_adapter_for_parser("monitor_workbook")
+
+    def test_runtime_source_lookup_rejects_compatibility_workbook(self) -> None:
+        with self.assertRaises(KeyError):
+            source_by_id({"source_configs": [{"id": "monitor_workbook"}]}, "monitor_workbook")
 
     def test_invalid_upload_is_not_published(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

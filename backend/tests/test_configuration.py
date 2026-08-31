@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
 from app.modules.cost_monitor.calculation import calculate
 from app.modules.cost_monitor.configuration import BASELINE_CONFIGURATION, validate_configuration
-from app.modules.cost_monitor.configuration.definition import SOURCE_DEFINITIONS
+from app.modules.cost_monitor.configuration.definition import (
+    COMPATIBILITY_SOURCE_DEFINITIONS,
+    PRODUCTION_SOURCE_DEFINITIONS,
+)
 from app.modules.cost_monitor.configuration.functions import ALLOWED_PRIMITIVE_NAMES
 from app.modules.cost_monitor.configuration.variables import REGISTERED_VARIABLE_NAMES
 from app.modules.cost_monitor.records import CostMonitorDataset
 from app.modules.cost_monitor.schemas import CalculationRequest
+from app.modules.cost_monitor.store import build_default_state
 from pydantic import ValidationError
 
 
@@ -26,12 +31,15 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(configuration.vat.airports, ("DME", "SVO", "VKO"))
         self.assertEqual(configuration.ground.fire_truck_rate, 25132)
         self.assertEqual(
-            {binding.id: binding.default_mask for binding in SOURCE_DEFINITIONS},
+            {binding.id: binding.default_mask for binding in PRODUCTION_SOURCE_DEFINITIONS},
             {
                 "srv": "7480_srv*.xlsx",
                 "fuel_registry": "реестр*.xlsx",
-                "monitor_workbook": "Расчет себестоимости рейсов*.xlsx",
             },
+        )
+        self.assertEqual(
+            [binding.id for binding in COMPATIBILITY_SOURCE_DEFINITIONS],
+            ["monitor_workbook"],
         )
 
     def test_schema_rejects_unknown_or_unsafe_configuration(self) -> None:
@@ -125,6 +133,27 @@ class ConfigurationTests(unittest.TestCase):
 
         self.assertEqual(baseline_result["legs"][0]["components"]["fuel"], 648.0)
         self.assertEqual(custom_result["legs"][0]["components"]["fuel"], 720.0)
+
+    def test_default_production_state_calculates_without_monitor_workbook_source(self) -> None:
+        state = build_default_state(Path("sources"))
+        state.update(
+            {
+                "routes": [{"key": "AAA-BBB", "flight_time": 2, "distance": 100}],
+                "imported_tariffs": [
+                    {"airport": "AAA", "service": "КЕРОСИН", "rate": 100},
+                    {"airport": "AAA", "service": "ЗАПРАВКА ВС", "rate": 20},
+                    {"airport": "AAA", "service": "АНО АД", "rate": 1000},
+                ],
+            }
+        )
+        request = CalculationRequest.model_validate(
+            {"legs": [{"id": "one", "departure": "AAA", "arrival": "BBB", "aircraft": "738"}]}
+        )
+
+        result = calculate(CostMonitorDataset.from_state(state), request)
+
+        self.assertEqual([source["id"] for source in state["source_configs"]], ["srv", "fuel_registry"])
+        self.assertEqual(result["legs"][0]["route"], "AAA-BBB")
 
     def test_legacy_v1_payload_is_upgraded_without_preserving_double_sources(self) -> None:
         legacy = {

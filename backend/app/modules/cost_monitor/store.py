@@ -14,13 +14,34 @@ from ...core.config import Settings
 from .configuration.definition import (
     DEFAULT_AIRCRAFT_MULTIPLIERS,
     DEFAULT_SCENARIO_RATES,
-    SOURCE_DEFINITIONS,
+    PRODUCTION_SOURCE_DEFINITIONS,
+    SourceDefinition,
 )
 from .configuration.service import ensure_configuration_state
 
 
 def utc_now() -> str:
     return datetime.now(UTC).isoformat()
+
+
+def default_source_config(binding: SourceDefinition, source_dir: Path) -> dict[str, Any]:
+    return {
+        "id": binding.id,
+        "label": binding.label,
+        "description": binding.description,
+        "directory": str(source_dir),
+        "mask": binding.default_mask,
+        "parser": binding.parser,
+        "last_status": "not_updated",
+        "last_file": None,
+        "active_file": None,
+        "uploaded_file": None,
+        "last_updated": None,
+        "last_error": None,
+        "rows_read": 0,
+        "rows_loaded": 0,
+        "preview": [],
+    }
 
 
 def build_default_state(source_dir: Path) -> dict[str, Any]:
@@ -30,7 +51,6 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
     фактические тарифы, маршруты и цены поступают только из внешних файлов.
     """
 
-    shared_path = str(source_dir)
     state = {
         "version": 1,
         "created_at": utc_now(),
@@ -38,26 +58,7 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
         # снимки истории, но делает версию исходных данных видимой клиентам API.
         "data_revision": 0,
         "data_updated_at": None,
-        "source_configs": [
-            {
-                "id": binding.id,
-                "label": binding.label,
-                "description": binding.description,
-                "directory": shared_path,
-                "mask": binding.default_mask,
-                "parser": binding.parser,
-                "last_status": "not_updated",
-                "last_file": None,
-                "active_file": None,
-                "uploaded_file": None,
-                "last_updated": None,
-                "last_error": None,
-                "rows_read": 0,
-                "rows_loaded": 0,
-                "preview": [],
-            }
-            for binding in SOURCE_DEFINITIONS
-        ],
+        "source_configs": [default_source_config(binding, source_dir) for binding in PRODUCTION_SOURCE_DEFINITIONS],
         "imported_tariffs": [],
         "manual_tariffs": [],
         "fuel_prices": [],
@@ -114,12 +115,28 @@ class JsonStore:
                 state["data_updated_at"] = max(timestamps) if timestamps else None
                 changed = True
             source_configs = state.get("source_configs", [])
-            active_source_configs = [
-                source
+            existing_sources = {
+                source.get("id"): source
                 for source in source_configs
-                if source.get("parser") in {"srv_tariffs", "fuel_registry", "monitor_workbook"}
-            ]
-            if len(active_source_configs) != len(source_configs):
+                if any(
+                    source.get("id") == definition.id and source.get("parser") == definition.parser
+                    for definition in PRODUCTION_SOURCE_DEFINITIONS
+                )
+            }
+            active_source_configs = []
+            for definition in PRODUCTION_SOURCE_DEFINITIONS:
+                source = default_source_config(definition, self._source_dir)
+                source.update(existing_sources.get(definition.id, {}))
+                source.update(
+                    {
+                        "id": definition.id,
+                        "label": definition.label,
+                        "description": definition.description,
+                        "parser": definition.parser,
+                    }
+                )
+                active_source_configs.append(source)
+            if active_source_configs != source_configs:
                 state["source_configs"] = active_source_configs
                 changed = True
             for source in state.get("source_configs", []):

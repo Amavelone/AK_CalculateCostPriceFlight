@@ -12,9 +12,14 @@ class SourceDefinition:
     default_mask: str
 
 
-SOURCE_DEFINITIONS = (
+PRODUCTION_SOURCE_DEFINITIONS = (
     SourceDefinition("srv", "Тарифы SRV", "Тарифы услуг аэропортов", "srv_tariffs", "7480_srv*.xlsx"),
     SourceDefinition("fuel_registry", "Реестр керосина", "Выгрузка 1С цен поставщиков", "fuel_registry", "реестр*.xlsx"),
+)
+
+# Legacy Monitor Workbook remains available to DEV parity and migration tools,
+# but it is deliberately absent from production runtime source configuration.
+COMPATIBILITY_SOURCE_DEFINITIONS = (
     SourceDefinition(
         "monitor_workbook",
         "Рабочая книга монитора",
@@ -24,8 +29,8 @@ SOURCE_DEFINITIONS = (
     ),
 )
 
-# Bootstrap data is module-owned DATA used only before the first workbook
-# activation. It is intentionally not runtime calculation configuration.
+# Bootstrap data is module-owned DATA. Workbook activation must not replace it
+# in production; ownership migration is handled by subsequent release work.
 DEFAULT_AIRCRAFT_MULTIPLIERS = {"733": 1.0, "737": 1.0, "738": 1.0}
 DEFAULT_SCENARIO_RATES = {
     "ГБ 2026": {
@@ -68,6 +73,7 @@ __all__ = [
     "DEFAULT_SCENARIO_RATES",
     "LOOKUP_ARGUMENTS",
     "REGISTERED_PARAMETER_PATHS",
-    "SOURCE_DEFINITIONS",
+    "COMPATIBILITY_SOURCE_DEFINITIONS",
+    "PRODUCTION_SOURCE_DEFINITIONS",
     "SourceDefinition",
 ]

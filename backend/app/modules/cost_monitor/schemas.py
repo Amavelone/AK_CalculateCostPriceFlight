@@ -41,12 +41,12 @@ class SourceConfigUpdate(BaseModel):
 
 
 class SourceConfigResponse(BaseModel):
-    id: Literal["srv", "fuel_registry", "monitor_workbook"]
+    id: Literal["srv", "fuel_registry"]
     label: str
     description: str
     directory: str
     mask: str
-    parser: Literal["srv_tariffs", "fuel_registry", "monitor_workbook"]
+    parser: Literal["srv_tariffs", "fuel_registry"]
     last_status: Literal["not_updated", "uploaded", "ready", "error"]
     last_file: str | None = None
     active_file: str | None = None

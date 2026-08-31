@@ -219,7 +219,7 @@ export interface CalculationOptions {
 }
 
 export interface SourceConfig {
-  id: string
+  id: 'srv' | 'fuel_registry'
   label: string
   description: string
   directory: string

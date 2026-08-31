@@ -44,6 +44,7 @@ from .sources import (
     activate_staged_source,
     find_active_file,
     mark_source_error,
+    production_source_configs,
     refresh_source,
     save_uploaded_file,
     source_by_id,
@@ -355,7 +356,7 @@ def rollback_configuration(version: int) -> dict[str, Any]:
 
 @router.get("/api/sources", response_model=list[SourceConfigResponse])
 def list_sources() -> list[dict[str, Any]]:
-    return repository.read()["source_configs"]
+    return production_source_configs(repository.read())
 
 
 @router.put("/api/sources/{source_id}", response_model=SourceConfigResponse)
@@ -413,7 +414,7 @@ def refresh_all_sources() -> dict[str, Any]:
         staged = []
         failures: dict[str, str] = {}
         candidate = copy.deepcopy(state)
-        for config in state["source_configs"]:
+        for config in production_source_configs(state):
             source_id = config["id"]
             try:
                 staged.append(stage_source_refresh(candidate, source_id, utc_now()))
@@ -424,13 +425,13 @@ def refresh_all_sources() -> dict[str, Any]:
             for source_id, message in failures.items():
                 mark_source_error(state, source_id, message, utc_now())
             repository.append_audit(state, "all_sources_refresh_failed", "active dataset preserved")
-            return {"sources": state["source_configs"]}
+            return {"sources": production_source_configs(state)}
         for item in staged:
             activate_staged_source(state, item)
         if staged:
             repository.mark_calculation_data_changed(state)
         repository.append_audit(state, "all_sources_refreshed", f"{len(staged)} источника(ов)")
-        return {"sources": state["source_configs"]}
+        return {"sources": production_source_configs(state)}
 
     return repository.mutate(operation)
 

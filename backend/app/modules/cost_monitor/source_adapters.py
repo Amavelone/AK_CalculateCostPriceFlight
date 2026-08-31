@@ -122,12 +122,25 @@ class MonitorWorkbookAdapter:
         )
 
 
-ADAPTERS: tuple[SourceAdapter, ...] = (SrvTariffsAdapter(), FuelRegistryAdapter(), MonitorWorkbookAdapter())
-ADAPTERS_BY_PARSER: Mapping[str, SourceAdapter] = {adapter.parser_id: adapter for adapter in ADAPTERS}
+PRODUCTION_ADAPTERS: tuple[SourceAdapter, ...] = (SrvTariffsAdapter(), FuelRegistryAdapter())
+COMPATIBILITY_ADAPTERS: tuple[SourceAdapter, ...] = (MonitorWorkbookAdapter(),)
+PRODUCTION_ADAPTERS_BY_PARSER: Mapping[str, SourceAdapter] = {
+    adapter.parser_id: adapter for adapter in PRODUCTION_ADAPTERS
+}
+COMPATIBILITY_ADAPTERS_BY_PARSER: Mapping[str, SourceAdapter] = {
+    adapter.parser_id: adapter for adapter in COMPATIBILITY_ADAPTERS
+}
 
 
-def adapter_for_parser(parser_id: str) -> SourceAdapter:
+def production_adapter_for_parser(parser_id: str) -> SourceAdapter:
     try:
-        return ADAPTERS_BY_PARSER[parser_id]
+        return PRODUCTION_ADAPTERS_BY_PARSER[parser_id]
     except KeyError as error:
-        raise ValueError(f"Не поддерживается source adapter: {parser_id}") from error
+        raise ValueError(f"Не поддерживается production source adapter: {parser_id}") from error
+
+
+def compatibility_adapter_for_parser(parser_id: str) -> SourceAdapter:
+    try:
+        return COMPATIBILITY_ADAPTERS_BY_PARSER[parser_id]
+    except KeyError as error:
+        raise ValueError(f"Не поддерживается compatibility source adapter: {parser_id}") from error

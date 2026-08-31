@@ -3,14 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .configuration.definition import PRODUCTION_SOURCE_DEFINITIONS
 from .parsers import (
     fetch_usd_rate,
     parse_fuel_registry,
-    parse_monitor_workbook,
     parse_srv_tariffs,
 )
 from .records import CostMonitorDataset
-from .source_adapters import SourceRunResult, adapter_for_parser
+from .source_adapters import SourceRunResult, production_adapter_for_parser
 from .source_files import find_active_file, find_latest_file, save_uploaded_file, workbook_preview
 
 
@@ -28,16 +28,24 @@ class SourceRefreshStage:
 
 
 def source_by_id(state: dict[str, Any], source_id: str) -> dict[str, Any]:
+    if source_id not in {definition.id for definition in PRODUCTION_SOURCE_DEFINITIONS}:
+        raise KeyError(source_id)
     for source in state["source_configs"]:
         if source["id"] == source_id:
             return source
     raise KeyError(source_id)
 
 
+def production_source_configs(state: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return production sources in registry order, never compatibility tooling."""
+
+    return [source_by_id(state, definition.id) for definition in PRODUCTION_SOURCE_DEFINITIONS]
+
+
 def stage_source_refresh(state: dict[str, Any], source_id: str, now: str) -> SourceRefreshStage:
     source = source_by_id(state, source_id)
     path = find_latest_file(source)
-    adapter = adapter_for_parser(str(source["parser"]))
+    adapter = production_adapter_for_parser(str(source["parser"]))
     if adapter.source_id != source_id:
         raise ValueError(f"Adapter {adapter.parser_id} не соответствует источнику {source_id}")
     result = adapter.load(path)
@@ -87,12 +95,12 @@ __all__ = [
     "find_latest_file",
     "mark_source_error",
     "parse_fuel_registry",
-    "parse_monitor_workbook",
     "parse_srv_tariffs",
     "refresh_source",
     "stage_source_refresh",
     "activate_staged_source",
     "save_uploaded_file",
     "source_by_id",
+    "production_source_configs",
     "workbook_preview",
 ]

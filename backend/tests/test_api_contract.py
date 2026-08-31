@@ -94,8 +94,10 @@ class ApiContractTests(unittest.TestCase):
         state["fuel_prices"] = [{"airport": "OLD", "price": 1}]
         state["routes"] = [{"key": "OLD-OLD", "flight_time": 1, "distance": 1}]
         memory_store = MemoryStore(state)
+        staged_source_ids: list[str] = []
 
         def stage_with_one_failure(active_state: dict, source_id: str, now: str) -> SourceRefreshStage:
+            staged_source_ids.append(source_id)
             if source_id == "fuel_registry":
                 raise ValueError("invalid fuel workbook")
             return SourceRefreshStage(
@@ -120,6 +122,8 @@ class ApiContractTests(unittest.TestCase):
         self.assertEqual(memory_store.state["imported_tariffs"][0]["airport"], "OLD")
         self.assertEqual(memory_store.state["routes"][0]["key"], "OLD-OLD")
         self.assertEqual(memory_store.state["fuel_prices"][0]["airport"], "OLD")
+        self.assertEqual(staged_source_ids, ["srv", "fuel_registry"])
+        self.assertEqual([source["id"] for source in response["sources"]], ["srv", "fuel_registry"])
 
 
 if __name__ == "__main__":

@@ -1,5 +1,21 @@
 # Project Changelog
 
+## 2026-08-31 — Release Iteration 1: detach Legacy Monitor Workbook
+
+### Изменено
+
+- Production source registry теперь содержит только SRV и Fuel Registry;
+  bootstrap и JsonStore migration исключают `monitor_workbook` из runtime state.
+- `refresh-all`, source API schema и Sources UI работают только с production
+  sources. Legacy Workbook больше не участвует в production source lifecycle.
+- Monitor Workbook parser и adapter сохранены в отдельном compatibility registry
+  для DEV parity/migration tests.
+
+### Проверка
+
+- Добавлены проверки production registry, удаления workbook из legacy store,
+  исключения workbook из `refresh-all` и расчёта без workbook source.
+
 ## 2026-08-31 — Release baseline: v1.0.0 Iteration 0
 
 ### Baseline

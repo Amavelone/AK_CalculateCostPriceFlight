@@ -33,9 +33,9 @@ Frontend:
   engine, сохраняющая physical first-match order.
 - `backend/app/modules/cost_monitor/catalog.py` — нормализация ключей и stable
   imported-before-manual tariff view shared by calculation and source import.
-- `backend/app/modules/cost_monitor/source_adapters.py` — module-owned SRV,
-  fuel-registry и monitor-workbook adapters: physical Excel → typed source run
-  → canonical data; здесь остаются parser/worksheet/column bindings.
+- `backend/app/modules/cost_monitor/source_adapters.py` — отдельные production
+  adapters для SRV/Fuel Registry и compatibility adapter для Legacy Monitor
+  Workbook; физические Excel bindings не проникают в calculation.
 - `backend/app/modules/cost_monitor/store.py` и `repository.py` — local JSON
   implementation и узкий persistence contract для read/mutate/audit/data
   revision; будущий SQL Server должен заменить implementation, а не calculation.
@@ -54,9 +54,9 @@ Frontend:
 
 ### Data sources
 
-- `backend/app/modules/cost_monitor/sources.py` — typed source-run
-  stage/activate orchestration; `refresh-all` публикует canonical dataset
-  только при успехе всех обязательных sources.
+- `backend/app/modules/cost_monitor/sources.py` — production-only typed
+  source-run stage/activate orchestration для SRV и Fuel Registry; `refresh-all`
+  атомарно публикует canonical dataset только при успехе обоих источников.
 - `backend/app/modules/cost_monitor/source_files.py` — ограниченный по размеру,
   проверяемый XLSX upload и preview активированного файла.
 - `backend/app/modules/cost_monitor/parsers/` — общие преобразования и
@@ -162,6 +162,8 @@ Frontend:
   на frontend не дублируются.
 - `JsonStore` безопасен только для одного процесса; shared deployment требует
   транзакционного persistence.
+- Legacy Monitor Workbook принадлежит compatibility tooling и не участвует в
+  startup, source UI, source refresh или calculation lifecycle release runtime.
 - Physical Excel names принадлежат module-local adapters; calculation получает
   только `CostMonitorDataset` и не зависит от JSON, filesystem или будущего SQL.
 - Активная ветка архитектурной инициативы — `feature/module-architecture`.
