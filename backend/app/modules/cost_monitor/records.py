@@ -80,6 +80,10 @@ class FuelPriceRecord:
     price_kind: str | None = None
     period: str | None = None
     source_file: str | None = None
+    exchange_rate: float | None = None
+    exchange_rate_source: str | None = None
+    exchange_rate_timestamp: str | None = None
+    exchange_rate_fallback_used: bool | None = None
 
     @classmethod
     def from_mapping(cls, value: Mapping[str, Any]) -> FuelPriceRecord:
@@ -91,6 +95,16 @@ class FuelPriceRecord:
             price_kind=str(value["price_kind"]) if value.get("price_kind") is not None else None,
             period=str(value["period"]) if value.get("period") is not None else None,
             source_file=str(value["source_file"]) if value.get("source_file") is not None else None,
+            exchange_rate=float(value["exchange_rate"]) if value.get("exchange_rate") is not None else None,
+            exchange_rate_source=str(value["exchange_rate_source"])
+            if value.get("exchange_rate_source") is not None
+            else None,
+            exchange_rate_timestamp=str(value["exchange_rate_timestamp"])
+            if value.get("exchange_rate_timestamp") is not None
+            else None,
+            exchange_rate_fallback_used=bool(value["exchange_rate_fallback_used"])
+            if value.get("exchange_rate_fallback_used") is not None
+            else None,
         )
 
     def to_mapping(self) -> dict[str, Any]:
@@ -104,6 +118,10 @@ class FuelPriceRecord:
                     "price_kind": self.price_kind,
                     "period": self.period,
                     "source_file": self.source_file,
+                    "exchange_rate": self.exchange_rate,
+                    "exchange_rate_source": self.exchange_rate_source,
+                    "exchange_rate_timestamp": self.exchange_rate_timestamp,
+                    "exchange_rate_fallback_used": self.exchange_rate_fallback_used,
                 }.items()
                 if value is not None
             }

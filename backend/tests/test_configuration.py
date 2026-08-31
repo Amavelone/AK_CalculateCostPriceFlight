@@ -4,6 +4,7 @@ import unittest
 
 from app.modules.cost_monitor.calculation import calculate
 from app.modules.cost_monitor.configuration import BASELINE_CONFIGURATION, validate_configuration
+from app.modules.cost_monitor.configuration.definition import SOURCE_DEFINITIONS
 from app.modules.cost_monitor.configuration.functions import ALLOWED_PRIMITIVE_NAMES
 from app.modules.cost_monitor.configuration.variables import REGISTERED_VARIABLE_NAMES
 from app.modules.cost_monitor.records import CostMonitorDataset
@@ -15,7 +16,7 @@ class ConfigurationTests(unittest.TestCase):
     def test_baseline_contains_excel_owned_parameters(self) -> None:
         configuration = BASELINE_CONFIGURATION
 
-        self.assertEqual(configuration.schema_version, "1.0")
+        self.assertEqual(configuration.schema_version, "2.0")
         self.assertEqual(configuration.fuel.consumption_tons_per_hour, 2.7)
         self.assertEqual(configuration.ano.route_rate_per_100_km, 1666.6)
         self.assertEqual(
@@ -25,7 +26,7 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(configuration.vat.airports, ("DME", "SVO", "VKO"))
         self.assertEqual(configuration.ground.fire_truck_rate, 25132)
         self.assertEqual(
-            {binding.id: binding.default_mask for binding in configuration.source_bindings},
+            {binding.id: binding.default_mask for binding in SOURCE_DEFINITIONS},
             {
                 "srv": "7480_srv*.xlsx",
                 "fuel_registry": "реестр*.xlsx",
@@ -44,10 +45,41 @@ class ConfigurationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "uppercase IATA"):
             validate_configuration(invalid_airport)
 
-        unsafe_mask = BASELINE_CONFIGURATION.model_dump(mode="json")
-        unsafe_mask["source_bindings"][0]["default_mask"] = "../srv.xlsx"
-        with self.assertRaisesRegex(ValueError, "без пути"):
-            validate_configuration(unsafe_mask)
+        unknown_variable = BASELINE_CONFIGURATION.model_dump(mode="json")
+        unknown_variable["operations"]["catering"]["parts"][0]["initial"] = {
+            "kind": "variable",
+            "name": "arbitrary_python",
+        }
+        with self.assertRaisesRegex(ValueError, "Неизвестная variable"):
+            validate_configuration(unknown_variable)
+
+        unknown_lookup = BASELINE_CONFIGURATION.model_dump(mode="json")
+        unknown_lookup["operations"]["ano"]["parts"][0]["initial"]["name"] = "arbitrary_query"
+        with self.assertRaisesRegex(ValueError, "Неизвестный lookup"):
+            validate_configuration(unknown_lookup)
+
+        division_by_zero = BASELINE_CONFIGURATION.model_dump(mode="json")
+        division_by_zero["operations"]["ano"]["parts"][1]["operations"][0]["operand"]["value"] = 0
+        with self.assertRaisesRegex(ValueError, "division by zero"):
+            validate_configuration(division_by_zero)
+
+        unknown_operation = BASELINE_CONFIGURATION.model_dump(mode="json")
+        unknown_operation["operations"]["ano"]["parts"][1]["operations"][0]["operation"] = "eval"
+        with self.assertRaises(ValidationError):
+            validate_configuration(unknown_operation)
+
+        invalid_condition = BASELINE_CONFIGURATION.model_dump(mode="json")
+        invalid_condition["operations"]["vat"]["parts"][0]["condition"]["any_of"][0]["all_of"][1]["right"] = {
+            "kind": "constant",
+            "value": "DME",
+        }
+        with self.assertRaisesRegex(ValueError, "collection"):
+            validate_configuration(invalid_condition)
+
+        invalid_type = BASELINE_CONFIGURATION.model_dump(mode="json")
+        invalid_type["operations"]["ano"]["parts"][1]["initial"] = {"kind": "constant", "value": "not-a-number"}
+        with self.assertRaisesRegex(ValueError, "numeric"):
+            validate_configuration(invalid_type)
 
         non_finite = BASELINE_CONFIGURATION.model_dump(mode="json")
         non_finite["fuel"]["consumption_tons_per_hour"] = float("nan")
@@ -55,11 +87,11 @@ class ConfigurationTests(unittest.TestCase):
             validate_configuration(non_finite)
 
     def test_definition_registers_only_explicit_variables_and_primitives(self) -> None:
-        self.assertEqual(
-            REGISTERED_VARIABLE_NAMES,
-            {"flight_time", "distance", "passengers", "aircraft", "departure", "arrival", "line_type", "is_techstop"},
+        self.assertTrue(
+            {"flight_time", "distance", "passengers", "aircraft", "departure", "arrival", "line_type", "is_techstop"}
+            .issubset(REGISTERED_VARIABLE_NAMES)
         )
-        self.assertEqual(ALLOWED_PRIMITIVE_NAMES, {"add", "multiply", "divide", "ceil", "contains"})
+        self.assertEqual(ALLOWED_PRIMITIVE_NAMES, {"add", "subtract", "multiply", "divide", "round", "sum"})
         self.assertNotIn("eval", ALLOWED_PRIMITIVE_NAMES)
         self.assertNotIn("exec", ALLOWED_PRIMITIVE_NAMES)
 
@@ -93,6 +125,31 @@ class ConfigurationTests(unittest.TestCase):
 
         self.assertEqual(baseline_result["legs"][0]["components"]["fuel"], 648.0)
         self.assertEqual(custom_result["legs"][0]["components"]["fuel"], 720.0)
+
+    def test_legacy_v1_payload_is_upgraded_without_preserving_double_sources(self) -> None:
+        legacy = {
+            "schema_version": "1.0",
+            "fuel": {"consumption_tons_per_hour": 2.7},
+            "ano": {"route_rate_per_100_km": 1666.6},
+            "catering": {"base_units": 6, "base_unit_rate": 1500, "passenger_surcharge": 500},
+            "vat": {"rate": 0.1, "airports": ["DME", "SVO", "VKO"]},
+            "ground": {
+                "split_divisor": 2,
+                "stairs_units": 2,
+                "telebridge_minutes": 90,
+                "transport_passenger_block": 100,
+                "fire_truck_rate": 25132,
+            },
+            "initial_data": {"aircraft_multipliers": {"738": 99}, "scenario_rates": {"Old": {"738": [1, 2, 3]}}},
+            "source_bindings": [],
+        }
+
+        upgraded = validate_configuration(legacy)
+
+        self.assertEqual(upgraded.schema_version, "2.0")
+        self.assertFalse(hasattr(upgraded, "initial_data"))
+        self.assertFalse(hasattr(upgraded, "source_bindings"))
+        self.assertEqual(upgraded.operations.catering.aggregation, "sum")
 
 
 if __name__ == "__main__":

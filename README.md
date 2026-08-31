@@ -40,13 +40,28 @@
 После `pnpm build` FastAPI также отдает собранный интерфейс по адресу
 `http://localhost:8000`, поэтому для демонстрационного запуска достаточно API.
 
+## Администрирование configuration
+
+Пользовательский Cost Monitor остаётся на `/`. Отдельный административный
+контур открывается на `http://localhost:5173/admin` в Vite или
+`http://localhost:8000/admin` после `pnpm build`.
+
+В `/admin` можно создать draft, изменить typed parameters и разрешённые части
+ANO/Catering/VAT, выполнить validation, preview/compare на контрольном input,
+activate новую версию или rollback. Active configuration нельзя редактировать
+напрямую. Route разделяет интерфейсы, но пока не является security boundary:
+authentication/RBAC не реализованы.
+
 ## Проверка
 
 ```powershell
 $env:PYTHONPATH = (Resolve-Path .\backend).Path
 .\.venv\Scripts\python -m unittest discover -s .\backend\tests -v
 .\.venv\Scripts\ruff check backend
-cd frontend; pnpm build
+Push-Location frontend
+pnpm exec tsc -b
+pnpm exec vite build
+Pop-Location
 ```
 
 Контрольный сценарий из приложенной книги — пять плеч на листе `РАСЧЕТ` с
@@ -61,6 +76,12 @@ cd frontend; pnpm build
 номер активной версии данных. Он возвращается вместе с результатом расчета и
 помогает связать итоговую себестоимость с тем набором данных, на котором она
 была получена.
+
+Calculation configuration versioned отдельно от dataset: она содержит safe
+typed operations и explicit overrides для aircraft multipliers/scenario rates.
+ANO, Catering и VAT можно менять только внутри зарегистрированных Cost Monitor
+capabilities; arbitrary Python, filesystem, HTTP и database access из
+configuration невозможны.
 
 Загружаемый XLSX ограничен 25 МБ и проверяется до публикации. Просмотр исходной
 книги показывает последний успешно активированный файл, а не незавершённый upload.

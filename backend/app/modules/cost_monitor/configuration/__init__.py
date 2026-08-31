@@ -1,4 +1,6 @@
 from .defaults import BASELINE_CONFIGURATION
+from .effective import EffectiveCalculationContext
+from .operations import OperationExecutionError, execute_step
 from .repository import JsonConfigurationRepository
 from .schema import CostMonitorConfiguration
 from .service import (
@@ -16,6 +18,9 @@ __all__ = [
     "ConfigurationService",
     "ConfigurationValidationError",
     "CostMonitorConfiguration",
+    "EffectiveCalculationContext",
     "JsonConfigurationRepository",
+    "OperationExecutionError",
+    "execute_step",
     "validate_configuration",
 ]

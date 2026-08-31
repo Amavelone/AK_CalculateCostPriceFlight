@@ -40,6 +40,41 @@ class SourceConfigUpdate(BaseModel):
     mask: str = Field(min_length=1, max_length=120)
 
 
+class SourceConfigResponse(BaseModel):
+    id: Literal["srv", "fuel_registry", "monitor_workbook"]
+    label: str
+    description: str
+    directory: str
+    mask: str
+    parser: Literal["srv_tariffs", "fuel_registry", "monitor_workbook"]
+    last_status: Literal["not_updated", "uploaded", "ready", "error"]
+    last_file: str | None = None
+    active_file: str | None = None
+    uploaded_file: str | None = None
+    last_updated: str | None = None
+    last_error: str | None = None
+    last_note: str | None = None
+    rows_read: int = 0
+    rows_loaded: int = 0
+    preview: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class SourcePreviewResponse(BaseModel):
+    source: SourceConfigResponse
+    preview: list[dict[str, Any]]
+
+
+class SourceRawPreviewResponse(BaseModel):
+    file: str
+    sheet: str
+    sheets: list[str]
+    preview: list[dict[str, Any]]
+
+
+class SourceRefreshAllResponse(BaseModel):
+    sources: list[SourceConfigResponse]
+
+
 class ManualTariffInput(BaseModel):
     airport: str = Field(min_length=3, max_length=3)
     service: str = Field(min_length=1, max_length=100)
@@ -91,6 +126,15 @@ class ConfigurationComparisonChange(BaseModel):
     path: str
     before: Any
     after: Any
+    kind: Literal[
+        "parameter_changed",
+        "operation_added",
+        "operation_removed",
+        "operation_changed",
+        "operation_reordered",
+        "override_changed",
+    ]
+    summary: str
 
 
 class ConfigurationReferenceResponse(BaseModel):
@@ -194,3 +238,30 @@ class CalculationResponse(BaseModel):
     config_version: int
     configuration_state: Literal["active", "draft"]
     trace: CalculationTrace
+
+
+class ConfigurationCapabilityItem(BaseModel):
+    name: str
+    value_type: str | None = None
+    description: str
+    arguments: list[str] = Field(default_factory=list)
+
+
+class ConfigurationCapabilitiesResponse(BaseModel):
+    schema_version: Literal["2.0"]
+    parameters: list[str]
+    variables: list[ConfigurationCapabilityItem]
+    operations: list[ConfigurationCapabilityItem]
+    lookups: list[ConfigurationCapabilityItem]
+    condition_operators: list[str]
+
+
+class CalculationDifference(BaseModel):
+    total: dict[str, float]
+    legs: dict[str, dict[str, float]]
+
+
+class ConfigurationPreviewComparisonResponse(BaseModel):
+    active: CalculationResponse
+    draft: CalculationResponse
+    difference: CalculationDifference

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .core.config import settings
@@ -22,5 +23,15 @@ app.add_middleware(
 app.include_router(cost_monitor_router)
 
 frontend_dist = settings.project_root / "frontend" / "dist"
+
+
+@app.get("/admin", include_in_schema=False)
+def admin_ui() -> FileResponse:
+    index = frontend_dist / "index.html"
+    if not index.exists():
+        raise HTTPException(status_code=404, detail="Frontend build не найден; используйте Vite /admin")
+    return FileResponse(index)
+
+
 if frontend_dist.exists():
     app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")

@@ -90,7 +90,15 @@ PROJECT_INDEX / PROJECT_CHANGELOG / architecture docs обновляются
 
 Обычный пользователь по-прежнему должен видеть простой монитор: выбрать или ввести параметры, получить результат, при необходимости раскрыть детализацию. Конфигурации, версии правил, source mappings, trace, сравнение версий и rollback существуют отдельно в административном контуре.
 
-![Целевая модель ответственности](assets/01_layers.png)
+```mermaid
+flowchart LR
+    P[Platform: composition, storage, audit] --> M[Cost Monitor module]
+    M --> C[Typed runtime configuration]
+    M --> D[Canonical source data]
+    C --> E[Effective calculation context]
+    D --> E
+    E --> R[Result + diagnostics + trace]
+```
 
 ---
 
@@ -374,13 +382,42 @@ arbitrary imports
 
 Если понадобятся строковые formulas, допускается restricted evaluator: literals, арифметика, comparisons, boolean operations, зарегистрированные variables и whitelist functions.
 
+## 8.5. Реализованная модель Cost Monitor 2.0
+
+Runtime configuration хранит только calculation parameters, разрешённые operation
+parts и explicit source-derived overrides. `initial_data` и `source_bindings` не
+являются частью active calculation configuration: bootstrap data и adapter
+identity принадлежат module definition, фактические rates/multipliers — active
+dataset, directory/mask — source configuration.
+
+`EffectiveCalculationContext` сохраняет все слои раздельно и разрешает
+provenance для каждого значения. Для aircraft multipliers и scenario rates
+поддерживается только явное versioned admin override:
+
+```text
+source dataset value + optional admin override = effective value
+```
+
+Operation configuration использует typed parts с `constant`, registered
+`variable`, registered `parameter` и registered `lookup`. Разрешены только
+`add`, `subtract`, `multiply`, `divide`, `round` и aggregation `sum`; conditions
+выражаются ограниченным набором comparisons и AND/OR groups. ANO, Catering и
+VAT используют этот executor; Fuel, Ground и Margin остаются module-owned там,
+где это нужно для Excel parity.
+
 ---
 
 # 9. Данные: physical source, adapter, canonical contract
 
 Одно из ключевых архитектурных решений - модуль не должен зависеть от физической формы источника.
 
-![Источники и канонический контракт](assets/02_data_contract.png)
+```mermaid
+flowchart LR
+    X[Excel / source file] --> A[Module-owned adapter]
+    A --> N[Normalization]
+    N --> D[CostMonitorDataset]
+    D --> C[Calculation]
+```
 
 Пример physical source:
 
@@ -499,7 +536,13 @@ Component Results
 Result + Diagnostics + Trace
 ```
 
-![Calculation trace](assets/04_trace.png)
+```mermaid
+flowchart LR
+    I[Request + module context] --> E[Effective configuration]
+    E --> O[Allowed operation executor]
+    O --> C[Component results]
+    C --> T[Diagnostics + provenance trace]
+```
 
 ## 11.1. Декомпозиция `calculate_leg()`
 
@@ -582,6 +625,12 @@ Trace нужен для:
 
 Гибкость должна существовать отдельно от основного пользовательского UX.
 
+Текущая реализация использует отдельный route `/admin`: в dev это
+`http://127.0.0.1:5173/admin`, после production build —
+`http://127.0.0.1:8000/admin`. Root route `/` остаётся пользовательским
+Cost Monitor. Это architectural separation local MVP, а не security boundary:
+authentication/RBAC являются отдельной будущей задачей.
+
 ## 12.1. Пользователь
 
 Видит:
@@ -611,7 +660,16 @@ Trace нужен для:
 
 ## 12.3. Жизненный цикл изменения правила
 
-![Жизненный цикл конфигурации](assets/03_config_lifecycle.png)
+```mermaid
+flowchart LR
+    A[Active immutable version] --> D[Create draft]
+    D --> E[Edit safe parameters/parts]
+    E --> V[Validate]
+    V --> P[Preview and compare]
+    P --> X[Activate]
+    X --> A
+    A --> R[Rollback to immutable version]
+```
 
 ```text
 ACTIVE v1
@@ -1271,7 +1329,13 @@ git remote -v
 
 # 27. Эволюционный roadmap
 
-![Эволюционный roadmap](assets/05_roadmap.png)
+```mermaid
+flowchart LR
+    F[Foundation] --> V[Versioned configuration]
+    V --> O[Typed operations and /admin]
+    O --> S[SQL-ready persistence boundary]
+    S --> M[Second real monitor]
+```
 
 ## Этап 0 - Foundation: уже выполнен
 

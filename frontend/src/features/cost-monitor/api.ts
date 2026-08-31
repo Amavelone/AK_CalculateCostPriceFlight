@@ -3,7 +3,10 @@ import type {
   CalculationOptions,
   CalculationRequest,
   CalculationResult,
+  ConfigurationCapabilities,
   ConfigurationComparison,
+  ConfigurationDraft,
+  ConfigurationPreviewComparison,
   ConfigurationVersion,
   DraftResponse,
   ExportFormat,
@@ -34,6 +37,25 @@ export const api = {
   calculationOptions: () => request<CalculationOptions>('/calculation-options'),
   activeConfiguration: () => request<ActiveConfiguration>('/configuration/active'),
   configurationVersions: () => request<ConfigurationVersion[]>('/configuration/versions'),
+  configurationCapabilities: () => request<ConfigurationCapabilities>('/configuration/capabilities'),
+  createConfigurationDraft: () => request<ConfigurationDraft>('/configuration/drafts', { method: 'POST' }),
+  configurationDraft: (version: number) => request<ConfigurationDraft>(`/configuration/drafts/${version}`),
+  updateConfigurationDraft: (version: number, configuration: ConfigurationDraft['configuration']) =>
+    request<ConfigurationDraft>(`/configuration/drafts/${version}`, {
+      method: 'PUT',
+      body: JSON.stringify({ configuration }),
+    }),
+  validateConfigurationDraft: (version: number) =>
+    request<ConfigurationDraft>(`/configuration/drafts/${version}/validate`, { method: 'POST' }),
+  previewConfigurationDraft: (version: number, calculation: CalculationRequest) =>
+    request<ConfigurationPreviewComparison>(`/configuration/drafts/${version}/preview-comparison`, {
+      method: 'POST',
+      body: JSON.stringify(calculation),
+    }),
+  activateConfigurationDraft: (version: number) =>
+    request<ActiveConfiguration>(`/configuration/drafts/${version}/activate`, { method: 'POST' }),
+  rollbackConfiguration: (version: number) =>
+    request<ActiveConfiguration>(`/configuration/rollback/${version}`, { method: 'POST' }),
   compareConfigurations: (leftVersion: number, rightVersion: number) =>
     request<ConfigurationComparison>(`/configuration/compare/${leftVersion}/${rightVersion}`),
   sources: () => request<SourceConfig[]>('/sources'),

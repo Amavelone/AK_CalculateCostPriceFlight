@@ -78,7 +78,8 @@ class ConfigurationServiceTests(unittest.TestCase):
         self.assertEqual(self.service.validate_draft(draft_version)["validation_status"], "valid")
 
         comparison = self.service.compare(1, draft_version)
-        self.assertEqual(comparison["changes"], [{"path": "fuel.consumption_tons_per_hour", "before": 2.7, "after": 3.0}])
+        self.assertEqual(comparison["changes"][0]["path"], "fuel.consumption_tons_per_hour")
+        self.assertEqual(comparison["changes"][0]["kind"], "parameter_changed")
 
         activated = self.service.activate(draft_version)
         self.assertEqual(activated["state"], "active")
@@ -126,6 +127,92 @@ class ConfigurationServiceTests(unittest.TestCase):
             self.assertEqual(restored["version"], 1)
             self.assertEqual(service.active()["configuration"].fuel.consumption_tons_per_hour, 2.7)
             self.assertIn("configuration_rolled_back", [event["action"] for event in memory_store.state["audit_log"]])
+
+    def test_ano_parameter_and_catering_composition_preview_activate_and_rollback(self) -> None:
+        memory_store = MemoryConfigurationStore(self.calculation_state())
+        service = ConfigurationService(JsonConfigurationRepository(memory_store))
+        draft = service.create_draft()
+        candidate = draft["configuration"]
+        candidate["ano"]["route_rate_per_100_km"] = 1742.3
+        passenger_condition = copy.deepcopy(candidate["operations"]["catering"]["parts"][1]["condition"])
+        candidate["operations"]["catering"]["parts"].append(
+            {
+                "id": "extra_passenger_component",
+                "label": "Дополнительная пассажирская часть",
+                "detail_service": "ДОПОЛНИТЕЛЬНАЯ ЧАСТЬ",
+                "initial": {"kind": "variable", "name": "passengers"},
+                "operations": [
+                    {
+                        "operation": "multiply",
+                        "operand": {"kind": "constant", "value": 200},
+                        "digits": None,
+                    }
+                ],
+                "condition": passenger_condition,
+            }
+        )
+        service.update_draft(draft["version"], candidate)
+        semantic_changes = service.compare(1, draft["version"])["changes"]
+        self.assertIn("operation_added", {change["kind"] for change in semantic_changes})
+        self.assertIn("parameter_changed", {change["kind"] for change in semantic_changes})
+        request = CalculationRequest.model_validate(
+            {
+                "legs": [{"id": "one", "departure": "AAA", "arrival": "BBB", "aircraft": "738", "passengers": 10}],
+                "settings": {"scenario": "ГБ 2026", "fuel_source": "ЦРТ", "catering": True},
+            }
+        )
+
+        with (
+            patch.object(cost_api, "repository", memory_store),
+            patch.object(cost_api, "configuration_service", service),
+        ):
+            comparison = cost_api.preview_configuration_comparison(draft["version"], request)
+            self.assertEqual(comparison["active"]["legs"][0]["components"]["catering"], 14000)
+            self.assertEqual(comparison["draft"]["legs"][0]["components"]["catering"], 16000)
+            self.assertEqual(comparison["draft"]["legs"][0]["components"]["ano"], 2742.3)
+            catering_trace = next(
+                step
+                for step in comparison["draft"]["trace"]["legs"][0]["steps"]
+                if step["component"] == "catering" and step["stage"] == "operation"
+            )
+            self.assertIn("extra_passenger_component", {part["id"] for part in catering_trace["values"]["parts"]})
+            self.assertEqual(service.active()["version"], 1)
+
+            service.activate(draft["version"])
+            active_result = cost_api.calculate_cost(request)
+            self.assertEqual(active_result["legs"][0]["components"]["catering"], 16000)
+            service.rollback(1)
+            restored = cost_api.calculate_cost(request)
+            self.assertEqual(restored["legs"][0]["components"]["catering"], 14000)
+
+    def test_source_overrides_are_effective_and_trace_base_value(self) -> None:
+        memory_store = MemoryConfigurationStore(self.calculation_state())
+        service = ConfigurationService(JsonConfigurationRepository(memory_store))
+        draft = service.create_draft()
+        candidate = draft["configuration"]
+        candidate["overrides"]["aircraft_multipliers"]["738"] = 1.5
+        candidate["overrides"]["scenario_rates"]["ГБ 2026"] = {"738": [11, 21, 31]}
+        service.update_draft(draft["version"], candidate)
+
+        with (
+            patch.object(cost_api, "repository", memory_store),
+            patch.object(cost_api, "configuration_service", service),
+        ):
+            preview = cost_api.preview_configuration_draft(draft["version"], self.request())
+
+        ground_parameters = next(
+            step
+            for step in preview["trace"]["legs"][0]["steps"]
+            if step["component"] == "ground" and step["stage"] == "parameters"
+        )
+        self.assertEqual(ground_parameters["values"]["aircraft_multiplier"]["origin"], "admin_override")
+        self.assertEqual(ground_parameters["values"]["aircraft_multiplier"]["base_value"], 1.0)
+        margin = next(
+            step
+            for step in preview["trace"]["legs"][0]["steps"]
+            if step["component"] == "margin" and step["stage"] == "operation"
+        )
+        self.assertTrue(all(rate["origin"] == "admin_override" for rate in margin["values"]["rates"]))
 
     def test_api_maps_missing_and_invalid_lifecycle_transitions_to_client_errors(self) -> None:
         with (

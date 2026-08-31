@@ -21,11 +21,14 @@ EXPECTED_OPERATIONS = {
     ("POST", "/api/exports/{file_format}"),
     ("GET", "/api/configuration/active"),
     ("GET", "/api/configuration/versions"),
+    ("GET", "/api/configuration/capabilities"),
     ("POST", "/api/configuration/drafts"),
+    ("GET", "/api/configuration/drafts/{version}"),
     ("PUT", "/api/configuration/drafts/{version}"),
     ("POST", "/api/configuration/drafts/{version}/validate"),
     ("GET", "/api/configuration/compare/{left_version}/{right_version}"),
     ("POST", "/api/configuration/drafts/{version}/preview"),
+    ("POST", "/api/configuration/drafts/{version}/preview-comparison"),
     ("POST", "/api/configuration/drafts/{version}/activate"),
     ("POST", "/api/configuration/rollback/{version}"),
     ("GET", "/api/sources"),
@@ -76,6 +79,13 @@ class ApiContractTests(unittest.TestCase):
         operation = main.app.openapi()["paths"]["/api/calculations"]["post"]
         schema = operation["responses"]["200"]["content"]["application/json"]["schema"]
         self.assertEqual(schema, {"$ref": "#/components/schemas/CalculationResponse"})
+
+    def test_admin_route_is_separate_from_api_and_root_spa(self) -> None:
+        admin_routes = [route for route in main.app.routes if getattr(route, "path", None) == "/admin"]
+        self.assertEqual(len(admin_routes), 1)
+        self.assertNotIn("/admin", main.app.openapi()["paths"])
+        if main.frontend_dist.exists():
+            self.assertTrue(any(getattr(route, "name", None) == "frontend" for route in main.app.routes))
 
     def test_refresh_all_preserves_active_dataset_when_any_source_fails(self) -> None:
         state = build_default_state(Path("sources"))

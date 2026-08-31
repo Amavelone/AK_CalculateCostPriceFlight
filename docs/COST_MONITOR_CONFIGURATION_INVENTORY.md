@@ -2,13 +2,12 @@
 
 ## Статус и назначение
 
-**Iteration:** 6 — Formal Source Adapters / SQL Readiness.
-**Статус:** безопасные параметры живут в versioned runtime configuration с
-immutable active version, isolated drafts, validation, compare, activation,
-rollback и calculation trace. Отдельный frontend admin contour показывает
-active configuration, immutable history, compare и текущий trace только для
-чтения. Source bindings теперь выбирают typed module-local adapters; SQL
-persistence и UI lifecycle commands не создаются.
+**Iteration:** 7 — Complete Configurable Calculation Architecture.
+**Статус:** active configuration schema `2.0` содержит typed parameters,
+operation parts, safe conditions/lookups и versioned source-derived overrides.
+ANO, Catering и VAT выполняются через Cost Monitor-owned operation executor.
+Отдельный `/admin` поддерживает Create Draft → Edit → Validate → Preview /
+Compare → Activate и rollback; root Cost Monitor не содержит admin UI.
 
 Документ фиксирует фактические правила foundation-версии и их текущее место
 ответственности. Typed baseline воспроизводит прежние Python/Excel значения и
@@ -20,6 +19,7 @@ draft → validation → activation, а не редактирует active versi
 | `CODE_INVARIANT` | Структура предметной модели, calculation capabilities и security boundaries; меняются только кодом. |
 | `CONFIGURABLE` | Безопасный параметр или binding в уже существующей capability; в будущем может попасть в module-owned runtime config. |
 | `DATA` | Фактическая бизнес-информация, загружаемая source adapters или введённая вручную. |
+| `SOURCE_CONFIGURATION` | Операционная настройка пути/маски/активного файла источника; не calculation rule. |
 | `LEGACY_PARITY` | Подтверждённое Excel/Power Query поведение, которое нельзя «исправлять» без отдельного бизнес-решения. |
 
 ## Code invariants
@@ -43,14 +43,14 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 | ID | Параметр / binding | Сейчас | Будущий безопасный scope |
 |---|---|---|---|
 | CF-01 | Норма расхода топлива `2.7` т/ч | `configuration.fuel`; используется `calculation.py` | Numeric parameter для существующего fuel primitive. |
-| CF-02 | Маршрутная ставка АНО `1666.6` на 100 км | `configuration.ano`; используется `calculation.py` | Numeric parameter для существующего ANO primitive. |
-| CF-03 | Базовое питание: количество `6` и ставка `1500` | `configuration.catering`; используется `calculation.py` | Два numeric parameter без изменения структуры catering. |
-| CF-04 | Доплата за пассажира `500` | `configuration.catering`; используется `calculation.py` | Numeric parameter существующей optional catering branch. |
-| CF-05 | НДС: ставка `0.1` и список DME/SVO/VKO | `configuration.vat`; используется `calculation.py` | Rate и airport set при сохранении существующего VAT condition. |
-| CF-06 | Числовые нормы НО: объёмы/делители, 90 минут телетрапа, транспортный порог 100, ставка пожарной машины `25132` | `configuration.ground`; используется `calculate_ground()` | Числовые параметры внутри уже зафиксированной normal/techstop matrix; состав услуг остаётся code invariant. |
-| CF-07 | Default scenario rates и aircraft multipliers до первого refresh | `configuration.initial_data`; используется `build_default_state()` | Baseline module data/config; source workbook по-прежнему может заменить значения. |
+| CF-02 | Маршрутная ставка АНО `1666.6` на 100 км | `configuration.ano` + operation parameter ref | Editable без deploy, trace показывает configuration origin. |
+| CF-03 | Базовое питание: количество `6` и ставка `1500` | `configuration.catering` + operation parts | Numeric parameters и composition безопасных parts. |
+| CF-04 | Доплата за пассажира `500` | `configuration.catering` + operation parts | Parameter существующей registered variable `passengers`. |
+| CF-05 | НДС: ставка `0.1` и список DME/SVO/VKO | `configuration.vat` + conditional operation | Rate и airport set при сохранении typed condition boundary. |
+| CF-06 | Числовые нормы НО: объёмы/делители, 90 минут телетрапа, транспортный порог 100, ставка пожарной машины `25132` | `configuration.ground`; используется code-owned ground block | Состав normal/techstop services остаётся invariant. |
+| CF-07 | Aircraft multipliers и scenario rates до первого refresh | module definition bootstrap data | Это DATA fallback, не active configuration. |
 | CF-08 | Источник топлива, сценарий, включение пассажирского питания, выбранный techstop | `CalculationRequest` | Это per-calculation input, не active runtime config; их shape — invariant, а допустимый выбор опирается на data. |
-| CF-09 | Source directory и file mask | Typed adapter identity/default mask — `configuration.source_bindings`; directory и фактический mask — `source_configs`/Settings UI | Parser identity и baseline mask типизированы; runtime path остаётся окружением/операционным state, physical mappings — adapter-owned. |
+| CF-09 | Source directory и file mask | `source_configs`/Settings UI; adapter identity — module definition | `SOURCE_CONFIGURATION`; не влияет на active calculation configuration напрямую. |
 | CF-10 | Будущие active flags, priorities, effective dates и source mappings | отсутствуют | `DEFERRED` до отдельного lifecycle/mapping scope; не добавлять структуру заранее. |
 
 ## Business data
@@ -67,6 +67,21 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 | DT-08 | Other costs by airport | sheet `Прочее`, строка 27 → monitor adapter | Строка `ПРОЧЕЕ` normal ground block. |
 | DT-09 | Dataset identity, active/uploaded file, source status/audit | local `JsonStore` | Операционная метаинформация; не является бизнес-формулой. |
 
+## Ownership matrix
+
+| Operational value | Authoritative owner | Effective behavior |
+|---|---|---|
+| Fuel burn rate | `CONFIGURATION` | Versioned numeric parameter. |
+| ANO route rate | `CONFIGURATION` | Versioned parameter referenced by ANO operation. |
+| Catering parameters/composition | `CONFIGURATION` | Versioned typed parts and allowed operation order. |
+| VAT and ground numeric parameters | `CONFIGURATION` | Versioned parameters; ground service matrix remains code-owned. |
+| Aircraft multipliers | `DATA` | Workbook dataset, optionally replaced by explicit `CONFIGURATION` override. |
+| Scenario M1/M2/M3 rates | `DATA` | Workbook dataset, optionally replaced by explicit `CONFIGURATION` override. |
+| Fuel price, route, ground services | `DATA` | Canonical dataset from source/manual tariff policy. |
+| Source masks and active files | `SOURCE_CONFIGURATION` | Source lifecycle only; not a calculation rule. |
+| Lookup policy, registered variables/operations, DTO shape | `CODE_INVARIANT` | Deploy required to change capability boundary. |
+| First-match, fallback, rounding sequence | `LEGACY_PARITY` | Preserved unless business methodology changes. |
+
 ## Legacy parity rules
 
 | ID | Правило | Текущее место | Почему не менять без решения бизнеса |
@@ -81,34 +96,23 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 | LP-08 | Пустой workbook section очищает прошлые values; failed full refresh сохраняет active dataset | source lifecycle | Reliability invariant, введённый в Iteration 1; не возвращать старое sticky/partial behaviour. |
 | LP-09 | Worksheet names, column positions и `Прочее!27` bindings | monitor/SRV/fuel adapters | Physical Excel binding; позднее может стать validated source mapping, сейчас не менять без adapter scope. |
 
-## Iteration 6 result and deferred decisions
+## Iteration 7 result and deferred decisions
 
-- Iteration 3 создала module-owned typed definition и baseline config для
-  CF-01…CF-07/CF-09. Iteration 4 добавила JSON-backed configuration service:
-  v1 мигрирует из baseline, active version immutable, drafts изолированы,
-  activation/rollback атомарно меняют только active pointer.
-- Runtime payload не принимает произвольные поля, пути или код; переменные и
-  primitives зарегистрированы явными whitelist, но expression evaluator не создан.
-- Calculation result и exports несут `config_version`, data revision и
-  structured trace фактически использованных inputs/lookups/parameters/
-  operations/results.
-- Iteration 5 добавила отдельную lazy-loaded группу `Администрирование`:
-  active v/schema/validation/data revision, parameter groups, aircraft
-  multipliers, scenarios, source bindings, immutable version history, compare
-  и trace текущего in-memory расчёта отображаются без write controls.
-- Admin API errors изолированы от normal Cost Monitor startup; frontend client
-  использует только read operations active/list/compare и не вызывает draft,
-  activate или rollback endpoints.
-- Iteration 6 формализовала цепочку `physical source → adapter → normalization
-  → CostMonitorDataset → calculation`: Excel worksheet/column semantics остались
-  внутри SRV, fuel-registry и monitor-workbook adapters, а calculation больше
-  не читает JSON-shaped rows. `JsonStore` реализует узкий repository contract;
-  это preparation к SQL Server без database driver или migration.
-- Не переносить CI-01…CI-07, LP-01…LP-09 или raw Excel/SQL column names в
-  arbitrary config. Они остаются code/adapters/legacy contracts до отдельного
-  решения.
-- Editing безопасных parameters/bindings, lifecycle commands и persisted
-  calculation history остаются отдельным будущим scope.
-- SQL Server, второй монитор, shared platform extraction, authentication/RBAC
-  и no-code builder
-  остаются `DEFERRED`.
+- Schema `2.0` upgrades persisted v1 configurations in memory, preserving
+  immutable stored history and rollback semantics.
+- Runtime payload accepts only typed parts, registered variables/parameters,
+  registered lookups and bounded operations. `eval`, `exec`, arbitrary Python,
+  dynamic imports and arbitrary I/O are impossible by schema and validation.
+- `EffectiveCalculationContext` resolves configuration, source data and only
+  two targeted override families with provenance; no active configuration value
+  is silently ignored.
+- Missing required ground tariffs retain legacy numeric zero and add
+  `GROUND_TARIFF_MISSING`, making the result `degraded`.
+- `/admin` exposes editing and lifecycle controls while `/` preserves normal
+  Cost Monitor UX. Preview comparison shows active/draft/difference on the
+  same input; compare reports semantic operation changes.
+- CBR-derived fuel prices retain rate/source/timestamp/fallback metadata in
+  canonical data and calculation trace.
+- SQL Server, generic overrides for tariffs/fuel prices, a visual node editor,
+  authentication/RBAC, second monitor and shared platform extraction remain
+  `DEFERRED`.

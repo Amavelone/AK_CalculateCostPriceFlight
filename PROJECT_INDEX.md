@@ -1,6 +1,6 @@
 # Project Index
 
-Карта отражает текущее состояние репозитория на 2026-08-30. Каноническая
+Карта отражает текущее состояние репозитория на 2026-08-31. Каноническая
 архитектурная модель, инварианты и порядок развития описаны в
 `docs/AK_CalculateCostPriceFlight_Архитектурное_ТЗ_и_спецификация.md`.
 `ARCHITECTURE_AUDIT.md` сохраняет исторический аудит foundation-версии.
@@ -14,8 +14,8 @@ Backend:
 
 Frontend:
 - `frontend/src/main.tsx` — React bootstrap.
-- `frontend/src/App.tsx` — стабильный root entry, реэкспортирующий Cost Monitor
-  feature.
+- `frontend/src/App.tsx` — route entry: `/` открывает пользовательский Cost
+  Monitor, `/admin` — отдельный administrative contour.
 - Dev: `cd frontend; pnpm dev`.
 
 ## Backend
@@ -39,16 +39,16 @@ Frontend:
 - `backend/app/modules/cost_monitor/store.py` и `repository.py` — local JSON
   implementation и узкий persistence contract для read/mutate/audit/data
   revision; будущий SQL Server должен заменить implementation, а не calculation.
-- `backend/app/modules/cost_monitor/configuration/` — typed definition и
-  module-owned JSON-backed lifecycle service: immutable active versions,
-  isolated drafts, validation, compare, activation и rollback. SQL persistence
-  остаётся deferred; Iteration 5 добавляет отдельный read-only frontend contour.
+- `backend/app/modules/cost_monitor/configuration/` — schema `2.0`, module
+  definition, effective context, typed operation executor и capability-oriented
+  JSON lifecycle: immutable versions, drafts, validate/preview/compare/activate/
+  rollback, source-derived overrides and provenance.
 
 ### Calculation and export
 
-- `backend/app/modules/cost_monitor/calculation.py` — источник истины для всех формул Cost
-  Monitor; возвращает legs, totals, legacy warnings, structured diagnostics,
-  status, `data_snapshot`, `config_version` и structured business trace.
+- `backend/app/modules/cost_monitor/calculation.py` — orchestration Cost
+  Monitor; ANO/Catering/VAT исполняются через typed config operations, Ground
+  сохраняет legacy matrix, diagnostics и business-readable provenance trace.
 - `backend/app/modules/cost_monitor/exports.py` — единый export snapshot и JSON/XLSX writers;
   не должен выполнять тарифные lookup или изменять результат.
 
@@ -72,12 +72,12 @@ Frontend:
 
 ### App and pages
 
-- `frontend/src/features/cost-monitor/CostMonitorApp.tsx` — application shell,
-  autosave, data refresh, API orchestration, stale-request protection и
-  отдельная lazy-loaded navigation group для администрирования.
-- `frontend/src/features/cost-monitor/pages/` — отдельные страницы калькулятора,
-  источников, тарифов, настроек и read-only `AdminPage` для active
-  configuration, immutable versions, compare и текущего calculation trace.
+- `frontend/src/features/cost-monitor/CostMonitorApp.tsx` — пользовательский
+  application shell без administrative workflow; `AdminApp.tsx` — отдельный
+  lazy-loaded lifecycle UI для `/admin`.
+- `frontend/src/features/cost-monitor/pages/` — user pages и editable
+  `AdminPage`: parameters, safe operation parts, overrides, preview, compare,
+  activate/rollback и trace.
 - `frontend/src/features/cost-monitor/formatting.ts` — общие форматтеры чисел,
   сумм и времени для feature-страниц.
 - `frontend/src/styles.css` — все стили приложения.
@@ -85,7 +85,7 @@ Frontend:
 ### API and types
 
 - `frontend/src/features/cost-monitor/api.ts` — Cost Monitor `/api` client,
-  upload, calculation export download и read-only configuration queries.
+  upload/export и typed configuration lifecycle/capabilities/preview calls.
 - `frontend/src/features/cost-monitor/types.ts` — вручную поддерживаемые
   TypeScript request/response types, включая configuration lifecycle и trace.
 - `frontend/src/features/cost-monitor/index.ts` — feature entry.
@@ -112,7 +112,7 @@ Frontend:
 - `ruff.toml` — минимальный backend lint gate.
 - Backend: `$env:PYTHONPATH=(Resolve-Path .\backend).Path; .\.venv\Scripts\python -m unittest discover -s .\backend\tests -v`.
 - Frontend: `cd frontend; pnpm build` (strict TypeScript + Vite production build).
-- Текущий полный набор: 40 backend tests; `\.venv\Scripts\ruff check backend`.
+- Текущий полный набор: 45 backend tests; `\.venv\Scripts\ruff check backend`.
 
 ## Documentation and analysis
 
@@ -120,9 +120,8 @@ Frontend:
 - `docs/AK_CalculateCostPriceFlight_Архитектурное_ТЗ_и_спецификация.md` —
   единственный канонический архитектурный документ: целевая модель,
   инварианты, roadmap и правила выполнения итераций.
-- `docs/COST_MONITOR_CONFIGURATION_INVENTORY.md` — classification правил из
-  Iteration 2, typed baseline Iteration 3, lifecycle boundaries Iteration 4 и
-  read-only admin boundary Iteration 5.
+- `docs/COST_MONITOR_CONFIGURATION_INVENTORY.md` — ownership matrix, schema
+  `2.0`, operation/override boundaries и current administrative lifecycle.
 - `ARCHITECTURE_AUDIT.md` — исторический аудит foundation-версии и исходные
   findings; не является текущим canonical architecture reference.
 - `PROJECT_CHANGELOG.md` — значимые технические изменения от этого аудита.
@@ -154,8 +153,8 @@ Frontend:
   парсеров, оркестрация источников и JSON adapter имеют отдельные границы.
 - Frontend страницы разделены; следующий безопасный seam — hooks только после
   фиксации autosave/API sequence отдельными тестами.
-- Read-only admin APIs загружаются только при входе в отдельный admin contour;
-  их отказ не входит в normal Cost Monitor startup path.
+- `/admin` lazy-loads its independent admin application; отсутствие admin API
+  не влияет на normal Cost Monitor startup. Authentication/RBAC пока нет.
 - Клиентская детализация рендерит backend `details`; формулы АНО/питания/НДС
   на frontend не дублируются.
 - `JsonStore` безопасен только для одного процесса; shared deployment требует

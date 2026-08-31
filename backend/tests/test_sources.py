@@ -74,6 +74,10 @@ class SourceParserCharacterizationTests(unittest.TestCase):
         state = SourceParserCharacterizationTests.empty_dataset_state()
         adapter_run.data.apply(CostMonitorDataset.from_state(state)).write_to_state(state)
         self.assertEqual(state["fuel_prices"][0]["currency"], "USD")
+        self.assertEqual(state["fuel_prices"][0]["exchange_rate"], 100.0)
+        self.assertEqual(state["fuel_prices"][0]["exchange_rate_source"], "тестовый курс")
+        self.assertFalse(state["fuel_prices"][0]["exchange_rate_fallback_used"])
+        self.assertTrue(state["fuel_prices"][0]["exchange_rate_timestamp"])
 
     def test_monitor_parser_reads_all_configuration_sections(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -203,10 +207,13 @@ class WorkbookPreviewTests(unittest.TestCase):
 
     def test_cbr_failure_keeps_documented_current_fallback(self) -> None:
         with patch("app.modules.cost_monitor.parsers.fuel.httpx.get", side_effect=OSError("offline")):
-            rate, note = fetch_usd_rate()
+            metadata = fetch_usd_rate()
 
-        self.assertEqual(rate, 95.0)
-        self.assertIn("резервное значение 95 RUB/USD", note)
+        self.assertEqual(metadata.rate, 95.0)
+        self.assertEqual(metadata.source, "fallback")
+        self.assertTrue(metadata.fallback_used)
+        self.assertTrue(metadata.timestamp)
+        self.assertIn("резервное значение 95 RUB/USD", metadata.note)
 
     def test_empty_workbook_sections_replace_previous_values(self) -> None:
         state = {

@@ -1,5 +1,36 @@
 # Project Changelog
 
+## 2026-08-31 — Iteration 7: complete configurable calculation architecture
+
+### Изменено
+
+- Configuration schema `2.0` добавляет typed ordered operation parts для ANO,
+  Catering и VAT, safe conditions/lookups, parameter refs и explicit versioned
+  overrides для aircraft multipliers/scenario rates.
+- `EffectiveCalculationContext` устраняет double source of truth: bootstrap
+  data и source definitions принадлежат module definition, source data —
+  dataset, directory/mask — source configuration; trace показывает origin и
+  `base_value` override.
+- Missing ground tariff теперь сохраняет legacy numeric zero, но добавляет
+  `GROUND_TARIFF_MISSING` и переводит result в `degraded`.
+- Admin UI перенесён на отдельный `/admin` route и поддерживает полный draft
+  workflow, preview comparison, typed operation editing, compare, activate и
+  rollback; пользовательский `/` не содержит admin navigation.
+- CBR metadata (`rate`, `source`, `timestamp`, `fallback_used`) сохранена в
+  fuel price record и trace. Configuration persistence использует
+  capability-oriented lifecycle adapter поверх JsonStore.
+
+### Проверка
+
+- Baseline до изменений: 40 backend tests, Ruff, TypeScript и Vite build — PASS.
+- После изменений: 45 backend tests, Excel golden parity, API/config tests,
+  Ruff, strict TypeScript и production build — PASS.
+
+### Deferred
+
+- SQL Server, generic tariff/fuel-price overrides, visual node editor,
+  authentication/RBAC, второй monitor и shared platform extraction.
+
 ## 2026-08-31 — Iteration 6: formal module source adapter boundaries
 
 ### Изменено

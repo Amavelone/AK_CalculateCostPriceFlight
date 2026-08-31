@@ -17,19 +17,28 @@ from .configuration import (
     ConfigurationValidationError,
     JsonConfigurationRepository,
 )
+from .configuration.definition import LOOKUP_ARGUMENTS, REGISTERED_PARAMETER_PATHS
+from .configuration.functions import ALLOWED_PRIMITIVES
+from .configuration.variables import REGISTERED_VARIABLES
 from .exports import build_export_snapshot, export_filename, json_bytes, xlsx_bytes
 from .records import CostMonitorDataset
 from .repository import CostMonitorRepository
 from .schemas import (
     CalculationRequest,
     CalculationResponse,
+    ConfigurationCapabilitiesResponse,
     ConfigurationCompareResponse,
     ConfigurationDraftResponse,
     ConfigurationDraftUpdate,
+    ConfigurationPreviewComparisonResponse,
     ConfigurationVersionResponse,
     DraftPayload,
     ManualTariffInput,
+    SourceConfigResponse,
     SourceConfigUpdate,
+    SourcePreviewResponse,
+    SourceRawPreviewResponse,
+    SourceRefreshAllResponse,
 )
 from .sources import (
     activate_staged_source,
@@ -125,12 +134,17 @@ def calculation_options() -> dict[str, list[str]]:
     """
 
     state = repository.read()
+    configuration = configuration_service.active()["configuration"]
     aircraft = {"733", "737", "738"}
     aircraft.update(state.get("aircraft_multipliers", {}).keys())
+    aircraft.update(configuration.overrides.aircraft_multipliers.keys())
     for rates in state.get("scenario_rates", {}).values():
         aircraft.update(rates.keys())
+    for rates in configuration.overrides.scenario_rates.values():
+        aircraft.update(rates.keys())
+    scenarios = list(dict.fromkeys([*state.get("scenario_rates", {}), *configuration.overrides.scenario_rates]))
     return {
-        "scenarios": list(state.get("scenario_rates", {}).keys()) or ["ГБ 2026"],
+        "scenarios": scenarios or ["ГБ 2026"],
         "aircraft": sorted(aircraft),
     }
 
@@ -202,10 +216,43 @@ def list_configuration_versions() -> list[dict[str, Any]]:
         raise configuration_error_to_http(error) from error
 
 
+@router.get("/api/configuration/capabilities", response_model=ConfigurationCapabilitiesResponse)
+def configuration_capabilities() -> dict[str, Any]:
+    return {
+        "schema_version": "2.0",
+        "parameters": sorted(REGISTERED_PARAMETER_PATHS),
+        "variables": [
+            {"name": item.name, "value_type": item.value_type, "description": item.description}
+            for item in REGISTERED_VARIABLES
+        ],
+        "operations": [
+            {"name": item.name, "description": item.description, "arguments": []}
+            for item in ALLOWED_PRIMITIVES
+        ],
+        "lookups": [
+            {
+                "name": name,
+                "description": "Зарегистрированный Cost Monitor lookup.",
+                "arguments": sorted(arguments),
+            }
+            for name, arguments in LOOKUP_ARGUMENTS.items()
+        ],
+        "condition_operators": ["eq", "ne", "gt", "gte", "lt", "lte", "in", "not_in", "and", "or"],
+    }
+
+
 @router.post("/api/configuration/drafts", response_model=ConfigurationDraftResponse, status_code=201)
 def create_configuration_draft() -> dict[str, Any]:
     try:
         return configuration_service.create_draft()
+    except Exception as error:
+        raise configuration_error_to_http(error) from error
+
+
+@router.get("/api/configuration/drafts/{version}", response_model=ConfigurationDraftResponse)
+def get_configuration_draft(version: int) -> dict[str, Any]:
+    try:
+        return configuration_service.draft(version)
     except Exception as error:
         raise configuration_error_to_http(error) from error
 
@@ -243,6 +290,53 @@ def preview_configuration_draft(version: int, payload: CalculationRequest) -> di
         raise configuration_error_to_http(error) from error
 
 
+@router.post(
+    "/api/configuration/drafts/{version}/preview-comparison",
+    response_model=ConfigurationPreviewComparisonResponse,
+)
+def preview_configuration_comparison(version: int, payload: CalculationRequest) -> dict[str, Any]:
+    try:
+        state = repository.read()
+        dataset = CostMonitorDataset.from_state(state)
+        active = configuration_service.active()
+        draft_configuration = configuration_service.draft_configuration(version)
+        active_result = calculate(
+            dataset,
+            payload,
+            active["configuration"],
+            active["version"],
+            "active",
+        )
+        draft_result = calculate(dataset, payload, draft_configuration, version, "draft")
+        leg_differences: dict[str, dict[str, float]] = {}
+        active_legs = {leg["id"]: leg for leg in active_result["legs"]}
+        for draft_leg in draft_result["legs"]:
+            active_leg = active_legs.get(draft_leg["id"])
+            if active_leg is None:
+                continue
+            leg_differences[draft_leg["id"]] = {
+                component: round(
+                    float(draft_leg["components"].get(component, 0.0))
+                    - float(active_leg["components"].get(component, 0.0)),
+                    2,
+                )
+                for component in sorted(set(active_leg["components"]) | set(draft_leg["components"]))
+            }
+        return {
+            "active": active_result,
+            "draft": draft_result,
+            "difference": {
+                "total": {
+                    level: round(float(draft_result["total"][level]) - float(active_result["total"][level]), 2)
+                    for level in ("m1", "m2", "m3")
+                },
+                "legs": leg_differences,
+            },
+        }
+    except Exception as error:
+        raise configuration_error_to_http(error) from error
+
+
 @router.post("/api/configuration/drafts/{version}/activate", response_model=ConfigurationVersionResponse)
 def activate_configuration_draft(version: int) -> dict[str, Any]:
     try:
@@ -259,12 +353,12 @@ def rollback_configuration(version: int) -> dict[str, Any]:
         raise configuration_error_to_http(error) from error
 
 
-@router.get("/api/sources")
+@router.get("/api/sources", response_model=list[SourceConfigResponse])
 def list_sources() -> list[dict[str, Any]]:
     return repository.read()["source_configs"]
 
 
-@router.put("/api/sources/{source_id}")
+@router.put("/api/sources/{source_id}", response_model=SourceConfigResponse)
 def update_source(source_id: str, payload: SourceConfigUpdate) -> dict[str, Any]:
     def operation(state: dict[str, Any]) -> dict[str, Any]:
         source = get_source_or_404(state, source_id)
@@ -278,14 +372,14 @@ def update_source(source_id: str, payload: SourceConfigUpdate) -> dict[str, Any]
     return repository.mutate(operation)
 
 
-@router.get("/api/sources/{source_id}/preview")
+@router.get("/api/sources/{source_id}/preview", response_model=SourcePreviewResponse)
 def source_preview(source_id: str) -> dict[str, Any]:
     state = repository.read()
     source = get_source_or_404(state, source_id)
     return {"source": source, "preview": source.get("preview", [])}
 
 
-@router.get("/api/sources/{source_id}/raw-preview")
+@router.get("/api/sources/{source_id}/raw-preview", response_model=SourceRawPreviewResponse)
 def source_raw_preview(source_id: str, sheet: str | None = None) -> dict[str, Any]:
     state = repository.read()
     source = get_source_or_404(state, source_id)
@@ -296,7 +390,7 @@ def source_raw_preview(source_id: str, sheet: str | None = None) -> dict[str, An
         raise HTTPException(status_code=404, detail=str(error)) from error
 
 
-@router.post("/api/sources/{source_id}/refresh")
+@router.post("/api/sources/{source_id}/refresh", response_model=SourceConfigResponse)
 def refresh_one_source(source_id: str) -> dict[str, Any]:
     def operation(state: dict[str, Any]) -> dict[str, Any]:
         get_source_or_404(state, source_id)
@@ -313,7 +407,7 @@ def refresh_one_source(source_id: str) -> dict[str, Any]:
     return repository.mutate(operation)
 
 
-@router.post("/api/sources/refresh-all")
+@router.post("/api/sources/refresh-all", response_model=SourceRefreshAllResponse)
 def refresh_all_sources() -> dict[str, Any]:
     def operation(state: dict[str, Any]) -> dict[str, Any]:
         staged = []
@@ -341,7 +435,7 @@ def refresh_all_sources() -> dict[str, Any]:
     return repository.mutate(operation)
 
 
-@router.post("/api/sources/{source_id}/upload")
+@router.post("/api/sources/{source_id}/upload", response_model=SourceConfigResponse)
 async def upload_source_file(source_id: str, file: UploadFile = File(...)) -> dict[str, Any]:
     def operation(state: dict[str, Any]) -> dict[str, Any]:
         source = get_source_or_404(state, source_id)

@@ -133,7 +133,27 @@ class CalculatorTests(unittest.TestCase):
         self.assertTrue(any("Маршрут CCC-DDD не найден" in warning for warning in result["warnings"]))
         self.assertTrue(any("Не найдена цена керосина АК" in warning for warning in result["warnings"]))
         self.assertEqual(result["status"], "degraded")
-        self.assertEqual({item["code"] for item in result["diagnostics"]}, {"missing_route", "missing_fuel_price", "missing_ano_rate"})
+        self.assertTrue(
+            {"missing_route", "missing_fuel_price", "missing_ano_rate", "GROUND_TARIFF_MISSING"}
+            .issubset({item["code"] for item in result["diagnostics"]})
+        )
+
+    def test_missing_required_ground_tariff_keeps_zero_and_degrades_result(self) -> None:
+        state = self.base_state()
+        request = CalculationRequest.model_validate(
+            {
+                "legs": [{"id": "one", "departure": "AAA", "arrival": "BBB", "aircraft": "738", "passengers": 0}],
+                "settings": {"scenario": "ГБ 2026", "fuel_source": "ЦРТ", "catering": False},
+            }
+        )
+
+        result = self.calculate(state, request)
+
+        self.assertEqual(result["legs"][0]["components"]["ground"], 0)
+        self.assertEqual(result["status"], "degraded")
+        ground_diagnostics = [item for item in result["diagnostics"] if item["code"] == "GROUND_TARIFF_MISSING"]
+        self.assertTrue(any(item["reference"] == "AAA/ПРИЕМ-ВЫПУСК" for item in ground_diagnostics))
+        self.assertFalse(any("ПАССАЖИР(М)" in (item["reference"] or "") for item in ground_diagnostics))
 
     def test_any_number_of_legs_is_accepted(self) -> None:
         state = self.base_state()

@@ -17,6 +17,15 @@ REGISTERED_VARIABLES = (
     VariableDefinition("arrival", "iata", "Аэропорт посадки из CalculationRequest."),
     VariableDefinition("line_type", "enum:ВВЛ|МВЛ", "Тип линии, разрешённый module code."),
     VariableDefinition("is_techstop", "boolean", "Признак выбранного техстопа."),
+    VariableDefinition("has_route", "boolean", "Маршрут найден в canonical dataset."),
+    VariableDefinition("has_route_key", "boolean", "Аэропорты плеча заполнены."),
+    VariableDefinition("has_ano_tariff", "boolean", "Тариф АНО найден для аэропорта вылета."),
+    VariableDefinition("catering_enabled", "boolean", "Включена пассажирская часть питания."),
+    VariableDefinition("base_catering_nonzero", "boolean", "Базовая часть питания ненулевая."),
+    VariableDefinition("fuel", "number", "Рассчитанный компонент топлива текущего плеча."),
+    VariableDefinition("ground", "number", "Рассчитанный компонент наземного обслуживания."),
+    VariableDefinition("ano", "number", "Рассчитанный компонент АНО."),
+    VariableDefinition("catering", "number", "Рассчитанный компонент бортпитания."),
 )
 
 REGISTERED_VARIABLE_NAMES = frozenset(item.name for item in REGISTERED_VARIABLES)

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class ConfigurationModel(BaseModel):
-    """Общая строгая граница code-owned configuration definition."""
+    """Strict, serializable boundary for module-owned runtime configuration."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, allow_inf_nan=False)
 
@@ -38,27 +38,106 @@ class GroundParameters(ConfigurationModel):
     fire_truck_rate: float = Field(ge=0, le=100_000_000)
 
 
-class InitialData(ConfigurationModel):
-    aircraft_multipliers: dict[str, float]
-    scenario_rates: dict[str, dict[str, tuple[float, float, float]]]
+class ConstantValue(ConfigurationModel):
+    kind: Literal["constant"]
+    value: float | str | bool | tuple[str, ...]
 
 
-class SourceBinding(ConfigurationModel):
-    id: Literal["srv", "fuel_registry", "monitor_workbook"]
-    label: str = Field(min_length=1, max_length=100)
-    description: str = Field(min_length=1, max_length=300)
-    parser: Literal["srv_tariffs", "fuel_registry", "monitor_workbook"]
-    default_mask: str = Field(min_length=1, max_length=120)
+class VariableValue(ConfigurationModel):
+    kind: Literal["variable"]
+    name: str = Field(min_length=1, max_length=80)
+
+
+class ParameterValue(ConfigurationModel):
+    kind: Literal["parameter"]
+    path: str = Field(min_length=1, max_length=120)
+
+
+LookupArgument = Annotated[ConstantValue | VariableValue | ParameterValue, Field(discriminator="kind")]
+
+
+class LookupValue(ConfigurationModel):
+    kind: Literal["lookup"]
+    name: str = Field(min_length=1, max_length=80)
+    arguments: dict[str, LookupArgument] = Field(default_factory=dict, max_length=8)
+
+
+ValueReference = Annotated[ConstantValue | VariableValue | ParameterValue | LookupValue, Field(discriminator="kind")]
+
+
+class OperationAction(ConfigurationModel):
+    operation: Literal["add", "subtract", "multiply", "divide", "round"]
+    operand: ValueReference | None = None
+    digits: int | None = Field(default=None, ge=0, le=8)
+
+
+class ConditionClause(ConfigurationModel):
+    left: ValueReference
+    operator: Literal["eq", "ne", "gt", "gte", "lt", "lte", "in", "not_in"]
+    right: ValueReference
+
+
+class ConditionGroup(ConfigurationModel):
+    all_of: tuple[ConditionClause, ...] = Field(min_length=1, max_length=12)
+
+
+class OperationCondition(ConfigurationModel):
+    # Groups are OR-ed, clauses inside a group are AND-ed.
+    any_of: tuple[ConditionGroup, ...] = Field(min_length=1, max_length=8)
+
+
+class OperationPart(ConfigurationModel):
+    id: str = Field(pattern=r"^[a-z][a-z0-9_]{1,63}$")
+    label: str = Field(min_length=1, max_length=120)
+    initial: ValueReference
+    operations: tuple[OperationAction, ...] = Field(default_factory=tuple, max_length=16)
+    condition: OperationCondition | None = None
+    detail_service: str = Field(min_length=1, max_length=120)
+
+
+class StepOperations(ConfigurationModel):
+    parts: tuple[OperationPart, ...] = Field(min_length=1, max_length=32)
+    aggregation: Literal["sum"] = "sum"
+
+
+class CalculationOperations(ConfigurationModel):
+    ano: StepOperations
+    catering: StepOperations
+    vat: StepOperations
+
+
+class CalculationOverrides(ConfigurationModel):
+    aircraft_multipliers: dict[str, float] = Field(default_factory=dict, max_length=200)
+    scenario_rates: dict[str, dict[str, tuple[float, float, float]]] = Field(default_factory=dict, max_length=100)
 
 
 class CostMonitorConfiguration(ConfigurationModel):
-    """Разрешённая схема Cost Monitor без arbitrary expressions или I/O."""
+    """Allowed Cost Monitor semantics; no arbitrary code or external I/O."""
 
-    schema_version: Literal["1.0"]
+    schema_version: Literal["2.0"]
     fuel: FuelParameters
     ano: AnoParameters
     catering: CateringParameters
     vat: VatParameters
     ground: GroundParameters
-    initial_data: InitialData
-    source_bindings: tuple[SourceBinding, ...] = Field(min_length=3, max_length=3)
+    operations: CalculationOperations
+    overrides: CalculationOverrides = Field(default_factory=CalculationOverrides)
+
+
+def value_ref(kind: str, **values: Any) -> dict[str, Any]:
+    return {"kind": kind, **values}
+
+
+__all__ = [
+    "CalculationOperations",
+    "CalculationOverrides",
+    "ConditionClause",
+    "ConditionGroup",
+    "CostMonitorConfiguration",
+    "OperationAction",
+    "OperationCondition",
+    "OperationPart",
+    "StepOperations",
+    "ValueReference",
+    "value_ref",
+]

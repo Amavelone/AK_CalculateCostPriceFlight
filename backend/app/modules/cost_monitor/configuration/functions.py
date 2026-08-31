@@ -12,10 +12,11 @@ class PrimitiveDefinition:
 # исполняет строки формул из внешнего ввода.
 ALLOWED_PRIMITIVES = (
     PrimitiveDefinition("add", 2, "Сложение двух чисел."),
+    PrimitiveDefinition("subtract", 2, "Вычитание двух чисел."),
     PrimitiveDefinition("multiply", 2, "Умножение двух чисел."),
     PrimitiveDefinition("divide", 2, "Деление с заранее проверенным ненулевым делителем."),
-    PrimitiveDefinition("ceil", 1, "Округление числа вверх."),
-    PrimitiveDefinition("contains", 2, "Проверка членства значения в разрешённом наборе."),
+    PrimitiveDefinition("round", 1, "Явное округление до разрешённого числа знаков."),
+    PrimitiveDefinition("sum", -1, "Агрегация разрешённых частей шага."),
 )
 
 ALLOWED_PRIMITIVE_NAMES = frozenset(item.name for item in ALLOWED_PRIMITIVES)

@@ -1,58 +1,176 @@
-from .validation import validate_configuration
+from __future__ import annotations
 
-BASELINE_CONFIGURATION = validate_configuration(
-    {
-        "schema_version": "1.0",
-        "fuel": {"consumption_tons_per_hour": 2.7},
-        "ano": {"route_rate_per_100_km": 1666.6},
-        "catering": {"base_units": 6, "base_unit_rate": 1500, "passenger_surcharge": 500},
-        "vat": {"rate": 0.1, "airports": ["DME", "SVO", "VKO"]},
-        "ground": {
-            "split_divisor": 2,
-            "stairs_units": 2,
-            "telebridge_minutes": 90,
-            "transport_passenger_block": 100,
-            "fire_truck_rate": 25132,
-        },
-        "initial_data": {
-            "aircraft_multipliers": {"733": 1.0, "737": 1.0, "738": 1.0},
-            "scenario_rates": {
-                "ГБ 2026": {
-                    "733": [78.48, 220.45, 272.17],
-                    "737": [120.0, 280.0, 340.0],
-                    "738": [165.73, 341.48, 391.28],
-                },
-                "Оперативная 2026": {
-                    "733": [78.48, 220.45, 272.17],
-                    "737": [120.0, 280.0, 340.0],
-                    "738": [165.73, 341.48, 391.28],
-                },
-            },
-        },
-        "source_bindings": [
+from collections.abc import Mapping
+from typing import Any
+
+from .schema import CostMonitorConfiguration
+
+
+def _constant(value: Any) -> dict[str, Any]:
+    return {"kind": "constant", "value": value}
+
+
+def _variable(name: str) -> dict[str, Any]:
+    return {"kind": "variable", "name": name}
+
+
+def _parameter(path: str) -> dict[str, Any]:
+    return {"kind": "parameter", "path": path}
+
+
+def _lookup(name: str, **arguments: dict[str, Any]) -> dict[str, Any]:
+    return {"kind": "lookup", "name": name, "arguments": arguments}
+
+
+def _condition(*groups: tuple[tuple[dict[str, Any], str, dict[str, Any]], ...]) -> dict[str, Any]:
+    return {
+        "any_of": [
+            {"all_of": [{"left": left, "operator": operator, "right": right} for left, operator, right in group]}
+            for group in groups
+        ]
+    }
+
+
+BASELINE_OPERATIONS: dict[str, Any] = {
+    "ano": {
+        "aggregation": "sum",
+        "parts": [
             {
-                "id": "srv",
-                "label": "Тарифы SRV",
-                "description": "Тарифы услуг аэропортов",
-                "parser": "srv_tariffs",
-                "default_mask": "7480_srv*.xlsx",
+                "id": "airport_ano",
+                "label": "Аэропортовая часть АНО",
+                "detail_service": "АНО АД",
+                "initial": _lookup(
+                    "airport_tariff",
+                    airport=_variable("departure"),
+                    service=_constant("АНО АД"),
+                ),
+                "operations": [
+                    {
+                        "operation": "multiply",
+                        "operand": _lookup("aircraft_multiplier", aircraft=_variable("aircraft")),
+                    }
+                ],
+                "condition": _condition(
+                    (
+                        (_variable("has_route"), "eq", _constant(True)),
+                        (_variable("has_ano_tariff"), "eq", _constant(True)),
+                    )
+                ),
             },
             {
-                "id": "fuel_registry",
-                "label": "Реестр керосина",
-                "description": "Выгрузка 1С цен поставщиков",
-                "parser": "fuel_registry",
-                "default_mask": "реестр*.xlsx",
-            },
-            {
-                "id": "monitor_workbook",
-                "label": "Рабочая книга монитора",
-                "description": "Маршруты, признак МВЛ и исходные параметры",
-                "parser": "monitor_workbook",
-                "default_mask": "Расчет себестоимости рейсов*.xlsx",
+                "id": "route_ano",
+                "label": "Маршрутная часть АНО",
+                "detail_service": "МАРШРУТНАЯ ЧАСТЬ АНО",
+                "initial": _variable("distance"),
+                "operations": [
+                    {"operation": "divide", "operand": _constant(100)},
+                    {"operation": "multiply", "operand": _parameter("ano.route_rate_per_100_km")},
+                ],
+                "condition": _condition(
+                    (
+                        (_variable("has_route"), "eq", _constant(True)),
+                        (_variable("has_ano_tariff"), "eq", _constant(True)),
+                    )
+                ),
             },
         ],
-    }
-)
+    },
+    "catering": {
+        "aggregation": "sum",
+        "parts": [
+            {
+                "id": "base_catering",
+                "label": "Базовое бортпитание",
+                "detail_service": "БАЗОВОЕ БОРТПИТАНИЕ",
+                "initial": _parameter("catering.base_units"),
+                "operations": [
+                    {"operation": "multiply", "operand": _parameter("catering.base_unit_rate")}
+                ],
+                "condition": _condition(((_variable("has_route_key"), "eq", _constant(True)),)),
+            },
+            {
+                "id": "passenger_catering",
+                "label": "Доплата за пассажиров",
+                "detail_service": "ДОПЛАТА ЗА ПАССАЖИРОВ",
+                "initial": _variable("passengers"),
+                "operations": [
+                    {"operation": "multiply", "operand": _parameter("catering.passenger_surcharge")}
+                ],
+                "condition": _condition(
+                    (
+                        (_variable("has_route_key"), "eq", _constant(True)),
+                        (_variable("catering_enabled"), "eq", _constant(True)),
+                        (_variable("base_catering_nonzero"), "eq", _constant(True)),
+                    )
+                ),
+            },
+        ],
+    },
+    "vat": {
+        "aggregation": "sum",
+        "parts": [
+            {
+                "id": "vat",
+                "label": "НДС",
+                "detail_service": "НДС",
+                "initial": _variable("fuel"),
+                "operations": [
+                    {"operation": "add", "operand": _variable("ground")},
+                    {"operation": "add", "operand": _variable("ano")},
+                    {"operation": "add", "operand": _variable("catering")},
+                    {"operation": "multiply", "operand": _parameter("vat.rate")},
+                ],
+                "condition": _condition(
+                    (
+                        (_variable("line_type"), "eq", _constant("ВВЛ")),
+                        (_variable("departure"), "in", _parameter("vat.airports")),
+                    ),
+                    (
+                        (_variable("line_type"), "eq", _constant("ВВЛ")),
+                        (_variable("arrival"), "in", _parameter("vat.airports")),
+                    ),
+                ),
+            }
+        ],
+    },
+}
 
-__all__ = ["BASELINE_CONFIGURATION"]
+
+BASELINE_PAYLOAD: dict[str, Any] = {
+    "schema_version": "2.0",
+    "fuel": {"consumption_tons_per_hour": 2.7},
+    "ano": {"route_rate_per_100_km": 1666.6},
+    "catering": {"base_units": 6, "base_unit_rate": 1500, "passenger_surcharge": 500},
+    "vat": {"rate": 0.1, "airports": ["DME", "SVO", "VKO"]},
+    "ground": {
+        "split_divisor": 2,
+        "stairs_units": 2,
+        "telebridge_minutes": 90,
+        "transport_passenger_block": 100,
+        "fire_truck_rate": 25132,
+    },
+    "operations": BASELINE_OPERATIONS,
+    "overrides": {"aircraft_multipliers": {}, "scenario_rates": {}},
+}
+
+
+def upgrade_legacy_payload(value: Mapping[str, Any]) -> dict[str, Any]:
+    """Normalizes persisted v1 content without rewriting immutable records."""
+
+    if value.get("schema_version") != "1.0":
+        return dict(value)
+    return {
+        "schema_version": "2.0",
+        "fuel": value["fuel"],
+        "ano": value["ano"],
+        "catering": value["catering"],
+        "vat": value["vat"],
+        "ground": value["ground"],
+        "operations": BASELINE_OPERATIONS,
+        "overrides": {"aircraft_multipliers": {}, "scenario_rates": {}},
+    }
+
+
+BASELINE_CONFIGURATION = CostMonitorConfiguration.model_validate(BASELINE_PAYLOAD)
+
+__all__ = ["BASELINE_CONFIGURATION", "BASELINE_OPERATIONS", "BASELINE_PAYLOAD", "upgrade_legacy_payload"]

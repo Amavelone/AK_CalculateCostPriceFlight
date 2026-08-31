@@ -11,7 +11,11 @@ from pathlib import Path
 from typing import Any
 
 from ...core.config import Settings
-from .configuration import BASELINE_CONFIGURATION
+from .configuration.definition import (
+    DEFAULT_AIRCRAFT_MULTIPLIERS,
+    DEFAULT_SCENARIO_RATES,
+    SOURCE_DEFINITIONS,
+)
 from .configuration.service import ensure_configuration_state
 
 
@@ -52,7 +56,7 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
                 "rows_loaded": 0,
                 "preview": [],
             }
-            for binding in BASELINE_CONFIGURATION.source_bindings
+            for binding in SOURCE_DEFINITIONS
         ],
         "imported_tariffs": [],
         "manual_tariffs": [],
@@ -60,8 +64,11 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
         "routes": [],
         "international_airports": {},
         "other_costs": {},
-        "scenario_rates": BASELINE_CONFIGURATION.initial_data.model_dump(mode="json")["scenario_rates"],
-        "aircraft_multipliers": dict(BASELINE_CONFIGURATION.initial_data.aircraft_multipliers),
+        "scenario_rates": {
+            scenario: {aircraft: list(rates) for aircraft, rates in aircraft_rates.items()}
+            for scenario, aircraft_rates in DEFAULT_SCENARIO_RATES.items()
+        },
+        "aircraft_multipliers": dict(DEFAULT_AIRCRAFT_MULTIPLIERS),
         "drafts": {},
         "audit_log": [],
     }

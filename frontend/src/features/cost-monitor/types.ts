@@ -70,7 +70,7 @@ export interface CalculationTrace {
 }
 
 export interface CostMonitorConfiguration {
-  schema_version: '1.0'
+  schema_version: '2.0'
   fuel: { consumption_tons_per_hour: number }
   ano: { route_rate_per_100_km: number }
   catering: { base_units: number; base_unit_rate: number; passenger_surcharge: number }
@@ -82,17 +82,51 @@ export interface CostMonitorConfiguration {
     transport_passenger_block: number
     fire_truck_rate: number
   }
-  initial_data: {
+  operations: {
+    ano: StepOperations
+    catering: StepOperations
+    vat: StepOperations
+  }
+  overrides: {
     aircraft_multipliers: Record<string, number>
     scenario_rates: Record<string, Record<string, [number, number, number]>>
   }
-  source_bindings: Array<{
-    id: 'srv' | 'fuel_registry' | 'monitor_workbook'
-    label: string
-    description: string
-    parser: 'srv_tariffs' | 'fuel_registry' | 'monitor_workbook'
-    default_mask: string
+}
+
+export type ValueReference =
+  | { kind: 'constant'; value: string | number | boolean | string[] }
+  | { kind: 'variable'; name: string }
+  | { kind: 'parameter'; path: string }
+  | { kind: 'lookup'; name: string; arguments: Record<string, Exclude<ValueReference, { kind: 'lookup' }>> }
+
+export interface OperationAction {
+  operation: 'add' | 'subtract' | 'multiply' | 'divide' | 'round'
+  operand: ValueReference | null
+  digits: number | null
+}
+
+export interface OperationCondition {
+  any_of: Array<{
+    all_of: Array<{
+      left: ValueReference
+      operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'not_in'
+      right: ValueReference
+    }>
   }>
+}
+
+export interface OperationPart {
+  id: string
+  label: string
+  initial: ValueReference
+  operations: OperationAction[]
+  condition: OperationCondition | null
+  detail_service: string
+}
+
+export interface StepOperations {
+  parts: OperationPart[]
+  aggregation: 'sum'
 }
 
 export interface ConfigurationVersion {
@@ -122,7 +156,39 @@ export interface ConfigurationReference {
 export interface ConfigurationComparison {
   left: ConfigurationReference
   right: ConfigurationReference
-  changes: Array<{ path: string; before: JsonValue; after: JsonValue }>
+  changes: Array<{
+    path: string
+    before: JsonValue
+    after: JsonValue
+    kind: 'parameter_changed' | 'operation_added' | 'operation_removed' | 'operation_changed' | 'operation_reordered' | 'override_changed'
+    summary: string
+  }>
+}
+
+export interface ConfigurationDraft {
+  version: number
+  state: 'draft'
+  base_version: number
+  created_at: string
+  updated_at: string
+  validated_at: string | null
+  validation_status: 'valid'
+  configuration: CostMonitorConfiguration
+}
+
+export interface ConfigurationCapabilities {
+  schema_version: '2.0'
+  parameters: string[]
+  variables: Array<{ name: string; value_type: string; description: string; arguments: string[] }>
+  operations: Array<{ name: string; value_type: null; description: string; arguments: string[] }>
+  lookups: Array<{ name: string; value_type: null; description: string; arguments: string[] }>
+  condition_operators: string[]
+}
+
+export interface ConfigurationPreviewComparison {
+  active: CalculationResult
+  draft: CalculationResult
+  difference: { total: Record<string, number>; legs: Record<string, Record<string, number>> }
 }
 
 export interface CalculationDiagnostic {
