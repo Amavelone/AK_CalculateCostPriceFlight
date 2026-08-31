@@ -79,6 +79,12 @@ def workbook_preview(path: Path, sheet_name: str | None = None, row_limit: int =
 
 
 def save_uploaded_file(source: dict[str, Any], original_name: str, source_file: Any) -> Path:
+    """Validate and atomically publish an uploaded workbook into its source directory.
+
+    The final filename is not replaced until ``openpyxl`` accepts the temporary
+    file. A failed upload therefore cannot become a candidate for refresh.
+    """
+
     file_name = Path(original_name or "source.xlsx").name
     if Path(file_name).suffix.lower() != ".xlsx":
         raise ValueError("Поддерживаются только файлы .xlsx")

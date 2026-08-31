@@ -111,6 +111,8 @@ def parse_fuel_registry(path: Path) -> tuple[list[dict[str, Any]], int, list[dic
                 }
             )
         current = fuel_by_airport.get(airport)
+        # The approved registry rule keeps the highest applicable airport price;
+        # do not replace this with a first-row lookup when refactoring parsing.
         if current is None or record["price"] > current["price"]:
             fuel_by_airport[airport] = record
         if len(preview) < 12:

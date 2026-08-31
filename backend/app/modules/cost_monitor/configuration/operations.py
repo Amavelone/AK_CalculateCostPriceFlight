@@ -101,6 +101,13 @@ def execute_step(
     effective: EffectiveCalculationContext,
     variables: dict[str, Any],
 ) -> StepExecution:
+    """Execute one validated, data-defined calculation component.
+
+    This is intentionally a small interpreter over the configuration whitelist,
+    not an expression evaluator. The trace preserves resolved values and action
+    order so a completed calculation can be audited without re-executing it.
+    """
+
     parts: dict[str, float] = {}
     trace: list[dict[str, Any]] = []
     for part in step.parts:

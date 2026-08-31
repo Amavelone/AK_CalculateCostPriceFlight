@@ -53,6 +53,12 @@ def build_tariff_index(dataset: CostMonitorDataset) -> dict[str, TariffRecord]:
 
 @dataclass(frozen=True)
 class LegContext:
+    """Resolved inputs shared by every component of one flight leg.
+
+    Missing routes deliberately produce a zero-valued context plus diagnostics,
+    so a partial calculation remains traceable instead of being rejected.
+    """
+
     departure: str
     arrival: str
     route_key: str
@@ -259,6 +265,13 @@ def calculate_leg(
     tariff_index: dict[str, TariffRecord],
     effective: EffectiveCalculationContext,
 ) -> dict[str, Any]:
+    """Calculate one leg and retain full precision for the later flight total.
+
+    The returned private fields are an internal hand-off to :func:`calculate`:
+    API-facing component values are rounded per leg, while M1/M2/M3 totals are
+    rounded only after summing all legs to preserve Excel parity.
+    """
+
     configuration = effective.configuration
     context, warnings = resolve_leg_context(reference_data, leg, request, configuration)
     departure = context.departure
@@ -677,6 +690,12 @@ def calculate(
     reference_version: int = 1,
     reference_state: str = "active",
 ) -> dict[str, Any]:
+    """Produce a versioned, traceable calculation snapshot for all request legs.
+
+    ``reference_data`` remains optional for baseline-compatible callers; normal
+    runtime callers pass the active immutable Reference Data version explicitly.
+    """
+
     if reference_data is None:
         from .reference_data.defaults import BASELINE_REFERENCE_DATA
 

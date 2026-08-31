@@ -651,6 +651,8 @@ def source_raw_preview(source_id: str, sheet: str | None = None) -> dict[str, An
 
 @router.post("/api/sources/{source_id}/refresh", response_model=SourceConfigResponse)
 def refresh_one_source(source_id: str) -> dict[str, Any]:
+    """Refresh one source independently, keeping the other live source intact."""
+
     def operation(state: dict[str, Any]) -> dict[str, Any]:
         get_source_or_404(state, source_id)
         try:
@@ -668,9 +670,17 @@ def refresh_one_source(source_id: str) -> dict[str, Any]:
 
 @router.post("/api/sources/refresh-all", response_model=SourceRefreshAllResponse)
 def refresh_all_sources() -> dict[str, Any]:
+    """Atomically replace both production-source datasets only when both stage.
+
+    A failed stage updates source status for operators but preserves every active
+    tariff and fuel record, and therefore preserves the current data revision.
+    """
+
     def operation(state: dict[str, Any]) -> dict[str, Any]:
         staged = []
         failures: dict[str, str] = {}
+        # Parsers operate on an isolated candidate because a successful first
+        # stage must not leak into state if the second source cannot be staged.
         candidate = copy.deepcopy(state)
         for config in production_source_configs(state):
             source_id = config["id"]
