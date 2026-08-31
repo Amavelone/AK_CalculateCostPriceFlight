@@ -2,9 +2,10 @@
 
 ## Статус и назначение
 
-**Iteration:** 7 — Complete Configurable Calculation Architecture.
+**Iteration:** Release Iteration 2 — Legacy Workbook Ownership Migration.
 **Статус:** active configuration schema `2.0` содержит typed parameters,
-operation parts, safe conditions/lookups и versioned source-derived overrides.
+operation parts, safe conditions/lookups и versioned configuration-owned
+aircraft/scenario values.
 ANO, Catering и VAT выполняются через Cost Monitor-owned operation executor.
 Отдельный `/admin` поддерживает Create Draft → Edit → Validate → Preview /
 Compare → Activate и rollback; root Cost Monitor не содержит admin UI.
@@ -48,7 +49,7 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 | CF-04 | Доплата за пассажира `500` | `configuration.catering` + operation parts | Parameter существующей registered variable `passengers`. |
 | CF-05 | НДС: ставка `0.1` и список DME/SVO/VKO | `configuration.vat` + conditional operation | Rate и airport set при сохранении typed condition boundary. |
 | CF-06 | Числовые нормы НО: объёмы/делители, 90 минут телетрапа, транспортный порог 100, ставка пожарной машины `25132` | `configuration.ground`; используется code-owned ground block | Состав normal/techstop services остаётся invariant. |
-| CF-07 | Aircraft multipliers и scenario rates до первого refresh | module definition bootstrap data | Это DATA fallback, не active configuration. |
+| CF-07 | Aircraft multipliers и scenario M1/M2/M3 rates | `configuration.overrides` active Configuration v1 | Единственный production owner; validation и trace показывают versioned configuration origin. |
 | CF-08 | Источник топлива, сценарий, включение пассажирского питания, выбранный techstop | `CalculationRequest` | Это per-calculation input, не active runtime config; их shape — invariant, а допустимый выбор опирается на data. |
 | CF-09 | Source directory и file mask | `source_configs`/Settings UI; adapter identity — module definition | `SOURCE_CONFIGURATION`; не влияет на active calculation configuration напрямую. |
 | CF-10 | Будущие active flags, priorities, effective dates и source mappings | отсутствуют | `DEFERRED` до отдельного lifecycle/mapping scope; не добавлять структуру заранее. |
@@ -58,13 +59,13 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 | ID | Набор данных | Physical source / текущий adapter | Использование |
 |---|---|---|---|
 | DT-01 | Тарифы SRV | `7480_srv*.xlsx` → `parse_srv_tariffs` | Ставки ГСМ, НО, АНО; physical row order сохраняется. |
-| DT-02 | Ручные тарифы и legacy `ЦРТ+` | API/manual JSON и sheet `ЦРТ+` → monitor adapter | Дополняют отсутствующие ключи и отображают conflict. |
+| DT-02 | Ручные тарифы и legacy `ЦРТ+` | API/manual JSON + one-time `baselines/manual_tariffs.json` seed | Дополняют отсутствующие ключи и отображают conflict; workbook parser только DEV compatibility. |
 | DT-03 | Цена топлива АК | `реестр*.xlsx` + курс ЦБ → `parse_fuel_registry` | Цена на аэропорт вылета для `fuel_source=АК`. |
-| DT-04 | Маршрут: distance и flight time | sheet `ИШР` → monitor adapter | Lookup маршрута, топливо, АНО, margins. |
-| DT-05 | Признак международного аэропорта | sheet `Признак МВЛ` → monitor adapter | Определяет МВЛ/ВВЛ. |
-| DT-06 | Aircraft multiplier | sheet `Справочники!F:G` → monitor adapter | Airport part АНО и связанные НО объёмы. |
-| DT-07 | Scenario M1/M2/M3 rates | sheet `Справочники!L:P` → monitor adapter | Margin по сценарию и типу ВС. |
-| DT-08 | Other costs by airport | sheet `Прочее`, строка 27 → monitor adapter | Строка `ПРОЧЕЕ` normal ground block. |
+| DT-04 | Маршрут: distance и flight time | checked-in `baselines/routes.json` (500 rows) | Lookup маршрута, топливо, АНО, margins; lifecycle Reference Data deferred to Iteration 3. |
+| DT-05 | Признак международного аэропорта | `Признак МВЛ` → compatibility monitor adapter | DEV parity/migration only; production ВВЛ invariant не читает это значение. |
+| DT-06 | Aircraft multiplier | Configuration v1 baseline overrides | Airport part АНО и связанные НО объёмы. |
+| DT-07 | Scenario M1/M2/M3 rates | Configuration v1 baseline overrides | Margin по сценарию и типу ВС. |
+| DT-08 | Other costs by airport | checked-in `baselines/airport_other_costs.json` (45 rows) | Строка `ПРОЧЕЕ` normal ground block; lifecycle Reference Data deferred to Iteration 3. |
 | DT-09 | Dataset identity, active/uploaded file, source status/audit | local `JsonStore` | Операционная метаинформация; не является бизнес-формулой. |
 
 ## Ownership matrix
@@ -75,9 +76,10 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 | ANO route rate | `CONFIGURATION` | Versioned parameter referenced by ANO operation. |
 | Catering parameters/composition | `CONFIGURATION` | Versioned typed parts and allowed operation order. |
 | VAT and ground numeric parameters | `CONFIGURATION` | Versioned parameters; ground service matrix remains code-owned. |
-| Aircraft multipliers | `DATA` | Workbook dataset, optionally replaced by explicit `CONFIGURATION` override. |
-| Scenario M1/M2/M3 rates | `DATA` | Workbook dataset, optionally replaced by explicit `CONFIGURATION` override. |
-| Fuel price, route, ground services | `DATA` | Canonical dataset from source/manual tariff policy. |
+| Aircraft multipliers | `CONFIGURATION` | Active Configuration v1 is the sole production owner. |
+| Scenario M1/M2/M3 rates | `CONFIGURATION` | Active Configuration v1 is the sole production owner. |
+| Fuel price and ground services | `DATA` | Canonical live/manual tariff dataset. |
+| Routes and Airport Other Costs | `DATA` | Checked-in baseline seed preserves existing populated JsonStore values; independent lifecycle deferred to Iteration 3. |
 | Source masks and active files | `SOURCE_CONFIGURATION` | Source lifecycle only; not a calculation rule. |
 | Lookup policy, registered variables/operations, DTO shape | `CODE_INVARIANT` | Deploy required to change capability boundary. |
 | First-match, fallback, rounding sequence | `LEGACY_PARITY` | Preserved unless business methodology changes. |
@@ -93,8 +95,8 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 | LP-05 | Missing fuel/tariff/ANO/multiplier/scenario даёт 0 + warning/diagnostic | `calculation.py` | Legacy result сохраняется, хотя теперь помечен `degraded`. |
 | LP-06 | Недоступный CBR → `95 RUB/USD` | `parsers/fuel.py` | Утверждённый fallback; richer metadata/trace остаётся deferred. |
 | LP-07 | Время Excel игнорирует секунды; monetary components round to 2 decimals после full-precision totals | parser/common, calculation/export | Результаты golden master зависят от этого порядка и точности. |
-| LP-08 | Пустой workbook section очищает прошлые values; failed full refresh сохраняет active dataset | source lifecycle | Reliability invariant, введённый в Iteration 1; не возвращать старое sticky/partial behaviour. |
-| LP-09 | Worksheet names, column positions и `Прочее!27` bindings | monitor/SRV/fuel adapters | Physical Excel binding; позднее может стать validated source mapping, сейчас не менять без adapter scope. |
+| LP-08 | Failed production refresh сохраняет active dataset; compatibility workbook payload не участвует в lifecycle | source lifecycle | SRV/Fuel activation atomic; не возвращать workbook dependency. |
+| LP-09 | Worksheet names, column positions и `Прочее!27` bindings | compatibility monitor adapter | Physical Excel binding сохранён только для DEV parity/migration tooling. |
 
 ## Iteration 7 result and deferred decisions
 
@@ -103,9 +105,9 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 - Runtime payload accepts only typed parts, registered variables/parameters,
   registered lookups and bounded operations. `eval`, `exec`, arbitrary Python,
   dynamic imports and arbitrary I/O are impossible by schema and validation.
-- `EffectiveCalculationContext` resolves configuration, source data and only
-  two targeted override families with provenance; no active configuration value
-  is silently ignored.
+- `EffectiveCalculationContext` resolves configuration-owned aircraft/scenario
+  values and source tariffs with provenance; no active configuration value is
+  silently ignored.
 - Missing required ground tariffs retain legacy numeric zero and add
   `GROUND_TARIFF_MISSING`, making the result `degraded`.
 - `/admin` exposes editing and lifecycle controls while `/` preserves normal

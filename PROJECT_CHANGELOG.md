@@ -1,5 +1,26 @@
 # Project Changelog
 
+## 2026-08-31 — Release Iteration 2: migrate legacy workbook ownership
+
+### Изменено
+
+- Release runtime теперь ВВЛ-only: `international_airports` не входит в
+  production dataset, `line_type` фиксирован как `ВВЛ`, а МВЛ-only ground
+  branches удалены. Parser `Признак МВЛ` остался только в DEV compatibility
+  tooling.
+- Aircraft multipliers и M1/M2/M3 scenario rates перенесены в immutable
+  Configuration v1; effective trace отмечает их configuration owner. Legacy
+  JsonStore migration обогащает v1, а не создаёт Configuration v2.
+- Добавлены checked-in JSON baseline artifacts: 500 routes, 45 Airport Other
+  Costs и все 10 строк `ЦРТ+`, включая две строки с ключом `=EL`. Fresh store
+  seed-ится этими данными, legacy store получает их только при отсутствии
+  собственных значений; manual conflict остаётся за existing value.
+
+### Проверка
+
+- Добавлены проверки ВВЛ invariant, Configuration-owned rates/effective trace,
+  baseline parity, all-10 manual tariff seed и migration populated legacy store.
+
 ## 2026-08-31 — Release Iteration 1: detach Legacy Monitor Workbook
 
 ### Изменено

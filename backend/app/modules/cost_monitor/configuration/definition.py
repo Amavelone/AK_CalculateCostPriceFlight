@@ -29,22 +29,6 @@ COMPATIBILITY_SOURCE_DEFINITIONS = (
     ),
 )
 
-# Bootstrap data is module-owned DATA. Workbook activation must not replace it
-# in production; ownership migration is handled by subsequent release work.
-DEFAULT_AIRCRAFT_MULTIPLIERS = {"733": 1.0, "737": 1.0, "738": 1.0}
-DEFAULT_SCENARIO_RATES = {
-    "ГБ 2026": {
-        "733": (78.48, 220.45, 272.17),
-        "737": (120.0, 280.0, 340.0),
-        "738": (165.73, 341.48, 391.28),
-    },
-    "Оперативная 2026": {
-        "733": (78.48, 220.45, 272.17),
-        "737": (120.0, 280.0, 340.0),
-        "738": (165.73, 341.48, 391.28),
-    },
-}
-
 REGISTERED_PARAMETER_PATHS = frozenset(
     {
         "fuel.consumption_tons_per_hour",
@@ -69,8 +53,6 @@ LOOKUP_ARGUMENTS = {
 }
 
 __all__ = [
-    "DEFAULT_AIRCRAFT_MULTIPLIERS",
-    "DEFAULT_SCENARIO_RATES",
     "LOOKUP_ARGUMENTS",
     "REGISTERED_PARAMETER_PATHS",
     "COMPATIBILITY_SOURCE_DEFINITIONS",

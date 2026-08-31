@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from .parsers import parse_fuel_registry, parse_monitor_workbook, parse_srv_tariffs
+from .parsers import parse_fuel_registry, parse_srv_tariffs
 from .records import CostMonitorDataset, FuelPriceRecord, MonitorWorkbookData, TariffRecord
 
 
@@ -108,10 +108,14 @@ class FuelRegistryAdapter:
 
 @dataclass(frozen=True)
 class MonitorWorkbookAdapter:
+    """DEV compatibility adapter; its parser is imported only when explicitly used."""
+
     source_id: str = "monitor_workbook"
     parser_id: str = "monitor_workbook"
 
     def load(self, path: Path) -> SourceRunResult:
+        from .parsers.monitor import parse_monitor_workbook
+
         result, rows_read, preview, note = parse_monitor_workbook(path)
         return SourceRunResult(
             source_id=self.source_id,

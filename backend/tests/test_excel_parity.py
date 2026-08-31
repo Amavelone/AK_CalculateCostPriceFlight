@@ -28,13 +28,10 @@ def build_state(fixture: dict[str, Any]) -> dict[str, Any]:
     return {
         "data_revision": 1,
         "routes": normalized["routes"],
-        "international_airports": normalized["international_airports"],
         "imported_tariffs": tariffs,
         "manual_tariffs": [],
         "fuel_prices": [],
         "other_costs": normalized["other_costs"],
-        "scenario_rates": normalized["scenario_rates"],
-        "aircraft_multipliers": normalized["aircraft_multipliers"],
     }
 
 

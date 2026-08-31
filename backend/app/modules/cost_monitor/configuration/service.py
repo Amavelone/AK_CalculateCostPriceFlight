@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import copy
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import ValidationError
 
-from .defaults import BASELINE_CONFIGURATION
+from .defaults import BASELINE_CALCULATION_OVERRIDES, BASELINE_CONFIGURATION
 from .repository import ConfigurationRepository
 from .schema import CostMonitorConfiguration
 from .validation import validate_configuration
@@ -57,6 +58,29 @@ def ensure_configuration_state(state: dict[str, Any], now: str | None = None) ->
     state["configuration_drafts"] = {}
     state["active_configuration_version"] = 1
     state["next_configuration_version"] = 2
+    return True
+
+
+def ensure_release_configuration_ownership(state: dict[str, Any]) -> bool:
+    """Move release-owned multipliers and scenario rates into every config record once."""
+
+    marker = "release_v1_configuration_ownership_migrated"
+    if state.get(marker):
+        return False
+    for record in [*state.get("configuration_versions", []), *state.get("configuration_drafts", {}).values()]:
+        configuration = record.get("configuration")
+        if not isinstance(configuration, dict):
+            continue
+        overrides = configuration.setdefault("overrides", {})
+        multipliers = overrides.setdefault("aircraft_multipliers", {})
+        for aircraft, multiplier in BASELINE_CALCULATION_OVERRIDES["aircraft_multipliers"].items():
+            multipliers.setdefault(aircraft, multiplier)
+        scenario_rates = overrides.setdefault("scenario_rates", {})
+        for scenario, aircraft_rates in BASELINE_CALCULATION_OVERRIDES["scenario_rates"].items():
+            target = scenario_rates.setdefault(scenario, {})
+            for aircraft, rates in aircraft_rates.items():
+                target.setdefault(aircraft, copy.deepcopy(rates))
+    state[marker] = True
     return True
 
 

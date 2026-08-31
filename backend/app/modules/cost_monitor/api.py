@@ -128,22 +128,14 @@ def dashboard() -> dict[str, Any]:
 
 @router.get("/api/calculation-options")
 def calculation_options() -> dict[str, list[str]]:
-    """Возвращает интерфейсу активные сценарии и типы воздушных судов.
+    """Возвращает интерфейсу сценарии и типы ВС из active configuration."""
 
-    Набор строится из текущего состояния книги и дополняется базовыми типами,
-    поэтому сохранённый черновик остаётся доступным после обновления данных.
-    """
-
-    state = repository.read()
     configuration = configuration_service.active()["configuration"]
-    aircraft = {"733", "737", "738"}
-    aircraft.update(state.get("aircraft_multipliers", {}).keys())
+    aircraft: set[str] = set()
     aircraft.update(configuration.overrides.aircraft_multipliers.keys())
-    for rates in state.get("scenario_rates", {}).values():
-        aircraft.update(rates.keys())
     for rates in configuration.overrides.scenario_rates.values():
         aircraft.update(rates.keys())
-    scenarios = list(dict.fromkeys([*state.get("scenario_rates", {}), *configuration.overrides.scenario_rates]))
+    scenarios = list(configuration.overrides.scenario_rates)
     return {
         "scenarios": scenarios or ["ГБ 2026"],
         "aircraft": sorted(aircraft),

@@ -65,6 +65,11 @@ Registry. Workbook parser/adapter остаются отдельным compatibil
 DEV parity и migration, но отсутствуют в startup, persisted production source
 configuration, source UI и `refresh-all`.
 
+**Выполнено в Iteration 2:** checked-in baseline routes, Airport Other Costs
+and manual tariffs seed a fresh JsonStore. Calculation Configuration v1 owns
+the approved aircraft multipliers and M1/M2/M3 scenario rates. Production
+calculation is a ВВЛ-only contour and never reads the workbook.
+
 ```text
 Release v1
     ├── Calculation Configuration
@@ -116,14 +121,15 @@ Production owner:
 
 Release v1 фиксируется как требуемый ВВЛ-контур.
 
-Это означает постепенное исключение из production runtime:
+Это означает исключение из production runtime:
 
 - `international_airports`;
-- parser листа `Признак МВЛ`;
+- parser листа `Признак МВЛ` как runtime binding;
 - определения `line_type` через Excel;
 - обязательства поддерживать МВЛ в v1.
 
-Это сознательное изменение функционального scope v1.
+Parser сохраняется только в DEV compatibility tooling для parity/migration
+tests. Это сознательное изменение функционального scope v1.
 
 ---
 
@@ -149,11 +155,14 @@ Production больше не получает их из Monitor Workbook.
 
 ## 4.5. `Прочее`
 
-Аэропортовые дополнительные значения становятся внутренним справочником:
+Аэропортовые дополнительные значения уже перенесены в checked-in baseline
+внутреннего справочника:
 
 > **Module-owned Reference Data → Airport Other Costs**
 
-Через `/admin` записи можно добавлять, изменять, удалять, валидировать, активировать и откатывать.
+Iteration 2 seed-ит 45 значений только для пустого legacy/fresh JsonStore;
+существующие значения не перезаписываются. Независимый version lifecycle и
+admin boundary для Reference Data — scope Iteration 3, не текущей реализации.
 
 ---
 
@@ -167,7 +176,9 @@ Excel ЦРТ+
 Internal Manual Tariff Catalog
 ```
 
-После этого production больше не читает `ЦРТ+`.
+Iteration 2 переносит все 10 строк, включая два ключа `=EL`, в internal manual
+tariff seed. Existing manual values win on key conflicts, а migration marker
+предотвращает повторный seed. После этого production больше не читает `ЦРТ+`.
 
 ---
 
@@ -252,7 +263,10 @@ Configuration != Reference Data != Live Sources
 
 # 8. Baseline Reference Data
 
-В repository хранится утверждённый baseline внутренних справочников.
+В repository хранится утверждённый baseline внутренних справочников. В
+Iteration 2 это human-readable JSON artifacts с schema/source/date metadata:
+500 Routes и 45 Airport Other Costs; internal manual tariff seed содержит 10
+строк. Их независимая версия и activation lifecycle остаются Iteration 3.
 
 Например:
 
@@ -979,4 +993,3 @@ architecture audit history
 project indexing files
 conversation-derived notes
 ```
-

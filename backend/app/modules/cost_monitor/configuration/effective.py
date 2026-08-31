@@ -6,7 +6,7 @@ from typing import Any, Literal
 from ..records import CostMonitorDataset, TariffRecord
 from .schema import CostMonitorConfiguration
 
-ValueOrigin = Literal["baseline_configuration", "runtime_configuration", "source", "admin_override"]
+ValueOrigin = Literal["baseline_configuration", "runtime_configuration", "source"]
 
 
 @dataclass(frozen=True)
@@ -46,30 +46,17 @@ class EffectiveCalculationContext:
         )
 
     def aircraft_multiplier(self, aircraft: str) -> EffectiveValue:
-        base = self.dataset.aircraft_multipliers.get(aircraft)
-        overrides = self.configuration.overrides.aircraft_multipliers
-        if aircraft in overrides:
-            return EffectiveValue(
-                float(overrides[aircraft]),
-                "admin_override",
-                float(base) if base is not None else None,
-                aircraft,
-            )
-        return EffectiveValue(float(base or 0.0), "source", reference=aircraft)
+        return EffectiveValue(
+            float(self.configuration.overrides.aircraft_multipliers.get(aircraft, 0.0)),
+            self.configuration_origin,
+            reference=aircraft,
+        )
 
     def scenario_rate(self, scenario: str, aircraft: str, level: int) -> EffectiveValue:
-        source_rates = self.dataset.scenario_rates.get(scenario, {}).get(aircraft)
-        override_rates = self.configuration.overrides.scenario_rates.get(scenario, {}).get(aircraft)
-        if override_rates is not None:
-            return EffectiveValue(
-                float(override_rates[level]),
-                "admin_override",
-                float(source_rates[level]) if source_rates is not None else None,
-                f"{scenario}/{aircraft}/m{level + 1}",
-            )
+        rates = self.configuration.overrides.scenario_rates.get(scenario, {}).get(aircraft)
         return EffectiveValue(
-            float(source_rates[level]) if source_rates is not None else 0.0,
-            "source",
+            float(rates[level]) if rates is not None else 0.0,
+            self.configuration_origin,
             reference=f"{scenario}/{aircraft}/m{level + 1}",
         )
 

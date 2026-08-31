@@ -3,13 +3,17 @@ from __future__ import annotations
 import unittest
 
 from app.modules.cost_monitor.calculation import calculate
+from app.modules.cost_monitor.configuration import BASELINE_CONFIGURATION, validate_configuration
 from app.modules.cost_monitor.records import CostMonitorDataset
 from app.modules.cost_monitor.schemas import CalculationRequest
 
 
 class CalculatorTests(unittest.TestCase):
     def calculate(self, state: dict, request: CalculationRequest) -> dict:
-        return calculate(CostMonitorDataset.from_state(state), request)
+        configuration_payload = BASELINE_CONFIGURATION.model_dump(mode="json")
+        configuration_payload["overrides"]["aircraft_multipliers"] = {"738": 1}
+        configuration_payload["overrides"]["scenario_rates"] = {"ГБ 2026": {"738": [10, 20, 30]}}
+        return calculate(CostMonitorDataset.from_state(state), request, validate_configuration(configuration_payload))
 
     def base_state(self) -> dict:
         return {
@@ -17,7 +21,6 @@ class CalculatorTests(unittest.TestCase):
                 {"key": "AAA-BBB", "flight_time": 2, "distance": 100},
                 {"key": "BBB-CCC", "flight_time": 1, "distance": 200},
             ],
-            "international_airports": {},
             "imported_tariffs": [
                 {"airport": "AAA", "service": "КЕРОСИН", "rate": 100},
                 {"airport": "AAA", "service": "КЕРОСИН", "rate": 999},
@@ -29,8 +32,6 @@ class CalculatorTests(unittest.TestCase):
             ],
             "manual_tariffs": [],
             "fuel_prices": [],
-            "scenario_rates": {"ГБ 2026": {"738": [10, 20, 30]}},
-            "aircraft_multipliers": {"738": 1},
         }
 
     def test_first_tariff_row_is_used_and_all_legs_are_summed(self) -> None:
@@ -154,6 +155,21 @@ class CalculatorTests(unittest.TestCase):
         ground_diagnostics = [item for item in result["diagnostics"] if item["code"] == "GROUND_TARIFF_MISSING"]
         self.assertTrue(any(item["reference"] == "AAA/ПРИЕМ-ВЫПУСК" for item in ground_diagnostics))
         self.assertFalse(any("ПАССАЖИР(М)" in (item["reference"] or "") for item in ground_diagnostics))
+
+    def test_release_runtime_is_vvl_even_if_legacy_state_contains_mvl_markers(self) -> None:
+        state = self.base_state()
+        state["international_airports"] = {"AAA": True, "BBB": True}
+        request = CalculationRequest.model_validate(
+            {
+                "legs": [{"id": "one", "departure": "AAA", "arrival": "BBB", "aircraft": "738", "passengers": 5}],
+                "settings": {"scenario": "ГБ 2026", "fuel_source": "ЦРТ", "catering": False},
+            }
+        )
+
+        result = self.calculate(state, request)
+
+        self.assertEqual(result["legs"][0]["line_type"], "ВВЛ")
+        self.assertFalse(any("М)" in item["service"] for item in result["legs"][0]["details"]["ground"]))
 
     def test_any_number_of_legs_is_accepted(self) -> None:
         state = self.base_state()

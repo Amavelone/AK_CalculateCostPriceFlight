@@ -36,13 +36,17 @@ Frontend:
 - `backend/app/modules/cost_monitor/source_adapters.py` — отдельные production
   adapters для SRV/Fuel Registry и compatibility adapter для Legacy Monitor
   Workbook; физические Excel bindings не проникают в calculation.
+- `backend/app/modules/cost_monitor/baselines.py` и `baselines/*.json` —
+  проверяемые one-time migration seeds: 500 ВВЛ routes, 45 Airport Other Costs
+  и 10 manual tariffs из утверждённой legacy-книги. Это не runtime workbook
+  binding и не будущий Reference Data lifecycle.
 - `backend/app/modules/cost_monitor/store.py` и `repository.py` — local JSON
   implementation и узкий persistence contract для read/mutate/audit/data
   revision; будущий SQL Server должен заменить implementation, а не calculation.
 - `backend/app/modules/cost_monitor/configuration/` — schema `2.0`, module
   definition, effective context, typed operation executor и capability-oriented
   JSON lifecycle: immutable versions, drafts, validate/preview/compare/activate/
-  rollback, source-derived overrides and provenance.
+  rollback, configuration-owned aircraft/scenario values and provenance.
 
 ### Calculation and export
 
@@ -98,8 +102,8 @@ Frontend:
   safeguards, atomic source activation, sticky-state regression, manual conflict
   и CBR fallback.
 - `backend/tests/test_exports.py` — shared JSON/XLSX snapshot packaging.
-- `backend/tests/test_store.py` — JSON persistence, repository boundary и legacy
-  revision migration.
+- `backend/tests/test_store.py` — JSON persistence, repository boundary,
+  baseline seed и one-time legacy workbook migration.
 - `backend/tests/test_configuration.py` — typed baseline, safety restrictions,
   зарегистрированные capabilities и инъекция validated configuration в расчёт.
 - `backend/tests/test_configuration_service.py` — lifecycle v1/draft/validate/
@@ -112,7 +116,7 @@ Frontend:
 - `ruff.toml` — минимальный backend lint gate.
 - Backend: `$env:PYTHONPATH=(Resolve-Path .\backend).Path; .\.venv\Scripts\python -m unittest discover -s .\backend\tests -v`.
 - Frontend: `cd frontend; pnpm build` (strict TypeScript + Vite production build).
-- Текущий полный набор: 45 backend tests; `\.venv\Scripts\ruff check backend`.
+- Текущий полный набор: 51 backend tests; `\.venv\Scripts\ruff check backend`.
 
 ## Documentation and analysis
 
@@ -164,6 +168,13 @@ Frontend:
   транзакционного persistence.
 - Legacy Monitor Workbook принадлежит compatibility tooling и не участвует в
   startup, source UI, source refresh или calculation lifecycle release runtime.
+- Release v1 — ВВЛ-only: `international_airports` и МВЛ ground branches
+  отсутствуют в production dataset/calculation; parser `Признак МВЛ` остаётся
+  только DEV compatibility tooling.
+- Configuration v1 — единственный production owner aircraft multipliers и
+  M1/M2/M3 scenario rates. Routes, Airport Other Costs и manual tariff seed
+  — module-owned baseline data; их отдельный admin/version lifecycle deferred
+  to Iteration 3.
 - Physical Excel names принадлежат module-local adapters; calculation получает
   только `CostMonitorDataset` и не зависит от JSON, filesystem или будущего SQL.
 - Активная ветка архитектурной инициативы — `feature/module-architecture`.

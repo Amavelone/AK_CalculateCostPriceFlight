@@ -15,7 +15,7 @@ REGISTERED_VARIABLES = (
     VariableDefinition("aircraft", "string", "Тип воздушного судна из CalculationRequest."),
     VariableDefinition("departure", "iata", "Аэропорт вылета из CalculationRequest."),
     VariableDefinition("arrival", "iata", "Аэропорт посадки из CalculationRequest."),
-    VariableDefinition("line_type", "enum:ВВЛ|МВЛ", "Тип линии, разрешённый module code."),
+    VariableDefinition("line_type", "enum:ВВЛ", "Release v1 module invariant."),
     VariableDefinition("is_techstop", "boolean", "Признак выбранного техстопа."),
     VariableDefinition("has_route", "boolean", "Маршрут найден в canonical dataset."),
     VariableDefinition("has_route_key", "boolean", "Аэропорты плеча заполнены."),

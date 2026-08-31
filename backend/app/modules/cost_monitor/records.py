@@ -189,36 +189,23 @@ class MonitorWorkbookData:
 
 @dataclass(frozen=True)
 class CostMonitorDataset:
-    """Source-agnostic input calculation engine; JSON остаётся на storage boundary."""
+    """Live and stable reference inputs consumed by the calculation engine."""
 
     imported_tariffs: tuple[TariffRecord, ...]
     manual_tariffs: tuple[TariffRecord, ...]
     fuel_prices: tuple[FuelPriceRecord, ...]
     routes: tuple[RouteRecord, ...]
-    international_airports: Mapping[str, bool]
     other_costs: Mapping[str, float]
-    aircraft_multipliers: Mapping[str, float]
-    scenario_rates: Mapping[str, Mapping[str, tuple[float, float, float]]]
     data_revision: int = 0
 
     @classmethod
     def from_state(cls, state: Mapping[str, Any]) -> CostMonitorDataset:
-        scenario_rates = {
-            str(scenario): {
-                str(aircraft): (float(rates[0]), float(rates[1]), float(rates[2]))
-                for aircraft, rates in aircraft_rates.items()
-            }
-            for scenario, aircraft_rates in state.get("scenario_rates", {}).items()
-        }
         return cls(
             imported_tariffs=tuple(TariffRecord.from_mapping(item) for item in state.get("imported_tariffs", [])),
             manual_tariffs=tuple(TariffRecord.from_mapping(item) for item in state.get("manual_tariffs", [])),
             fuel_prices=tuple(FuelPriceRecord.from_mapping(item) for item in state.get("fuel_prices", [])),
             routes=tuple(RouteRecord.from_mapping(item) for item in state.get("routes", [])),
-            international_airports=_immutable_mapping({str(key): bool(flag) for key, flag in state.get("international_airports", {}).items()}),
             other_costs=_immutable_mapping({str(key): float(amount) for key, amount in state.get("other_costs", {}).items()}),
-            aircraft_multipliers=_immutable_mapping({str(key): float(amount) for key, amount in state.get("aircraft_multipliers", {}).items()}),
-            scenario_rates=MappingProxyType({scenario: _immutable_mapping(rates) for scenario, rates in scenario_rates.items()}),
             data_revision=int(state.get("data_revision", 0)),
         )
 
@@ -235,14 +222,17 @@ class CostMonitorDataset:
         return replace(self, fuel_prices=prices)
 
     def with_monitor_workbook(self, workbook: MonitorWorkbookData) -> CostMonitorDataset:
+        """Compatibility-only projection used by direct parser/adapter tooling.
+
+        Production source lifecycle never invokes this method. The workbook's
+        MВЛ marker and calculation rates intentionally remain outside the
+        production dataset.
+        """
         manual_tariffs = tuple(item for item in self.manual_tariffs if not item.legacy_manual) + workbook.legacy_manual_tariffs
         return replace(
             self,
             routes=workbook.routes,
-            international_airports=workbook.international_airports,
             other_costs=workbook.other_costs,
-            aircraft_multipliers=workbook.aircraft_multipliers,
-            scenario_rates=workbook.scenario_rates,
             manual_tariffs=manual_tariffs,
         )
 
@@ -255,12 +245,6 @@ class CostMonitorDataset:
                 "manual_tariffs": [tariff.to_mapping() for tariff in self.manual_tariffs],
                 "fuel_prices": [price.to_mapping() for price in self.fuel_prices],
                 "routes": [route.to_mapping() for route in self.routes],
-                "international_airports": dict(self.international_airports),
                 "other_costs": dict(self.other_costs),
-                "aircraft_multipliers": dict(self.aircraft_multipliers),
-                "scenario_rates": {
-                    scenario: {aircraft: list(rates) for aircraft, rates in aircraft_rates.items()}
-                    for scenario, aircraft_rates in self.scenario_rates.items()
-                },
             }
         )

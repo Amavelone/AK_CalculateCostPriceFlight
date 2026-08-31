@@ -11,13 +11,12 @@ from pathlib import Path
 from typing import Any
 
 from ...core.config import Settings
+from .baselines import baseline_manual_tariffs, baseline_other_costs, baseline_routes, migrate_legacy_workbook_data
 from .configuration.definition import (
-    DEFAULT_AIRCRAFT_MULTIPLIERS,
-    DEFAULT_SCENARIO_RATES,
     PRODUCTION_SOURCE_DEFINITIONS,
     SourceDefinition,
 )
-from .configuration.service import ensure_configuration_state
+from .configuration.service import ensure_configuration_state, ensure_release_configuration_ownership
 
 
 def utc_now() -> str:
@@ -45,11 +44,7 @@ def default_source_config(binding: SourceDefinition, source_dir: Path) -> dict[s
 
 
 def build_default_state(source_dir: Path) -> dict[str, Any]:
-    """Создаёт минимальное начальное состояние до первого обновления источников.
-
-    Значения сценариев и множителей соответствуют текущей рабочей базе, а
-    фактические тарифы, маршруты и цены поступают только из внешних файлов.
-    """
+    """Creates production state seeded with stable, checked-in module data."""
 
     state = {
         "version": 1,
@@ -60,20 +55,16 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
         "data_updated_at": None,
         "source_configs": [default_source_config(binding, source_dir) for binding in PRODUCTION_SOURCE_DEFINITIONS],
         "imported_tariffs": [],
-        "manual_tariffs": [],
+        "manual_tariffs": baseline_manual_tariffs(),
         "fuel_prices": [],
-        "routes": [],
-        "international_airports": {},
-        "other_costs": {},
-        "scenario_rates": {
-            scenario: {aircraft: list(rates) for aircraft, rates in aircraft_rates.items()}
-            for scenario, aircraft_rates in DEFAULT_SCENARIO_RATES.items()
-        },
-        "aircraft_multipliers": dict(DEFAULT_AIRCRAFT_MULTIPLIERS),
+        "routes": baseline_routes(),
+        "other_costs": baseline_other_costs(),
+        "release_v1_workbook_ownership_migrated": True,
         "drafts": {},
         "audit_log": [],
     }
     ensure_configuration_state(state, state["created_at"])
+    ensure_release_configuration_ownership(state)
     return state
 
 
@@ -147,6 +138,11 @@ class JsonStore:
                     source["uploaded_file"] = None
                     changed = True
             if ensure_configuration_state(state):
+                changed = True
+            if ensure_release_configuration_ownership(state):
+                changed = True
+            if migrate_legacy_workbook_data(state):
+                self.append_audit(state, "legacy_workbook_ownership_migrated", "stable baseline data seeded")
                 changed = True
             if changed:
                 self._write(state)

@@ -85,9 +85,6 @@ def resolve_leg_context(
     if route is None and departure and arrival:
         warnings.append(f"Маршрут {route_key} не найден в ИШР: налет принят равным 0.")
 
-    international = bool(dataset.international_airports.get(departure)) or bool(
-        dataset.international_airports.get(arrival)
-    )
     flight_time = route.flight_time if route else 0.0
     return (
         LegContext(
@@ -98,7 +95,7 @@ def resolve_leg_context(
             distance=route.distance if route else 0.0,
             has_route=route is not None,
             fuel_tons=flight_time * configuration.fuel.consumption_tons_per_hour,
-            line_type="МВЛ" if international else "ВВЛ",
+            line_type="ВВЛ",
             is_techstop=request.settings.techstop_leg_id == leg.id,
         ),
         warnings,
@@ -152,14 +149,13 @@ def calculate_ground(
     dataset: CostMonitorDataset,
     leg: LegInput,
     tariff_index: dict[str, TariffRecord],
-    line_type: str,
     is_techstop: bool,
     effective: EffectiveCalculationContext,
 ) -> tuple[float, list[dict[str, Any]], list[dict[str, str | None]]]:
     """Воспроизводит обычный и техстоповый блоки НО действующей книги.
 
-    Состав услуг, объёмы и делители зависят от типа линии и признака техстопа;
-    порядок добавления сохраняет семантику первого совпадения Excel.
+    Release v1 поддерживает только ВВЛ; порядок добавления сохраняет first-match
+    semantics Excel для approved domestic baseline.
     """
 
     departure = normalize_key(leg.departure)
@@ -198,23 +194,15 @@ def calculate_ground(
         )
         return ground + fire_truck, details, diagnostics
 
-    # Строки НО 6:24. Пассажирские и аэровокзальные услуги применяются во
-    # взаимоисключающих ветках ВВЛ/МВЛ в точности как в Excel.
-    is_domestic = line_type == "ВВЛ"
     passenger_volume = float(leg.passengers)
-    terminal_departure = passenger_volume if is_domestic else 0.0
-    terminal_arrival = passenger_volume if is_domestic else 0.0
-    terminal_m_departure = passenger_volume if not is_domestic else 0.0
-    terminal_m_arrival = passenger_volume if not is_domestic else 0.0
+    terminal_departure = passenger_volume
+    terminal_arrival = passenger_volume
     ground = 0.0
     ground += add_service(details, tariff_index, diagnostics, departure, "ВЗЛЕТ-ПОСАДКА", aircraft_factor)
     ground += add_service(details, tariff_index, diagnostics, departure, "ТРАНСПБЕЗОП", aircraft_factor)
-    ground += add_service(details, tariff_index, diagnostics, departure, "ПАССАЖИР", passenger_volume if is_domestic else 0.0)
-    ground += add_service(details, tariff_index, diagnostics, departure, "ПАССАЖИР(М)", passenger_volume if not is_domestic else 0.0)
+    ground += add_service(details, tariff_index, diagnostics, departure, "ПАССАЖИР", passenger_volume)
     ground += add_service(details, tariff_index, diagnostics, departure, "АЭРОВОКЗАЛ", terminal_departure)
-    ground += add_service(details, tariff_index, diagnostics, departure, "АЭРОВОКЗАЛ(М)", terminal_m_departure)
     ground += add_service(details, tariff_index, diagnostics, arrival, "АЭРОВОКЗАЛ", terminal_arrival)
-    ground += add_service(details, tariff_index, diagnostics, arrival, "АЭРОВОКЗАЛ(М)", terminal_m_arrival)
     ground += add_service(details, tariff_index, diagnostics, departure, "ПРИЕМ-ВЫПУСК", 1)
     ground += add_service(details, tariff_index, diagnostics, departure, "БУКСИРОВКА", 1)
     ground += add_service(
@@ -227,8 +215,7 @@ def calculate_ground(
         divisor=configuration.ground.split_divisor,
     )
     transport_volume = ceil(
-        (terminal_departure + terminal_m_departure + terminal_arrival + terminal_m_arrival)
-        / configuration.ground.transport_passenger_block
+        (terminal_departure + terminal_arrival) / configuration.ground.transport_passenger_block
     )
     ground += add_service(
         details,
@@ -349,7 +336,6 @@ def calculate_leg(
         dataset,
         leg,
         tariff_index,
-        line_type,
         is_techstop,
         effective,
     )
@@ -394,11 +380,8 @@ def calculate_leg(
         ]
     if not ano_tariff and departure:
         warnings.append(f"Не найдена ставка АНО АД для {departure}; компонент АНО принят равным 0.")
-    if (
-        leg.aircraft not in dataset.aircraft_multipliers
-        and leg.aircraft not in configuration.overrides.aircraft_multipliers
-    ):
-        warnings.append(f"Для типа ВС {leg.aircraft} отсутствует коэффициент из Справочников.")
+    if leg.aircraft not in configuration.overrides.aircraft_multipliers:
+        warnings.append(f"Для типа ВС {leg.aircraft} отсутствует коэффициент в Calculation Configuration.")
 
     base_catering_nonzero = bool(
         configuration.catering.base_units * configuration.catering.base_unit_rate
@@ -496,11 +479,10 @@ def calculate_leg(
             ]
         )
 
-    source_scenario = dataset.scenario_rates.get(request.settings.scenario, {})
-    override_scenario = configuration.overrides.scenario_rates.get(request.settings.scenario, {})
+    configured_scenario = configuration.overrides.scenario_rates.get(request.settings.scenario, {})
     rate_values = [effective.scenario_rate(request.settings.scenario, leg.aircraft, level) for level in range(3)]
     rates = tuple(float(value.value) for value in rate_values)
-    if leg.aircraft not in source_scenario and leg.aircraft not in override_scenario:
+    if leg.aircraft not in configured_scenario:
         warnings.append(f"Для типа ВС {leg.aircraft} нет ставок М1/М2/М3 в сценарии «{request.settings.scenario}».")
     margins = [float(rate) * flight_time * 1000 for rate in rates]
     base_cost = fuel + ground + ano + catering + vat

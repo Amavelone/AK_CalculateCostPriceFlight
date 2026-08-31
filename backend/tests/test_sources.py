@@ -8,7 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from app.modules.cost_monitor.catalog import tariffs_for_view
-from app.modules.cost_monitor.parsers import parse_monitor_workbook
+from app.modules.cost_monitor.parsers.monitor import parse_monitor_workbook
 from app.modules.cost_monitor.records import CostMonitorDataset, MonitorWorkbookData
 from app.modules.cost_monitor.source_adapters import (
     MonitorWorkbookSourceData,
@@ -140,10 +140,7 @@ class SourceParserCharacterizationTests(unittest.TestCase):
             "manual_tariffs": [],
             "fuel_prices": [],
             "routes": [],
-            "international_airports": {},
             "other_costs": {},
-            "aircraft_multipliers": {},
-            "scenario_rates": {},
         }
 
 
@@ -222,17 +219,12 @@ class WorkbookPreviewTests(unittest.TestCase):
         state = {
             "manual_tariffs": [],
             "routes": [{"key": "OLD-OLD"}],
-            "international_airports": {"OLD": True},
             "other_costs": {"OLD": 1},
-            "aircraft_multipliers": {"738": 1.0},
-            "scenario_rates": {"Old": {"738": [1, 2, 3]}},
         }
         MonitorWorkbookSourceData(MonitorWorkbookData.from_mapping({})).apply(
             CostMonitorDataset.from_state(state)
         ).write_to_state(state)
 
-        self.assertEqual(state["aircraft_multipliers"], {})
-        self.assertEqual(state["scenario_rates"], {})
         self.assertEqual(state["routes"], [])
 
     def test_srv_adapter_normalizes_and_round_trips_canonical_data(self) -> None:

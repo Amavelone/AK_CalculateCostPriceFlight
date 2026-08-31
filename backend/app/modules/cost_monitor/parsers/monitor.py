@@ -69,7 +69,7 @@ def parse_monitor_workbook(path: Path) -> tuple[dict[str, Any], int, list[dict[s
     if "Прочее" in workbook.sheetnames:
         worksheet = workbook["Прочее"]
         # Строка 27 — значение «Итого» по аэропорту, которое использует формула
-        # массива НО!F24. Храним его в конфигурации, а не вшиваем в расчёт.
+        # массива НО!F24. Это compatibility payload для one-time migration.
         for column in range(2, worksheet.max_column + 1):
             airport = normalize_key(worksheet.cell(1, column).value)
             amount = as_float(worksheet.cell(27, column).value)

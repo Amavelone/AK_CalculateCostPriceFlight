@@ -136,6 +136,21 @@ BASELINE_OPERATIONS: dict[str, Any] = {
 }
 
 
+BASELINE_CALCULATION_OVERRIDES = {
+    "aircraft_multipliers": {"733": 62.822, "738": 79.015},
+    "scenario_rates": {
+        "ГБ 2026": {
+            "733": [78.4821885554647, 220.446814882244, 272.17480053077],
+            "738": [165.7264579935, 341.481178756, 391.282636477],
+        },
+        "Оперативная 2026": {
+            "733": [78.48218856, 220.4468149, 272.1748005],
+            "738": [161.6316247, 325.8585986, 376.9372549],
+        },
+    },
+}
+
+
 BASELINE_PAYLOAD: dict[str, Any] = {
     "schema_version": "2.0",
     "fuel": {"consumption_tons_per_hour": 2.7},
@@ -150,7 +165,7 @@ BASELINE_PAYLOAD: dict[str, Any] = {
         "fire_truck_rate": 25132,
     },
     "operations": BASELINE_OPERATIONS,
-    "overrides": {"aircraft_multipliers": {}, "scenario_rates": {}},
+    "overrides": BASELINE_CALCULATION_OVERRIDES,
 }
 
 
@@ -167,10 +182,16 @@ def upgrade_legacy_payload(value: Mapping[str, Any]) -> dict[str, Any]:
         "vat": value["vat"],
         "ground": value["ground"],
         "operations": BASELINE_OPERATIONS,
-        "overrides": {"aircraft_multipliers": {}, "scenario_rates": {}},
+        "overrides": BASELINE_CALCULATION_OVERRIDES,
     }
 
 
 BASELINE_CONFIGURATION = CostMonitorConfiguration.model_validate(BASELINE_PAYLOAD)
 
-__all__ = ["BASELINE_CONFIGURATION", "BASELINE_OPERATIONS", "BASELINE_PAYLOAD", "upgrade_legacy_payload"]
+__all__ = [
+    "BASELINE_CALCULATION_OVERRIDES",
+    "BASELINE_CONFIGURATION",
+    "BASELINE_OPERATIONS",
+    "BASELINE_PAYLOAD",
+    "upgrade_legacy_payload",
+]

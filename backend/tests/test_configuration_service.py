@@ -63,8 +63,6 @@ class ConfigurationServiceTests(unittest.TestCase):
                     {"airport": "AAA", "service": "ЗАПРАВКА ВС", "rate": 20},
                     {"airport": "AAA", "service": "АНО АД", "rate": 1000},
                 ],
-                "scenario_rates": {"ГБ 2026": {"738": [10, 20, 30]}},
-                "aircraft_multipliers": {"738": 1},
             }
         )
         return state
@@ -133,6 +131,8 @@ class ConfigurationServiceTests(unittest.TestCase):
         service = ConfigurationService(JsonConfigurationRepository(memory_store))
         draft = service.create_draft()
         candidate = draft["configuration"]
+        candidate["overrides"]["aircraft_multipliers"] = {"738": 1}
+        candidate["overrides"]["scenario_rates"] = {"ГБ 2026": {"738": [10, 20, 30]}}
         candidate["ano"]["route_rate_per_100_km"] = 1742.3
         passenger_condition = copy.deepcopy(candidate["operations"]["catering"]["parts"][1]["condition"])
         candidate["operations"]["catering"]["parts"].append(
@@ -185,7 +185,7 @@ class ConfigurationServiceTests(unittest.TestCase):
             restored = cost_api.calculate_cost(request)
             self.assertEqual(restored["legs"][0]["components"]["catering"], 14000)
 
-    def test_source_overrides_are_effective_and_trace_base_value(self) -> None:
+    def test_configuration_rates_are_effective_and_trace_configuration_owner(self) -> None:
         memory_store = MemoryConfigurationStore(self.calculation_state())
         service = ConfigurationService(JsonConfigurationRepository(memory_store))
         draft = service.create_draft()
@@ -205,14 +205,14 @@ class ConfigurationServiceTests(unittest.TestCase):
             for step in preview["trace"]["legs"][0]["steps"]
             if step["component"] == "ground" and step["stage"] == "parameters"
         )
-        self.assertEqual(ground_parameters["values"]["aircraft_multiplier"]["origin"], "admin_override")
-        self.assertEqual(ground_parameters["values"]["aircraft_multiplier"]["base_value"], 1.0)
+        self.assertEqual(ground_parameters["values"]["aircraft_multiplier"]["origin"], "runtime_configuration")
+        self.assertEqual(ground_parameters["values"]["aircraft_multiplier"]["reference"], "738")
         margin = next(
             step
             for step in preview["trace"]["legs"][0]["steps"]
             if step["component"] == "margin" and step["stage"] == "operation"
         )
-        self.assertTrue(all(rate["origin"] == "admin_override" for rate in margin["values"]["rates"]))
+        self.assertTrue(all(rate["origin"] == "runtime_configuration" for rate in margin["values"]["rates"]))
 
     def test_api_maps_missing_and_invalid_lifecycle_transitions_to_client_errors(self) -> None:
         with (

@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "baseline_source": "approved legacy monitor workbook",
+  "baseline_date": "2026-08-31",
+  "records": [
+    {
+      "airport": "ABA",
+      "amount": 12180.92
+    },
+    {
+      "airport": "AER",
+      "amount": 15619.0
+    },
+    {
+      "airport": "BVJ",
+      "amount": 57164.0
+    },
+    {
+      "airport": "BAX",
+      "amount": 3000.0
+    },
+    {
+      "airport": "BQS",
+      "amount": 18329.0
+    },
+    {
+      "airport": "CEK",
+      "amount": 18769.04
+    },
+    {
+      "airport": "DME",
+      "amount": 33545.02
+    },
+    {
+      "airport": "GDZ",
+      "amount": 6788.0
+    },
+    {
+      "airport": "GOJ",
+      "amount": 13028.9
+    },
+    {
+      "airport": "HMA",
+      "amount": 12959.81
+    },
+    {
+      "airport": "IAA",
+      "amount": 24015.0
+    },
+    {
+      "airport": "IAR",
+      "amount": 52814.0
+    },
+    {
+      "airport": "IKT",
+      "amount": 10118.28
+    },
+    {
+      "airport": "KGD",
+      "amount": 25800.0
+    },
+    {
+      "airport": "KHV",
+      "amount": 6483.0
+    },
+    {
+      "airport": "KJA",
+      "amount": 32829.130000000005
+    },
+    {
+      "airport": "KRO",
+      "amount": 8060.0
+    },
+    {
+      "airport": "KRR",
+      "amount": 12971.699999999999
+    },
+    {
+      "airport": "KUF",
+      "amount": 22717.02
+    },
+    {
+      "airport": "KZN",
+      "amount": 11810.0
+    },
+    {
+      "airport": "LED",
+      "amount": 7488.49
+    },
+    {
+      "airport": "NOZ",
+      "amount": 11298.66
+    },
+    {
+      "airport": "UFA",
+      "amount": 12410.0
+    },
+    {
+      "airport": "MCX",
+      "amount": 8996.02
+    },
+    {
+      "airport": "MRV",
+      "amount": 40314.5
+    },
+    {
+      "airport": "MJZ",
+      "amount": 6326.0
+    },
+    {
+      "airport": "MMK",
+      "amount": 5855.0
+    },
+    {
+      "airport": "MQF",
+      "amount": 25885.0
+    },
+    {
+      "airport": "NBC",
+      "amount": 7610.75
+    },
+    {
+      "airport": "NJC",
+      "amount": 18292.0
+    },
+    {
+      "airport": "NOJ",
+      "amount": 2730.0
+    },
+    {
+      "airport": "NSK",
+      "amount": 7925.0
+    },
+    {
+      "airport": "OGZ",
+      "amount": 5230.5
+    },
+    {
+      "airport": "OMS",
+      "amount": 1600.0
+    },
+    {
+      "airport": "OVB",
+      "amount": 26782.0
+    },
+    {
+      "airport": "PEE",
+      "amount": 5325.0
+    },
+    {
+      "airport": "SGX",
+      "amount": 18901.0
+    },
+    {
+      "airport": "STW",
+      "amount": 7047.0
+    },
+    {
+      "airport": "SVO",
+      "amount": 9927.8
+    },
+    {
+      "airport": "SVX",
+      "amount": 3080.0
+    },
+    {
+      "airport": "TJM",
+      "amount": 7905.0
+    },
+    {
+      "airport": "TLK",
+      "amount": 2690.0
+    },
+    {
+      "airport": "VOG",
+      "amount": 10446.46
+    },
+    {
+      "airport": "VVO",
+      "amount": 47105.659999999996
+    },
+    {
+      "airport": "YKS",
+      "amount": 17387.100000000002
+    }
+  ]
+}

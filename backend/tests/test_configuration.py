@@ -30,6 +30,11 @@ class ConfigurationTests(unittest.TestCase):
         )
         self.assertEqual(configuration.vat.airports, ("DME", "SVO", "VKO"))
         self.assertEqual(configuration.ground.fire_truck_rate, 25132)
+        self.assertEqual(configuration.overrides.aircraft_multipliers, {"733": 62.822, "738": 79.015})
+        self.assertEqual(
+            configuration.overrides.scenario_rates["ГБ 2026"]["738"],
+            (165.7264579935, 341.481178756, 391.282636477),
+        )
         self.assertEqual(
             {binding.id: binding.default_mask for binding in PRODUCTION_SOURCE_DEFINITIONS},
             {
@@ -106,7 +111,6 @@ class ConfigurationTests(unittest.TestCase):
     def test_calculation_consumes_validated_configuration_without_changing_default(self) -> None:
         state = {
             "routes": [{"key": "AAA-BBB", "flight_time": 2, "distance": 100}],
-            "international_airports": {},
             "imported_tariffs": [
                 {"airport": "AAA", "service": "КЕРОСИН", "rate": 100},
                 {"airport": "AAA", "service": "ЗАПРАВКА ВС", "rate": 20},
@@ -114,8 +118,6 @@ class ConfigurationTests(unittest.TestCase):
             ],
             "manual_tariffs": [],
             "fuel_prices": [],
-            "scenario_rates": {"ГБ 2026": {"738": [10, 20, 30]}},
-            "aircraft_multipliers": {"738": 1},
         }
         request = CalculationRequest.model_validate(
             {
