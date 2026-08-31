@@ -13,6 +13,7 @@ from app.modules.cost_monitor.store import build_default_state, utc_now
 
 EXPECTED_OPERATIONS = {
     ("GET", "/api/health"),
+    ("GET", "/api/ready"),
     ("GET", "/api/dashboard"),
     ("GET", "/api/calculation-options"),
     ("GET", "/api/drafts/current"),

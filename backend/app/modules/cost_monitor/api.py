@@ -41,6 +41,7 @@ from .schemas import (
     ConfigurationVersionResponse,
     DraftPayload,
     ManualTariffInput,
+    ReadinessResponse,
     ReferenceDataCompareResponse,
     ReferenceDataDraftResponse,
     ReferenceDataDraftUpdate,
@@ -95,7 +96,7 @@ def draft_id(request: Request, response: Response) -> str:
         max_age=60 * 60 * 24 * 180,
         httponly=True,
         samesite="lax",
-        secure=False,  # Local development. Enable HTTPS + Secure in deployment.
+        secure=settings.is_production,
     )
     return value
 
@@ -158,6 +159,66 @@ def calculation_difference(active_result: dict[str, Any], draft_result: dict[str
 @router.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@router.get("/api/ready", response_model=ReadinessResponse)
+def readiness(response: Response) -> dict[str, Any]:
+    """Return readiness only for a fully initialized production calculation state."""
+
+    checks: dict[str, dict[str, str]] = {}
+    state: dict[str, Any] | None = None
+    configuration: dict[str, Any] | None = None
+    reference: dict[str, Any] | None = None
+
+    try:
+        state = repository.read()
+        checks["store"] = {"status": "ok", "detail": "readable"}
+    except Exception as error:
+        checks["store"] = {"status": "failed", "detail": f"unreadable: {type(error).__name__}"}
+
+    if state is not None:
+        try:
+            configuration = configuration_service.active()
+            checks["active_configuration"] = {"status": "ok", "detail": "valid"}
+        except Exception as error:
+            checks["active_configuration"] = {"status": "failed", "detail": f"invalid: {type(error).__name__}"}
+        try:
+            reference = reference_data_service.active()
+            checks["active_reference_data"] = {"status": "ok", "detail": "valid"}
+        except Exception as error:
+            checks["active_reference_data"] = {"status": "failed", "detail": f"invalid: {type(error).__name__}"}
+
+        sources = {source.get("id"): source for source in state.get("source_configs", [])}
+        required_sources = (("srv", "imported_tariffs"), ("fuel_registry", "fuel_prices"))
+        for source_id, dataset_key in required_sources:
+            source = sources.get(source_id)
+            if source is None:
+                checks[f"source:{source_id}"] = {"status": "failed", "detail": "missing configuration"}
+            elif source.get("last_status") != "ready":
+                checks[f"source:{source_id}"] = {"status": "failed", "detail": "not ready"}
+            elif not source.get("active_file"):
+                checks[f"source:{source_id}"] = {"status": "failed", "detail": "no active file"}
+            elif not state.get(dataset_key):
+                checks[f"source:{source_id}"] = {"status": "failed", "detail": "no canonical data"}
+            else:
+                checks[f"source:{source_id}"] = {"status": "ok", "detail": "ready"}
+
+    if state is None:
+        checks["active_configuration"] = {"status": "failed", "detail": "store unavailable"}
+        checks["active_reference_data"] = {"status": "failed", "detail": "store unavailable"}
+        checks["source:srv"] = {"status": "failed", "detail": "store unavailable"}
+        checks["source:fuel_registry"] = {"status": "failed", "detail": "store unavailable"}
+
+    ready = all(check["status"] == "ok" for check in checks.values())
+    if not ready:
+        response.status_code = 503
+    return {
+        "status": "ready" if ready else "not_ready",
+        "checks": checks,
+        "config_version": configuration["version"] if configuration else None,
+        "reference_version": reference["version"] if reference else None,
+        "data_revision": int(state.get("data_revision", 0)) if state else None,
+    }
 
 
 @router.get("/api/dashboard")

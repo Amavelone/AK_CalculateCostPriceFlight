@@ -8,8 +8,10 @@
 ## Entry Points
 
 Backend:
-- `backend/app/main.py` — FastAPI composition root: middleware, Cost Monitor
-  router и раздача `frontend/dist`.
+- `backend/app/main.py` — FastAPI composition root: environment-specific CORS,
+  version-aware request logging, Cost Monitor router и раздача `frontend/dist`.
+- `backend/app/__main__.py` — production entry без reload, использующий
+  configured host/port и ровно один JsonStore worker.
 - Dev: `python -m uvicorn app.main:app --app-dir backend --reload --port 8000`.
 
 Frontend:
@@ -23,7 +25,7 @@ Frontend:
 ### Cost Monitor feature
 
 - `backend/app/modules/cost_monitor/api.py` — feature router, JSON store
-  composition, health/dashboard, calculation/options, user drafts, independent
+  composition, independent health/readiness checks, dashboard, calculation/options, user drafts, independent
   versioned Configuration and Reference Data lifecycles, exports,
   sources/upload/refresh/preview, tariffs, routes и audit.
 - `backend/app/modules/cost_monitor/schemas.py` — request DTO и явный
@@ -73,8 +75,13 @@ Frontend:
 
 ### Persistence and configuration
 
-- `backend/app/core/config.py` — project/data/source paths из environment.
-- Environment: `MONITOR_DATA_DIRECTORY`, `MONITOR_SOURCE_DIRECTORY`.
+- `backend/app/core/config.py` — validated runtime environment and production
+  logging: `APP_ENV`, `MONITOR_DATA_DIRECTORY`, `MONITOR_SOURCE_DIRECTORY`,
+  `HOST`, `PORT`, `LOG_LEVEL`; production has no developer-path fallback.
+- JsonStore deployment invariant: one server / one process / one worker until
+  its persistence adapter is replaced by SQL Server. Recovery copies the whole
+  data directory, required active source files and deployment settings while
+  the process is stopped, then verifies `/api/ready`.
 
 ## Frontend
 
@@ -115,6 +122,8 @@ Frontend:
 - `backend/tests/test_reference_data.py` — typed reference payload validation,
   immutable active snapshot, draft/compare/preview/activate/rollback, audit и
   независимость `config_version`/`reference_version`/`data_revision`.
+- `backend/tests/test_runtime_hardening.py` — environment validation, strict
+  readiness, CORS/cookie production policy and version-aware request logging.
 - `backend/tests/test_excel_parity.py` и
   `backend/tests/fixtures/excel_cost_monitor_baseline.json` — Excel-owned
   пяти-плечевой golden master и calculation/export shape.

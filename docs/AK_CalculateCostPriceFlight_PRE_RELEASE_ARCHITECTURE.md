@@ -592,17 +592,24 @@ Data:      31
 
 # 20. Release Hardening
 
-Перед v1.0.0 проверить:
+Iteration 5 реализовала runtime hardening перед v1.0.0:
 
-- явную production environment configuration;
-- отсутствие developer Downloads fallback;
-- repository visibility/secrets;
-- admin security boundary;
-- JsonStore single-process/single-worker constraint;
-- backup/restore;
-- `/api/health`;
-- `/api/ready`;
-- production logging;
+- `APP_ENV`, `MONITOR_DATA_DIRECTORY`, `MONITOR_SOURCE_DIRECTORY`, `HOST`,
+  `PORT` и `LOG_LEVEL` required в production; нет fallback на developer paths;
+- JsonStore запускается только как one server / one process / one worker;
+- `/api/health` process-only, а `/api/ready` требует readable store, valid
+  active Config/Reference Data и ready SRV/Fuel Registry canonical datasets;
+- CORS разрешён только для local development; production same-origin/HTTPS
+  cookie behavior и text request logging включены;
+- backup/restore охватывает whole data directory, required active source files
+  и deployment settings и выполняется только на остановленном процессе;
+- repository visibility/secrets review остаётся read-only.
+
+P0 network deployment blocker: corporate authentication/RBAC не определены;
+`/admin` route separation и same-origin не являются authorization boundary.
+
+Перед v1.0.0 также проверить:
+
 - CI;
 - protected `main`;
 - application version `1.0.0`;

@@ -76,6 +76,19 @@ class SourceRefreshAllResponse(BaseModel):
     sources: list[SourceConfigResponse]
 
 
+class ReadinessCheckResponse(BaseModel):
+    status: Literal["ok", "failed"]
+    detail: str
+
+
+class ReadinessResponse(BaseModel):
+    status: Literal["ready", "not_ready"]
+    checks: dict[str, ReadinessCheckResponse]
+    config_version: int | None = None
+    reference_version: int | None = None
+    data_revision: int | None = None
+
+
 class ManualTariffInput(BaseModel):
     airport: str = Field(min_length=3, max_length=3)
     service: str = Field(min_length=1, max_length=100)

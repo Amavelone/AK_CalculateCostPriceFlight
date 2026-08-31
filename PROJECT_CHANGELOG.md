@@ -1,5 +1,28 @@
 # Project Changelog
 
+## 2026-08-31 — Release Iteration 5: production hardening
+
+### Изменено
+
+- Production теперь требует явные validated settings для environment, paths,
+  host/port и log level; developer Downloads fallback удалён. Добавлен
+  single-worker production entry и `.env.example` без secrets.
+- Добавлен `/api/ready`: он проверяет store, active Configuration, Reference
+  Data и initialized SRV/Fuel Registry, не учитывая Legacy Workbook.
+- Production использует same-origin без CORS, secure draft cookie и text
+  request/error logging с calculation-version context. JsonStore backup/restore
+  и single-process constraint документированы.
+
+### Security status
+
+- Authentication/RBAC не реализованы. Это P0 blocker для network deployment:
+  `/admin` и same-origin не защищают mutation API без корпоративного механизма
+  доступа. Visibility/secrets review выполняется read-only; GitHub settings не
+  изменяются этой итерацией.
+- На момент review `origin` указывает на public GitHub repository; tracked
+  credential-файлов не найдено. Runtime store, `.env` и frontend build остаются
+  ignored; единственная historical developer-path ссылка сохранена в audit doc.
+
 ## 2026-08-31 — Release Iteration 4: reference data administration
 
 ### Изменено
