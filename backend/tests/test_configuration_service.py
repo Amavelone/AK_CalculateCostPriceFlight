@@ -107,7 +107,7 @@ class ConfigurationServiceTests(unittest.TestCase):
         service.update_draft(draft_version, candidate)
 
         with (
-            patch.object(cost_api, "store", memory_store),
+            patch.object(cost_api, "repository", memory_store),
             patch.object(cost_api, "configuration_service", service),
         ):
             preview = cost_api.preview_configuration_draft(draft_version, self.request())
@@ -129,7 +129,7 @@ class ConfigurationServiceTests(unittest.TestCase):
 
     def test_api_maps_missing_and_invalid_lifecycle_transitions_to_client_errors(self) -> None:
         with (
-            patch.object(cost_api, "store", self.store),
+            patch.object(cost_api, "repository", self.store),
             patch.object(cost_api, "configuration_service", self.service),
         ):
             with self.assertRaises(HTTPException) as missing:

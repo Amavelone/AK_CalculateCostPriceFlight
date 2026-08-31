@@ -29,11 +29,16 @@ Frontend:
 - `backend/app/modules/cost_monitor/schemas.py` — request DTO и явный
   `CalculationResponse` contract с diagnostics/status для `/api/calculations`.
 - `backend/app/modules/cost_monitor/records.py` — immutable canonical records
-  тарифов, цен топлива и маршрутов на границе JSON state → calculation engine.
+  и `CostMonitorDataset`: source-agnostic граница local state → calculation
+  engine, сохраняющая physical first-match order.
 - `backend/app/modules/cost_monitor/catalog.py` — нормализация ключей и stable
   imported-before-manual tariff view shared by calculation and source import.
-- `backend/app/modules/cost_monitor/store.py` — default state, миграция,
-  атомарный JSON read/mutate, audit log и data revision этого feature.
+- `backend/app/modules/cost_monitor/source_adapters.py` — module-owned SRV,
+  fuel-registry и monitor-workbook adapters: physical Excel → typed source run
+  → canonical data; здесь остаются parser/worksheet/column bindings.
+- `backend/app/modules/cost_monitor/store.py` и `repository.py` — local JSON
+  implementation и узкий persistence contract для read/mutate/audit/data
+  revision; будущий SQL Server должен заменить implementation, а не calculation.
 - `backend/app/modules/cost_monitor/configuration/` — typed definition и
   module-owned JSON-backed lifecycle service: immutable active versions,
   isolated drafts, validation, compare, activation и rollback. SQL persistence
@@ -49,8 +54,9 @@ Frontend:
 
 ### Data sources
 
-- `backend/app/modules/cost_monitor/sources.py` — stage/activate orchestration;
-  `refresh-all` публикует набор только при успехе всех обязательных sources.
+- `backend/app/modules/cost_monitor/sources.py` — typed source-run
+  stage/activate orchestration; `refresh-all` публикует canonical dataset
+  только при успехе всех обязательных sources.
 - `backend/app/modules/cost_monitor/source_files.py` — ограниченный по размеру,
   проверяемый XLSX upload и preview активированного файла.
 - `backend/app/modules/cost_monitor/parsers/` — общие преобразования и
@@ -88,10 +94,12 @@ Frontend:
 ## Tests and validation
 
 - `backend/tests/test_calculator.py` — synthetic calculation cases.
-- `backend/tests/test_sources.py` — parser fixtures, preview/upload safeguards,
-  atomic source activation, sticky-state regression, manual conflict и CBR fallback.
+- `backend/tests/test_sources.py` — parser/adapter normalization, preview/upload
+  safeguards, atomic source activation, sticky-state regression, manual conflict
+  и CBR fallback.
 - `backend/tests/test_exports.py` — shared JSON/XLSX snapshot packaging.
-- `backend/tests/test_store.py` — JSON persistence и legacy revision migration.
+- `backend/tests/test_store.py` — JSON persistence, repository boundary и legacy
+  revision migration.
 - `backend/tests/test_configuration.py` — typed baseline, safety restrictions,
   зарегистрированные capabilities и инъекция validated configuration в расчёт.
 - `backend/tests/test_configuration_service.py` — lifecycle v1/draft/validate/
@@ -104,7 +112,7 @@ Frontend:
 - `ruff.toml` — минимальный backend lint gate.
 - Backend: `$env:PYTHONPATH=(Resolve-Path .\backend).Path; .\.venv\Scripts\python -m unittest discover -s .\backend\tests -v`.
 - Frontend: `cd frontend; pnpm build` (strict TypeScript + Vite production build).
-- Текущий полный набор: 38 backend tests; `\.venv\Scripts\ruff check backend`.
+- Текущий полный набор: 40 backend tests; `\.venv\Scripts\ruff check backend`.
 
 ## Documentation and analysis
 
@@ -152,5 +160,7 @@ Frontend:
   на frontend не дублируются.
 - `JsonStore` безопасен только для одного процесса; shared deployment требует
   транзакционного persistence.
+- Physical Excel names принадлежат module-local adapters; calculation получает
+  только `CostMonitorDataset` и не зависит от JSON, filesystem или будущего SQL.
 - Активная ветка архитектурной инициативы — `feature/module-architecture`.
   `codex/architecture-foundation` сохранена как baseline foundation-версии.

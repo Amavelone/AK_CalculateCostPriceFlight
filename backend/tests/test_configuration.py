@@ -6,6 +6,7 @@ from app.modules.cost_monitor.calculation import calculate
 from app.modules.cost_monitor.configuration import BASELINE_CONFIGURATION, validate_configuration
 from app.modules.cost_monitor.configuration.functions import ALLOWED_PRIMITIVE_NAMES
 from app.modules.cost_monitor.configuration.variables import REGISTERED_VARIABLE_NAMES
+from app.modules.cost_monitor.records import CostMonitorDataset
 from app.modules.cost_monitor.schemas import CalculationRequest
 from pydantic import ValidationError
 
@@ -86,8 +87,9 @@ class ConfigurationTests(unittest.TestCase):
         custom_payload["fuel"]["consumption_tons_per_hour"] = 3.0
         custom = validate_configuration(custom_payload)
 
-        baseline_result = calculate(state, request)
-        custom_result = calculate(state, request, custom)
+        dataset = CostMonitorDataset.from_state(state)
+        baseline_result = calculate(dataset, request)
+        custom_result = calculate(dataset, request, custom)
 
         self.assertEqual(baseline_result["legs"][0]["components"]["fuel"], 648.0)
         self.assertEqual(custom_result["legs"][0]["components"]["fuel"], 720.0)

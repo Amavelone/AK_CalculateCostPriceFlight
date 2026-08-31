@@ -5,10 +5,28 @@ import unittest
 from pathlib import Path
 
 from app.core.config import Settings
+from app.modules.cost_monitor.repository import CostMonitorRepository
 from app.modules.cost_monitor.store import JsonStore
 
 
 class JsonStoreTests(unittest.TestCase):
+    def test_json_store_implements_module_repository_audit_and_revision_boundary(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            settings = Settings(project_root=root, data_dir=root / "data", default_source_dir=root / "sources")
+            repository: CostMonitorRepository = JsonStore(settings)
+
+            def change_data(state: dict) -> int:
+                repository.append_audit(state, "adapter_boundary_checked", "srv")
+                return repository.mark_calculation_data_changed(state)
+
+            revision = repository.mutate(change_data)
+            state = repository.read()
+
+        self.assertEqual(revision, 1)
+        self.assertEqual(state["data_revision"], 1)
+        self.assertEqual(state["audit_log"][-1]["action"], "adapter_boundary_checked")
+
     def test_draft_survives_store_recreation_without_changing_data_revision(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)

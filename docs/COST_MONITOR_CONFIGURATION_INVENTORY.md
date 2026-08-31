@@ -2,12 +2,13 @@
 
 ## Статус и назначение
 
-**Iteration:** 5 — Read-only Configuration Admin Foundation.
+**Iteration:** 6 — Formal Source Adapters / SQL Readiness.
 **Статус:** безопасные параметры живут в versioned runtime configuration с
 immutable active version, isolated drafts, validation, compare, activation,
 rollback и calculation trace. Отдельный frontend admin contour показывает
 active configuration, immutable history, compare и текущий trace только для
-чтения; SQL persistence и UI lifecycle commands не создаются.
+чтения. Source bindings теперь выбирают typed module-local adapters; SQL
+persistence и UI lifecycle commands не создаются.
 
 Документ фиксирует фактические правила foundation-версии и их текущее место
 ответственности. Typed baseline воспроизводит прежние Python/Excel значения и
@@ -80,7 +81,7 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 | LP-08 | Пустой workbook section очищает прошлые values; failed full refresh сохраняет active dataset | source lifecycle | Reliability invariant, введённый в Iteration 1; не возвращать старое sticky/partial behaviour. |
 | LP-09 | Worksheet names, column positions и `Прочее!27` bindings | monitor/SRV/fuel adapters | Physical Excel binding; позднее может стать validated source mapping, сейчас не менять без adapter scope. |
 
-## Iteration 5 result and deferred decisions
+## Iteration 6 result and deferred decisions
 
 - Iteration 3 создала module-owned typed definition и baseline config для
   CF-01…CF-07/CF-09. Iteration 4 добавила JSON-backed configuration service:
@@ -98,6 +99,11 @@ CF-01…CF-07 и безопасная часть CF-09 перенесены в t
 - Admin API errors изолированы от normal Cost Monitor startup; frontend client
   использует только read operations active/list/compare и не вызывает draft,
   activate или rollback endpoints.
+- Iteration 6 формализовала цепочку `physical source → adapter → normalization
+  → CostMonitorDataset → calculation`: Excel worksheet/column semantics остались
+  внутри SRV, fuel-registry и monitor-workbook adapters, а calculation больше
+  не читает JSON-shaped rows. `JsonStore` реализует узкий repository contract;
+  это preparation к SQL Server без database driver или migration.
 - Не переносить CI-01…CI-07, LP-01…LP-09 или raw Excel/SQL column names в
   arbitrary config. Они остаются code/adapters/legacy contracts до отдельного
   решения.

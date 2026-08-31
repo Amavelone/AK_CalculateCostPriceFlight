@@ -1,17 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Protocol
+from typing import Any
 
+from ..repository import CostMonitorRepository
 
-class ConfigurationRepository(Protocol):
-    """Узкая persistence boundary для lifecycle configuration."""
-
-    def read(self) -> dict[str, Any]: ...
-
-    def mutate(self, operation: Callable[[dict[str, Any]], Any]) -> Any: ...
-
-    def append_audit(self, state: dict[str, Any], action: str, detail: str) -> None: ...
+ConfigurationRepository = CostMonitorRepository
 
 
 class JsonConfigurationRepository:

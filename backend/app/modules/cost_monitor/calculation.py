@@ -5,9 +5,9 @@ from datetime import UTC, datetime
 from math import ceil
 from typing import Any
 
-from .catalog import normalize_key, tariffs_for_view
+from .catalog import normalize_key
 from .configuration import BASELINE_CONFIGURATION, CostMonitorConfiguration
-from .records import FuelPriceRecord, RouteRecord, TariffRecord
+from .records import CostMonitorDataset, RouteRecord, TariffRecord
 from .schemas import CalculationRequest, LegInput
 
 
@@ -37,12 +37,11 @@ def first_rate(index: dict[str, TariffRecord], airport: str, service: str) -> Ta
     return index.get(f"{airport}-{service}")
 
 
-def build_tariff_index(state: dict[str, Any]) -> dict[str, TariffRecord]:
+def build_tariff_index(dataset: CostMonitorDataset) -> dict[str, TariffRecord]:
     index: dict[str, TariffRecord] = {}
     # `setdefault` намеренно сохраняет первую физическую строку — это повторяет
     # действующее поведение ВПР Excel по таблице ЦРТ_Check.
-    for raw_tariff in tariffs_for_view(state):
-        tariff = TariffRecord.from_mapping(raw_tariff)
+    for tariff in dataset.tariffs:
         index.setdefault(f"{tariff.airport}-{tariff.service}", tariff)
     return index
 
@@ -61,7 +60,7 @@ class LegContext:
 
 
 def resolve_leg_context(
-    state: dict[str, Any],
+    dataset: CostMonitorDataset,
     leg: LegInput,
     request: CalculationRequest,
     configuration: CostMonitorConfiguration,
@@ -72,8 +71,7 @@ def resolve_leg_context(
     arrival = normalize_key(leg.arrival)
     route_key = f"{departure}-{arrival}"
     routes: dict[str, RouteRecord] = {}
-    for raw_candidate in state.get("routes", []):
-        candidate = RouteRecord.from_mapping(raw_candidate)
+    for candidate in dataset.routes:
         routes.setdefault(candidate.key, candidate)
     route = routes.get(route_key)
     warnings: list[str] = []
@@ -82,8 +80,8 @@ def resolve_leg_context(
     if route is None and departure and arrival:
         warnings.append(f"Маршрут {route_key} не найден в ИШР: налет принят равным 0.")
 
-    international = bool(state.get("international_airports", {}).get(departure)) or bool(
-        state.get("international_airports", {}).get(arrival)
+    international = bool(dataset.international_airports.get(departure)) or bool(
+        dataset.international_airports.get(arrival)
     )
     flight_time = route.flight_time if route else 0.0
     return (
@@ -134,7 +132,7 @@ def add_service(
 
 
 def calculate_ground(
-    state: dict[str, Any],
+    dataset: CostMonitorDataset,
     leg: LegInput,
     tariff_index: dict[str, TariffRecord],
     line_type: str,
@@ -149,7 +147,7 @@ def calculate_ground(
 
     departure = normalize_key(leg.departure)
     arrival = normalize_key(leg.arrival)
-    aircraft_factor = float(state.get("aircraft_multipliers", {}).get(leg.aircraft, 0.0))
+    aircraft_factor = float(dataset.aircraft_multipliers.get(leg.aircraft, 0.0))
     details: list[dict[str, Any]] = []
 
     if is_techstop:
@@ -233,7 +231,7 @@ def calculate_ground(
     ground += add_service(details, tariff_index, departure, "БОРТПИТАНИЕ", 1)
     ground += add_service(details, tariff_index, arrival, "СЛИВ ВОДЫ", 1)
 
-    other = float(state.get("other_costs", {}).get(departure, 0.0))
+    other = float(dataset.other_costs.get(departure, 0.0))
     if other:
         details.append(
             {"airport": departure, "service": "ПРОЧЕЕ", "rate": other, "volume": 1, "divisor": 1, "amount": other}
@@ -243,13 +241,13 @@ def calculate_ground(
 
 
 def calculate_leg(
-    state: dict[str, Any],
+    dataset: CostMonitorDataset,
     leg: LegInput,
     request: CalculationRequest,
     tariff_index: dict[str, TariffRecord],
     configuration: CostMonitorConfiguration,
 ) -> dict[str, Any]:
-    context, warnings = resolve_leg_context(state, leg, request, configuration)
+    context, warnings = resolve_leg_context(dataset, leg, request, configuration)
     departure = context.departure
     arrival = context.arrival
     route_key = context.route_key
@@ -262,9 +260,7 @@ def calculate_leg(
     fuel = 0.0
     fuel_detail: list[dict[str, Any]] = []
     if request.settings.fuel_source == "АК":
-        fuel_prices = {
-            record.airport: record for record in (FuelPriceRecord.from_mapping(value) for value in state.get("fuel_prices", []))
-        }
+        fuel_prices = {record.airport: record for record in dataset.fuel_prices}
         price = fuel_prices.get(departure)
         if price:
             fuel = price.price * fuel_tons
@@ -303,10 +299,10 @@ def calculate_leg(
                 }
             )
 
-    ground, ground_detail = calculate_ground(state, leg, tariff_index, line_type, is_techstop, configuration)
+    ground, ground_detail = calculate_ground(dataset, leg, tariff_index, line_type, is_techstop, configuration)
 
     ano_tariff = first_rate(tariff_index, departure, "АНО АД")
-    aircraft_multiplier = float(state.get("aircraft_multipliers", {}).get(leg.aircraft, 0.0))
+    aircraft_multiplier = float(dataset.aircraft_multipliers.get(leg.aircraft, 0.0))
     ano = 0.0
     ano_detail: list[dict[str, Any]] = []
     if ano_tariff and context.has_route:
@@ -333,7 +329,7 @@ def calculate_leg(
         ]
     if not ano_tariff and departure:
         warnings.append(f"Не найдена ставка АНО АД для {departure}; компонент АНО принят равным 0.")
-    if leg.aircraft not in state.get("aircraft_multipliers", {}):
+    if leg.aircraft not in dataset.aircraft_multipliers:
         warnings.append(f"Для типа ВС {leg.aircraft} отсутствует коэффициент из Справочников.")
 
     catering = (
@@ -395,8 +391,8 @@ def calculate_leg(
             ]
         )
 
-    scenario = state.get("scenario_rates", {}).get(request.settings.scenario, {})
-    rates = scenario.get(leg.aircraft) or [0.0, 0.0, 0.0]
+    scenario = dataset.scenario_rates.get(request.settings.scenario, {})
+    rates = scenario.get(leg.aircraft) or (0.0, 0.0, 0.0)
     if leg.aircraft not in scenario:
         warnings.append(f"Для типа ВС {leg.aircraft} нет ставок М1/М2/М3 в сценарии «{request.settings.scenario}».")
     margins = [float(rate) * flight_time * 1000 for rate in rates]
@@ -553,14 +549,14 @@ def calculate_leg(
 
 
 def calculate(
-    state: dict[str, Any],
+    dataset: CostMonitorDataset,
     request: CalculationRequest,
     configuration: CostMonitorConfiguration = BASELINE_CONFIGURATION,
     config_version: int = 1,
     configuration_state: str = "active",
 ) -> dict[str, Any]:
-    tariff_index = build_tariff_index(state)
-    legs = [calculate_leg(state, leg, request, tariff_index, configuration) for leg in request.legs]
+    tariff_index = build_tariff_index(dataset)
+    legs = [calculate_leg(dataset, leg, request, tariff_index, configuration) for leg in request.legs]
     total = {
         level: round_currency(sum(item["_raw_totals"][level] for item in legs))
         for level in ("m1", "m2", "m3")
@@ -579,18 +575,18 @@ def calculate(
         "status": "degraded" if diagnostics else "complete",
         "diagnostics": diagnostics,
         "data_snapshot": {
-            "revision": int(state.get("data_revision", 0)),
-            "tariffs": len(state.get("imported_tariffs", [])),
-            "manual_tariffs": len(state.get("manual_tariffs", [])),
-            "fuel_prices": len(state.get("fuel_prices", [])),
-            "routes": len(state.get("routes", [])),
+            "revision": dataset.data_revision,
+            "tariffs": len(dataset.imported_tariffs),
+            "manual_tariffs": len(dataset.manual_tariffs),
+            "fuel_prices": len(dataset.fuel_prices),
+            "routes": len(dataset.routes),
         },
         "config_version": config_version,
         "configuration_state": configuration_state,
         "trace": {
             "config_version": config_version,
             "configuration_state": configuration_state,
-            "data_revision": int(state.get("data_revision", 0)),
+            "data_revision": dataset.data_revision,
             "legs": trace_legs,
         },
     }

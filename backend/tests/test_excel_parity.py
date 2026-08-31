@@ -7,6 +7,7 @@ from typing import Any
 
 from app.modules.cost_monitor.calculation import calculate
 from app.modules.cost_monitor.exports import build_export_snapshot
+from app.modules.cost_monitor.records import CostMonitorDataset
 from app.modules.cost_monitor.schemas import CalculationRequest
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "excel_cost_monitor_baseline.json"
@@ -41,7 +42,7 @@ class ExcelParityTests(unittest.TestCase):
     def setUp(self) -> None:
         self.fixture = load_fixture()
         self.request = CalculationRequest.model_validate(self.fixture["request"])
-        self.result = calculate(build_state(self.fixture), self.request)
+        self.result = calculate(CostMonitorDataset.from_state(build_state(self.fixture)), self.request)
 
     def test_approved_five_leg_scenario_matches_excel_cached_values(self) -> None:
         expected_legs = self.fixture["expected_excel_rows"]
@@ -77,7 +78,7 @@ class ExcelParityTests(unittest.TestCase):
         state_with_legacy_source = build_state(self.fixture)
         state_with_legacy_source["source_configs"] = [{"id": "obsolete", "parser": "unsupported"}]
 
-        result_with_legacy_source = calculate(state_with_legacy_source, self.request)
+        result_with_legacy_source = calculate(CostMonitorDataset.from_state(state_with_legacy_source), self.request)
 
         self.assertEqual(
             {key: value for key, value in result_with_legacy_source.items() if key != "calculated_at"},

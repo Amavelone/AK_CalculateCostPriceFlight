@@ -72,8 +72,8 @@ def build_default_state(source_dir: Path) -> dict[str, Any]:
 class JsonStore:
     """Предоставляет потокобезопасное атомарное локальное хранилище JSON.
 
-    Узкий интерфейс чтения и изменения служит границей для будущего репозитория
-    PostgreSQL: API и расчётный модуль не работают с файлом напрямую.
+    Узкий module repository contract отделяет local JSON adapter от API и
+    calculation dataset; SQL Server implementation остаётся будущим этапом.
     """
 
     def __init__(self, settings: Settings) -> None:

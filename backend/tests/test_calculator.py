@@ -3,10 +3,14 @@ from __future__ import annotations
 import unittest
 
 from app.modules.cost_monitor.calculation import calculate
+from app.modules.cost_monitor.records import CostMonitorDataset
 from app.modules.cost_monitor.schemas import CalculationRequest
 
 
 class CalculatorTests(unittest.TestCase):
+    def calculate(self, state: dict, request: CalculationRequest) -> dict:
+        return calculate(CostMonitorDataset.from_state(state), request)
+
     def base_state(self) -> dict:
         return {
             "routes": [
@@ -41,7 +45,7 @@ class CalculatorTests(unittest.TestCase):
             }
         )
 
-        result = calculate(state, request)
+        result = self.calculate(state, request)
 
         self.assertEqual(result["legs"][0]["components"]["fuel"], 648.0)
         self.assertEqual(result["legs"][0]["components"]["ano"], 2666.6)
@@ -53,9 +57,9 @@ class CalculatorTests(unittest.TestCase):
             "legs": [{"id": "one", "departure": "AAA", "arrival": "BBB", "aircraft": "738", "passengers": 17}],
             "settings": {"scenario": "ГБ 2026", "fuel_source": "ЦРТ", "catering": False},
         }
-        disabled = calculate(state, CalculationRequest.model_validate(base_payload))
+        disabled = self.calculate(state, CalculationRequest.model_validate(base_payload))
         base_payload["settings"]["catering"] = True
-        enabled = calculate(state, CalculationRequest.model_validate(base_payload))
+        enabled = self.calculate(state, CalculationRequest.model_validate(base_payload))
 
         self.assertEqual(disabled["legs"][0]["components"]["catering"], 9000)
         self.assertEqual(enabled["legs"][0]["components"]["catering"], 17500)
@@ -71,7 +75,7 @@ class CalculatorTests(unittest.TestCase):
             }
         )
 
-        result = calculate(state, request)
+        result = self.calculate(state, request)
 
         self.assertEqual(result["data_snapshot"]["revision"], 12)
         self.assertEqual(result["config_version"], 1)
@@ -91,7 +95,7 @@ class CalculatorTests(unittest.TestCase):
             }
         )
 
-        result = calculate(state, request)
+        result = self.calculate(state, request)
 
         self.assertEqual(result["legs"][0]["components"]["fuel"], 5400)
         self.assertEqual(result["legs"][0]["details"]["fuel"][0]["service"], "Керосин АК")
@@ -109,7 +113,7 @@ class CalculatorTests(unittest.TestCase):
             }
         )
 
-        result = calculate(state, request)
+        result = self.calculate(state, request)
 
         self.assertTrue(result["legs"][0]["is_techstop"])
         self.assertEqual(result["legs"][0]["components"]["ground"], 13066)
@@ -123,7 +127,7 @@ class CalculatorTests(unittest.TestCase):
             }
         )
 
-        result = calculate(state, request)
+        result = self.calculate(state, request)
 
         self.assertEqual(result["legs"][0]["flight_time"], 0)
         self.assertTrue(any("Маршрут CCC-DDD не найден" in warning for warning in result["warnings"]))
@@ -143,7 +147,7 @@ class CalculatorTests(unittest.TestCase):
             }
         )
 
-        result = calculate(state, request)
+        result = self.calculate(state, request)
 
         self.assertEqual(len(result["legs"]), 7)
         self.assertGreater(result["total"]["m2"], result["legs"][0]["totals"]["m2"])

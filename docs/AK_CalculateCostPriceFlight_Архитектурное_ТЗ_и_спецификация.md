@@ -1356,11 +1356,19 @@ version history, compare и structured trace текущего in-memory расч
 Authentication/RBAC, persisted calculation history и editing безопасных
 parameters/bindings остаются `DEFERRED`.
 
-## Этап 6 - Formal Adapters / SQL Readiness
+## Этап 6 - Formal Adapters / SQL Readiness: реализован в Iteration 6
 
 - canonical contracts окончательно закреплены;
 - source bindings формализованы;
 - storage abstractions готовы к SQL Server.
+
+Реализованы module-local typed adapters для SRV, fuel registry/CBR и monitor
+workbook. Их результаты нормализуются в canonical `CostMonitorDataset`, который
+получает calculation engine; physical Excel bindings не переходят в calculation.
+`JsonStore` остаётся единственным local implementation узкого repository
+contract read/mutate/audit/data revision. SQL Server adapter, SQLAlchemy,
+pyodbc, Alembic, immutable dataset snapshots/history и shared platform
+extraction остаются `DEFERRED`.
 
 ## Этап 7 - SQL Server Persistence
 

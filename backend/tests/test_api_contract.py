@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from app import main
 from app.modules.cost_monitor import api as cost_api
+from app.modules.cost_monitor.source_adapters import SourceRunResult, SrvTariffData
 from app.modules.cost_monitor.sources import SourceRefreshStage
 from app.modules.cost_monitor.store import build_default_state, utc_now
 
@@ -87,10 +88,18 @@ class ApiContractTests(unittest.TestCase):
         def stage_with_one_failure(active_state: dict, source_id: str, now: str) -> SourceRefreshStage:
             if source_id == "fuel_registry":
                 raise ValueError("invalid fuel workbook")
-            return SourceRefreshStage(source_id, f"{source_id}.xlsx", [], 1, [], None, now)
+            return SourceRefreshStage(
+                source_id,
+                f"{source_id}.xlsx",
+                SourceRunResult(source_id, SrvTariffData(()), 1, [], None),
+                1,
+                [],
+                None,
+                now,
+            )
 
         with (
-            patch.object(cost_api, "store", memory_store),
+            patch.object(cost_api, "repository", memory_store),
             patch.object(cost_api, "stage_source_refresh", side_effect=stage_with_one_failure),
         ):
             response = cost_api.refresh_all_sources()

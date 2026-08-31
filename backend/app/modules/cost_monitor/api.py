@@ -18,6 +18,8 @@ from .configuration import (
     JsonConfigurationRepository,
 )
 from .exports import build_export_snapshot, export_filename, json_bytes, xlsx_bytes
+from .records import CostMonitorDataset
+from .repository import CostMonitorRepository
 from .schemas import (
     CalculationRequest,
     CalculationResponse,
@@ -42,8 +44,8 @@ from .sources import (
 from .store import JsonStore, utc_now
 
 router = APIRouter()
-store = JsonStore(settings)
-configuration_service = ConfigurationService(JsonConfigurationRepository(store))
+repository: CostMonitorRepository = JsonStore(settings)
+configuration_service = ConfigurationService(JsonConfigurationRepository(repository))
 COOKIE_NAME = "cost_monitor_draft"
 
 
@@ -100,7 +102,7 @@ def health() -> dict[str, str]:
 
 @router.get("/api/dashboard")
 def dashboard() -> dict[str, Any]:
-    state = store.read()
+    state = repository.read()
     return {
         "sources": state["source_configs"],
         "stats": {
@@ -122,7 +124,7 @@ def calculation_options() -> dict[str, list[str]]:
     поэтому сохранённый черновик остаётся доступным после обновления данных.
     """
 
-    state = store.read()
+    state = repository.read()
     aircraft = {"733", "737", "738"}
     aircraft.update(state.get("aircraft_multipliers", {}).keys())
     for rates in state.get("scenario_rates", {}).values():
@@ -136,7 +138,7 @@ def calculation_options() -> dict[str, list[str]]:
 @router.get("/api/drafts/current")
 def get_current_draft(request: Request, response: Response) -> dict[str, Any]:
     key = draft_id(request, response)
-    state = store.read()
+    state = repository.read()
     saved = state["drafts"].get(key)
     return saved or {"calculation": default_calculation(), "updated_at": None}
 
@@ -150,13 +152,13 @@ def save_current_draft(payload: DraftPayload, request: Request, response: Respon
         state["drafts"][key] = draft
         return draft
 
-    return store.mutate(operation)
+    return repository.mutate(operation)
 
 
 @router.post("/api/calculations", response_model=CalculationResponse)
 def calculate_cost(payload: CalculationRequest) -> dict[str, Any]:
     active = configuration_service.active()
-    return calculate(store.read(), payload, active["configuration"], active["version"], active["state"])
+    return calculate(CostMonitorDataset.from_state(repository.read()), payload, active["configuration"], active["version"], active["state"])
 
 
 @router.post("/api/exports/{file_format}")
@@ -170,7 +172,7 @@ def export_calculation(file_format: str, payload: CalculationRequest) -> Respons
     if file_format not in {"json", "xlsx"}:
         raise HTTPException(status_code=404, detail="Формат выгрузки не поддерживается")
     active = configuration_service.active()
-    result = calculate(store.read(), payload, active["configuration"], active["version"], active["state"])
+    result = calculate(CostMonitorDataset.from_state(repository.read()), payload, active["configuration"], active["version"], active["state"])
     snapshot = build_export_snapshot(payload, result)
     content = json_bytes(snapshot) if file_format == "json" else xlsx_bytes(snapshot)
     media_type = "application/json; charset=utf-8" if file_format == "json" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -236,7 +238,7 @@ def compare_configuration_versions(left_version: int, right_version: int) -> dic
 def preview_configuration_draft(version: int, payload: CalculationRequest) -> dict[str, Any]:
     try:
         configuration = configuration_service.draft_configuration(version)
-        return calculate(store.read(), payload, configuration, version, "draft")
+        return calculate(CostMonitorDataset.from_state(repository.read()), payload, configuration, version, "draft")
     except Exception as error:
         raise configuration_error_to_http(error) from error
 
@@ -259,7 +261,7 @@ def rollback_configuration(version: int) -> dict[str, Any]:
 
 @router.get("/api/sources")
 def list_sources() -> list[dict[str, Any]]:
-    return store.read()["source_configs"]
+    return repository.read()["source_configs"]
 
 
 @router.put("/api/sources/{source_id}")
@@ -270,22 +272,22 @@ def update_source(source_id: str, payload: SourceConfigUpdate) -> dict[str, Any]
         source["mask"] = payload.mask.strip()
         source["last_status"] = "not_updated"
         source["last_error"] = None
-        store.append_audit(state, "source_config_updated", source_id)
+        repository.append_audit(state, "source_config_updated", source_id)
         return source
 
-    return store.mutate(operation)
+    return repository.mutate(operation)
 
 
 @router.get("/api/sources/{source_id}/preview")
 def source_preview(source_id: str) -> dict[str, Any]:
-    state = store.read()
+    state = repository.read()
     source = get_source_or_404(state, source_id)
     return {"source": source, "preview": source.get("preview", [])}
 
 
 @router.get("/api/sources/{source_id}/raw-preview")
 def source_raw_preview(source_id: str, sheet: str | None = None) -> dict[str, Any]:
-    state = store.read()
+    state = repository.read()
     source = get_source_or_404(state, source_id)
     try:
         file_path = find_active_file(source)
@@ -300,15 +302,15 @@ def refresh_one_source(source_id: str) -> dict[str, Any]:
         get_source_or_404(state, source_id)
         try:
             source = refresh_source(state, source_id, utc_now())
-            store.mark_calculation_data_changed(state)
-            store.append_audit(state, "source_refreshed", source_id)
+            repository.mark_calculation_data_changed(state)
+            repository.append_audit(state, "source_refreshed", source_id)
             return source
         except Exception as error:
             source = mark_source_error(state, source_id, str(error), utc_now())
-            store.append_audit(state, "source_refresh_failed", f"{source_id}: {error}")
+            repository.append_audit(state, "source_refresh_failed", f"{source_id}: {error}")
             return source
 
-    return store.mutate(operation)
+    return repository.mutate(operation)
 
 
 @router.post("/api/sources/refresh-all")
@@ -323,20 +325,20 @@ def refresh_all_sources() -> dict[str, Any]:
                 staged.append(stage_source_refresh(candidate, source_id, utc_now()))
             except Exception as error:
                 failures[source_id] = str(error)
-                store.append_audit(state, "source_refresh_failed", f"{source_id}: {error}")
+                repository.append_audit(state, "source_refresh_failed", f"{source_id}: {error}")
         if failures:
             for source_id, message in failures.items():
                 mark_source_error(state, source_id, message, utc_now())
-            store.append_audit(state, "all_sources_refresh_failed", "active dataset preserved")
+            repository.append_audit(state, "all_sources_refresh_failed", "active dataset preserved")
             return {"sources": state["source_configs"]}
         for item in staged:
             activate_staged_source(state, item)
         if staged:
-            store.mark_calculation_data_changed(state)
-        store.append_audit(state, "all_sources_refreshed", f"{len(staged)} источника(ов)")
+            repository.mark_calculation_data_changed(state)
+        repository.append_audit(state, "all_sources_refreshed", f"{len(staged)} источника(ов)")
         return {"sources": state["source_configs"]}
 
-    return store.mutate(operation)
+    return repository.mutate(operation)
 
 
 @router.post("/api/sources/{source_id}/upload")
@@ -352,18 +354,18 @@ async def upload_source_file(source_id: str, file: UploadFile = File(...)) -> di
                 "last_note": "Файл загружен. Запустите обновление для парсинга.",
             }
         )
-        store.append_audit(state, "source_uploaded", f"{source_id}: {target.name}")
+        repository.append_audit(state, "source_uploaded", f"{source_id}: {target.name}")
         return source
 
     try:
-        return store.mutate(operation)
+        return repository.mutate(operation)
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
 
 
 @router.get("/api/tariffs")
 def list_tariffs(search: str = "") -> list[dict[str, Any]]:
-    tariffs = tariffs_for_view(store.read())
+    tariffs = tariffs_for_view(repository.read())
     phrase = search.strip().upper()
     if not phrase:
         return tariffs
@@ -399,12 +401,12 @@ def add_manual_tariff(payload: ManualTariffInput) -> dict[str, Any]:
             "source_row": None,
         }
         state["manual_tariffs"].append(tariff)
-        store.mark_calculation_data_changed(state)
-        store.append_audit(state, "manual_tariff_added", key)
+        repository.mark_calculation_data_changed(state)
+        repository.append_audit(state, "manual_tariff_added", key)
         return tariff
 
     try:
-        return store.mutate(operation)
+        return repository.mutate(operation)
     except ValueError as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
 
@@ -416,18 +418,18 @@ def delete_manual_tariff(tariff_id: str) -> Response:
         state["manual_tariffs"] = [item for item in state["manual_tariffs"] if item["id"] != tariff_id]
         if len(state["manual_tariffs"]) == initial:
             return False
-        store.mark_calculation_data_changed(state)
-        store.append_audit(state, "manual_tariff_deleted", tariff_id)
+        repository.mark_calculation_data_changed(state)
+        repository.append_audit(state, "manual_tariff_deleted", tariff_id)
         return True
 
-    if not store.mutate(operation):
+    if not repository.mutate(operation):
         raise HTTPException(status_code=404, detail="Ручная запись не найдена")
     return Response(status_code=204)
 
 
 @router.get("/api/routes")
 def list_routes(query: str = "") -> list[dict[str, Any]]:
-    routes = store.read()["routes"]
+    routes = repository.read()["routes"]
     phrase = query.strip().upper()
     filtered = [route for route in routes if not phrase or phrase in route["key"]]
     return filtered[:50]
@@ -435,4 +437,4 @@ def list_routes(query: str = "") -> list[dict[str, Any]]:
 
 @router.get("/api/audit")
 def audit_log() -> list[dict[str, Any]]:
-    return list(reversed(store.read().get("audit_log", [])))
+    return list(reversed(repository.read().get("audit_log", [])))

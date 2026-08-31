@@ -1,5 +1,37 @@
 # Project Changelog
 
+## 2026-08-31 — Iteration 6: formal module source adapter boundaries
+
+### Изменено
+
+- SRV, fuel registry/CBR и monitor workbook оформлены как typed module-owned
+  adapters с canonical source-run results.
+- Calculation получает immutable `CostMonitorDataset`, а не JSON-shaped state;
+  typed activation сериализует обновлённый dataset обратно через local adapter.
+- Добавлен узкий Cost Monitor repository contract для read/mutate/audit/data
+  revision; `JsonStore` остаётся единственной implementation.
+
+### Architecture
+
+- Physical Excel worksheet/column names принадлежат adapters, а не calculation;
+  source и storage остаются разными слоями Cost Monitor.
+- Public URLs, response contracts, formulas, data revision semantics, JSON local
+  persistence, normal UX и admin contour не изменялись. SQL tooling/migration,
+  snapshots/history и shared platform extraction остаются deferred.
+
+### Проверка
+
+- Backend: 40 тестов пройдены, включая typed adapter normalization/round-trip,
+  Excel golden master, configuration lifecycle и API contracts.
+- Ruff: PASS.
+- Frontend: strict TypeScript и production build пройдены.
+
+### Git
+
+- Baseline revision: `ed1fdce` (Iteration 5).
+- Commit: see git history.
+- Branch: `feature/module-architecture`.
+
 ## 2026-08-30 — Iteration 5: read-only configuration admin foundation
 
 ### Изменено

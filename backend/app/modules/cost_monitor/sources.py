@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 from .parsers import (
@@ -11,13 +9,9 @@ from .parsers import (
     parse_monitor_workbook,
     parse_srv_tariffs,
 )
+from .records import CostMonitorDataset
+from .source_adapters import SourceRunResult, adapter_for_parser
 from .source_files import find_active_file, find_latest_file, save_uploaded_file, workbook_preview
-
-PARSERS: dict[str, Callable[[Path], tuple[Any, int, list[dict[str, Any]], str | None]]] = {
-    "srv_tariffs": parse_srv_tariffs,
-    "fuel_registry": parse_fuel_registry,
-    "monitor_workbook": parse_monitor_workbook,
-}
 
 
 @dataclass(frozen=True)
@@ -26,7 +20,7 @@ class SourceRefreshStage:
 
     source_id: str
     file_name: str
-    result: Any
+    result: SourceRunResult
     rows_read: int
     preview: list[dict[str, Any]]
     note: str | None
@@ -43,34 +37,23 @@ def source_by_id(state: dict[str, Any], source_id: str) -> dict[str, Any]:
 def stage_source_refresh(state: dict[str, Any], source_id: str, now: str) -> SourceRefreshStage:
     source = source_by_id(state, source_id)
     path = find_latest_file(source)
-    parser = PARSERS[source["parser"]]
-    result, rows_read, preview, note = parser(path)
-    return SourceRefreshStage(source_id, path.name, result, rows_read, preview, note, now)
+    adapter = adapter_for_parser(str(source["parser"]))
+    if adapter.source_id != source_id:
+        raise ValueError(f"Adapter {adapter.parser_id} не соответствует источнику {source_id}")
+    result = adapter.load(path)
+    return SourceRefreshStage(source_id, path.name, result, result.rows_read, result.preview, result.note, now)
 
 
 def activate_staged_source(state: dict[str, Any], staged: SourceRefreshStage) -> dict[str, Any]:
     source = source_by_id(state, staged.source_id)
-    result = staged.result
+    if staged.result.source_id != staged.source_id:
+        raise ValueError(f"Нельзя активировать результат {staged.result.source_id} для {staged.source_id}")
 
-    if staged.source_id == "srv":
-        state["imported_tariffs"] = result
-        rows_loaded = len(result)
-    elif staged.source_id == "fuel_registry":
-        state["fuel_prices"] = result
-        rows_loaded = len(result)
-    elif staged.source_id == "monitor_workbook":
-        state["routes"] = result["routes"]
-        state["international_airports"] = result["international_airports"]
-        state["other_costs"] = result["other_costs"]
-        # Пустой валидный раздел обязан заменить предыдущий набор, иначе новый
-        # workbook маскируется старой sticky-конфигурацией.
-        state["aircraft_multipliers"] = result["aircraft_multipliers"]
-        state["scenario_rates"] = result["scenario_rates"]
-        non_legacy_manual = [item for item in state["manual_tariffs"] if not item.get("legacy_manual")]
-        state["manual_tariffs"] = non_legacy_manual + result["legacy_manual_tariffs"]
-        rows_loaded = len(result["routes"])
-    else:
-        rows_loaded = len(result)
+    # Physical parser result сначала применяет typed canonical dataset, и только
+    # затем dataset сериализуется в local JSON adapter. Calculation не получает
+    # raw workbook/JSON rows.
+    dataset = CostMonitorDataset.from_state(state)
+    staged.result.data.apply(dataset).write_to_state(state)
 
     source.update(
         {
@@ -81,7 +64,7 @@ def activate_staged_source(state: dict[str, Any], staged: SourceRefreshStage) ->
             "last_error": None,
             "last_note": staged.note,
             "rows_read": staged.rows_read,
-            "rows_loaded": rows_loaded,
+            "rows_loaded": staged.result.data.rows_loaded,
             "preview": staged.preview,
         }
     )
