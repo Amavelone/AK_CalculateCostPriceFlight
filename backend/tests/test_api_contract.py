@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import copy
+import json
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 from app import main
+from app.core.release import APPLICATION_VERSION, VERSION_FILE
 from app.modules.cost_monitor import api as cost_api
 from app.modules.cost_monitor.source_adapters import SourceRunResult, SrvTariffData
 from app.modules.cost_monitor.sources import SourceRefreshStage
@@ -78,6 +80,12 @@ class MemoryStore:
 
 
 class ApiContractTests(unittest.TestCase):
+    def test_release_version_has_one_authoritative_source(self) -> None:
+        frontend_package = json.loads((VERSION_FILE.parent / "frontend" / "package.json").read_text(encoding="utf-8"))
+        self.assertEqual(APPLICATION_VERSION, "1.0.0")
+        self.assertEqual(main.app.version, APPLICATION_VERSION)
+        self.assertEqual(frontend_package["version"], APPLICATION_VERSION)
+
     def test_current_api_operations_are_stable(self) -> None:
         specification = main.app.openapi()
         actual = {

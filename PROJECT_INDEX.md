@@ -12,6 +12,8 @@ Backend:
   version-aware request logging, Cost Monitor router и раздача `frontend/dist`.
 - `backend/app/__main__.py` — production entry без reload, использующий
   configured host/port и ровно один JsonStore worker.
+- `VERSION` — authoritative application release version; backend reads it at
+  startup, а frontend package version проверяется contract test.
 - Dev: `python -m uvicorn app.main:app --app-dir backend --reload --port 8000`.
 
 Frontend:
@@ -128,11 +130,16 @@ Frontend:
   `backend/tests/fixtures/excel_cost_monitor_baseline.json` — Excel-owned
   пяти-плечевой golden master и calculation/export shape.
 - `backend/tests/test_api_contract.py` — стабильный набор API operations,
-  explicit OpenAPI response contract и atomic refresh-all characterization.
+  explicit OpenAPI response contract, authoritative release version и atomic
+  refresh-all characterization.
 - `ruff.toml` — минимальный backend lint gate.
 - Backend: `$env:PYTHONPATH=(Resolve-Path .\backend).Path; .\.venv\Scripts\python -m unittest discover -s .\backend\tests -v`.
 - Frontend: `cd frontend; pnpm build` (strict TypeScript + Vite production build).
-- Текущий полный набор: 54 backend tests; `\.venv\Scripts\ruff check backend`.
+- `.github/workflows/ci.yml` — GitHub CI: backend/golden/API/config/source/
+  reference tests, Ruff, frontend strict typecheck и production build.
+- `docs/RELEASE_CANDIDATE_v1.0.0.md` — release identity, validation evidence,
+  deployment limitations, security blocker и remaining risks.
+- Текущий полный набор: 60 backend tests; `\.venv\Scripts\ruff check backend`.
 
 ## Documentation and analysis
 

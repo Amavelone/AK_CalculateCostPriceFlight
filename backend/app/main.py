@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .core.config import Settings, configure_logging, settings
+from .core.release import APPLICATION_VERSION
 from .modules.cost_monitor import api as cost_monitor_api
 
 logger = logging.getLogger("cost_monitor.request")
@@ -39,7 +40,7 @@ def create_app(runtime_settings: Settings = settings) -> FastAPI:
     configure_logging(runtime_settings)
     application = FastAPI(
         title="Монитор расчета себестоимости",
-        version="1.0.0",
+        version=APPLICATION_VERSION,
         description="API модульного монитора себестоимости рейсов.",
     )
     if not runtime_settings.is_production:

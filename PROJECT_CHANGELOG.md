@@ -1,5 +1,21 @@
 # Project Changelog
 
+## 2026-08-31 — Release Iteration 6: CI and release candidate
+
+### Изменено
+
+- Добавлен authoritative root `VERSION` (`1.0.0`), используемый FastAPI; test
+  фиксирует совпадение с frontend package metadata.
+- Добавлен GitHub Actions workflow с backend regression/golden/API/config/source/
+  reference suites, Ruff, frontend strict typecheck и production build.
+- Добавлен release-candidate report с versioned baselines, live source model,
+  validation matrix, deployment limitations и security blocker.
+
+### Граница delivery
+
+- Release Candidate не создаёт tag, GitHub Release, deployment или merge в
+  `main`; дальнейшее действие требует отдельного user approval.
+
 ## 2026-08-31 — Release Iteration 5: production hardening
 
 ### Изменено
