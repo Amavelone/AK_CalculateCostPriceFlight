@@ -1,5 +1,26 @@
 # Project Changelog
 
+## 2026-08-31 — Release baseline: v1.0.0 Iteration 0
+
+### Baseline
+
+- От verified HEAD `a85ff68` ветки `feature/module-architecture` создана
+  самостоятельная release line `release/v1.0.0`.
+- Production behaviour не менялся.
+
+### Verification
+
+- Backend suite, включая Excel golden parity, API contracts, configuration и
+  source adapters: 45 tests — PASS.
+- Ruff — PASS.
+- Frontend strict TypeScript check и production build — PASS.
+
+### Release plan
+
+- Добавлен `docs/AK_CalculateCostPriceFlight_PRE_RELEASE_ARCHITECTURE.md`:
+  целевая DEV/PROD граница, ownership Configuration/Reference Data/Live Sources
+  и последовательность release-итераций.
+
 ## 2026-08-31 — Iteration 7: complete configurable calculation architecture
 
 ### Изменено

@@ -120,6 +120,9 @@ Frontend:
 - `docs/AK_CalculateCostPriceFlight_Архитектурное_ТЗ_и_спецификация.md` —
   единственный канонический архитектурный документ: целевая модель,
   инварианты, roadmap и правила выполнения итераций.
+- `docs/AK_CalculateCostPriceFlight_PRE_RELEASE_ARCHITECTURE.md` —
+  утверждённая предрелизная модель: граница DEV/PROD, независимость runtime
+  от Legacy Monitor Workbook и план подготовки ветки `release/v1.0.0`.
 - `docs/COST_MONITOR_CONFIGURATION_INVENTORY.md` — ownership matrix, schema
   `2.0`, operation/override boundaries и current administrative lifecycle.
 - `ARCHITECTURE_AUDIT.md` — исторический аудит foundation-версии и исходные
