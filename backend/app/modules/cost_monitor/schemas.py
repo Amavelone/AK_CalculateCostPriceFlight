@@ -116,6 +116,15 @@ class ConfigurationDraftUpdate(BaseModel):
     configuration: CostMonitorConfiguration
 
 
+class ConfigurationDraftCreate(BaseModel):
+    base: Literal["default", "active"] = "active"
+
+
+class BusinessConfigurationDraftUpdate(BaseModel):
+    values: dict[str, Any] = Field(default_factory=dict)
+    flight_hour: dict[str, Any] | None = None
+
+
 class ReferenceDataDraftUpdate(BaseModel):
     reference_data: CostMonitorReferenceData
 
@@ -126,6 +135,7 @@ class ConfigurationVersionResponse(BaseModel):
     created_at: str
     activated_at: str | None
     validation_status: Literal["valid"]
+    is_default: bool = False
     configuration: CostMonitorConfiguration | None = None
 
 
@@ -173,6 +183,7 @@ class ConfigurationComparisonChange(BaseModel):
         "override_changed",
     ]
     summary: str
+    presentation: dict[str, Any] | None = None
 
 
 class ConfigurationReferenceResponse(BaseModel):
@@ -183,6 +194,7 @@ class ConfigurationReferenceResponse(BaseModel):
     updated_at: str | None = None
     base_version: int | None = None
     validation_status: Literal["valid"]
+    is_default: bool = False
 
 
 class ConfigurationCompareResponse(BaseModel):

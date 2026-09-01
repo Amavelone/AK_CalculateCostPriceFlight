@@ -88,9 +88,14 @@ Configuration и Reference Data, а также оба production-источни�
 
 ## Администрирование и ограничения
 
-`/admin` управляет draft-версиями Configuration и Reference Data; активные
-версии доступны только для чтения. Настройка источников и ручные тарифы остаются
-в основном приложении.
+`/admin` управляет business-oriented draft-версиями Configuration и Reference
+Data. Default Configuration v1 — видимый immutable baseline release: из него
+или из текущей Active можно создать draft, но его нельзя изменить, удалить или
+перезаписать. Basic mode показывает предметные параметры топлива, НО, АНО,
+питания, НДС и M1/M2/M3; Advanced mode раскрывает только разрешённые модулем
+operations/lookup details. Versions можно сравнить с Default, preview остаётся
+неактивирующим, а Configuration можно выгрузить в JSON. Настройка источников и
+ручные тарифы остаются в основном приложении.
 
 JsonStore ограничен одним сервером, одним процессом и одним worker до перехода
 на SQL Server. Corporate authentication/RBAC отсутствует: это P0-блокер для

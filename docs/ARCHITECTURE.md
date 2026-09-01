@@ -15,7 +15,9 @@ Calculation Configuration + Reference Data + Live Sources
 ## Границы runtime
 
 - **Configuration** — неизменяемая версионируемая операционная логика и
-  утверждённые значения для типов ВС и сценариев.
+  утверждённые значения для типов ВС и сценариев. Release baseline v1 имеет
+  отдельный immutable-маркер **Default**; rollback может выбрать этот снимок
+  активным, но никогда не изменяет его payload.
 - **Reference Data** — неизменяемые версионируемые Routes и Airport Other Costs.
 - **Live Sources** — только SRV и Fuel Registry. Их атомарное обновление меняет
   канонические тарифы/цены топлива и `data_revision`.
@@ -26,6 +28,10 @@ Calculation Configuration + Reference Data + Live Sources
 один. Импортированные строки тарифов предшествуют ручным, сохраняя значимый для
 parity первый физический match дублирующихся ключей. Округление расчёта и
 структура M1/M2/M3 покрыты Excel golden-parity suite.
+
+Business Configuration Facade располагается поверх typed schema 2.0: metadata
+назначает business label, группу, unit, границы и where-used для разрешённых
+параметров. Она не выполняет формулы и не владеет source/reference data.
 
 ## Хранение и совместимость
 

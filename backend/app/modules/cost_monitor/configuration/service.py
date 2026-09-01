@@ -8,6 +8,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from .defaults import BASELINE_CALCULATION_OVERRIDES, BASELINE_CONFIGURATION
+from .presentation import PARAMETER_BY_ID, apply_business_update, business_view, describe_change, metadata
 from .repository import ConfigurationRepository
 from .schema import CostMonitorConfiguration
 from .validation import validate_configuration
@@ -43,7 +44,25 @@ def ensure_configuration_state(state: dict[str, Any], now: str | None = None) ->
         "next_configuration_version",
     }
     if required.issubset(state):
-        return False
+        changed = False
+        default_version = state.get("default_configuration_version")
+        if default_version is None:
+            # v1 was released with version 1 as the approved baseline. Marking
+            # the record is metadata-only: the historic payload is never reset.
+            baseline = next((item for item in state["configuration_versions"] if item["version"] == 1), None)
+            if baseline is None:
+                raise ConfigurationConflictError("Не найдена release Default Configuration v1")
+            baseline["is_default"] = True
+            state["default_configuration_version"] = 1
+            changed = True
+        else:
+            baseline = next((item for item in state["configuration_versions"] if item["version"] == default_version), None)
+            if baseline is None:
+                raise ConfigurationConflictError("Default Configuration указывает на отсутствующую версию")
+            if not baseline.get("is_default"):
+                baseline["is_default"] = True
+                changed = True
+        return changed
     created_at = now or state.get("created_at") or _now()
     state["configuration_versions"] = [
         {
@@ -53,10 +72,12 @@ def ensure_configuration_state(state: dict[str, Any], now: str | None = None) ->
             "activated_at": created_at,
             "configuration": BASELINE_CONFIGURATION.model_dump(mode="json"),
             "validation_status": "valid",
+            "is_default": True,
         }
     ]
     state["configuration_drafts"] = {}
     state["active_configuration_version"] = 1
+    state["default_configuration_version"] = 1
     state["next_configuration_version"] = 2
     return True
 
@@ -87,7 +108,17 @@ def ensure_release_configuration_ownership(state: dict[str, Any]) -> bool:
 def _configuration_from(value: Mapping[str, Any]) -> CostMonitorConfiguration:
     try:
         return validate_configuration(value)
-    except (ValidationError, ValueError) as error:
+    except ValidationError as error:
+        first = error.errors()[0]
+        path = ".".join(str(part) for part in first["loc"])
+        parameter = PARAMETER_BY_ID.get(path)
+        if parameter:
+            raise ConfigurationValidationError(
+                f"{next(group['label'] for group in metadata()['groups'] if group['id'] == parameter['group'])} → "
+                f"{parameter['label']}: {first['msg']} ({path})"
+            ) from error
+        raise ConfigurationValidationError(str(error)) from error
+    except ValueError as error:
         raise ConfigurationValidationError(str(error)) from error
 
 
@@ -112,6 +143,7 @@ def _summary(record: Mapping[str, Any]) -> dict[str, Any]:
         "created_at": record["created_at"],
         "activated_at": record.get("activated_at"),
         "validation_status": record["validation_status"],
+        "is_default": bool(record.get("is_default", False)),
     }
     if "updated_at" in record:
         summary["updated_at"] = record["updated_at"]
@@ -181,15 +213,27 @@ class ConfigurationService:
         version = _find_version(state, int(state["active_configuration_version"]))
         return {**_summary(version), "configuration": _configuration_from(version["configuration"])}
 
+    def default(self) -> dict[str, Any]:
+        state = self._repository.read_configuration_state()
+        version = _find_version(state, int(state["default_configuration_version"]))
+        if not version.get("is_default"):
+            raise ConfigurationConflictError("Default Configuration не помечена immutable")
+        return {**_summary(version), "configuration": _configuration_from(version["configuration"])}
+
     def list_versions(self) -> list[dict[str, Any]]:
         state = self._repository.read_configuration_state()
         return [_summary(item) for item in sorted(state["configuration_versions"], key=lambda item: item["version"])]
 
-    def create_draft(self) -> dict[str, Any]:
+    def create_draft(self, base: str = "active") -> dict[str, Any]:
         state = self._repository.read_configuration_state()
-        active = _find_version(state, int(state["active_configuration_version"]))
-        configuration = _configuration_from(active["configuration"]).model_dump(mode="json")
-        return self._repository.create_configuration_draft(active["version"], configuration, _now())
+        if base == "active":
+            source = _find_version(state, int(state["active_configuration_version"]))
+        elif base == "default":
+            source = _find_version(state, int(state["default_configuration_version"]))
+        else:
+            raise ConfigurationValidationError("Основа draft должна быть Default или Current Active.")
+        configuration = _configuration_from(source["configuration"]).model_dump(mode="json")
+        return self._repository.create_configuration_draft(source["version"], configuration, _now())
 
     def update_draft(self, version: int, candidate: Mapping[str, Any]) -> dict[str, Any]:
         configuration = _configuration_from(candidate)
@@ -199,6 +243,23 @@ class ConfigurationService:
                 configuration.model_dump(mode="json"),
                 _now(),
             )
+        except KeyError as error:
+            raise ConfigurationNotFoundError(f"Draft configuration {version} не найден") from error
+
+    def business_draft(self, version: int) -> dict[str, Any]:
+        return {"draft": self.draft(version), "business": business_view(self.draft_configuration(version))}
+
+    def update_business_draft(self, version: int, candidate: Mapping[str, Any]) -> dict[str, Any]:
+        current = self.draft_configuration(version)
+        try:
+            translated = apply_business_update(current, candidate)
+        except ValueError as error:
+            raise ConfigurationValidationError(str(error)) from error
+        return self.update_draft(version, translated)
+
+    def delete_draft(self, version: int) -> None:
+        try:
+            self._repository.delete_configuration_draft(version)
         except KeyError as error:
             raise ConfigurationNotFoundError(f"Draft configuration {version} не найден") from error
 
@@ -236,7 +297,23 @@ class ConfigurationService:
         return {
             "left": _summary(left),
             "right": _summary(right),
-            "changes": _diff(left_configuration, right_configuration),
+            "changes": [describe_change(change) for change in _diff(left_configuration, right_configuration)],
+        }
+
+    def presentation_metadata(self) -> dict[str, Any]:
+        return metadata()
+
+    def export_snapshot(self, version: int) -> dict[str, Any]:
+        state = self._repository.read_configuration_state()
+        try:
+            record = _find_version(state, version)
+        except ConfigurationNotFoundError:
+            record = _find_draft(state, version)
+        return {
+            "export_schema_version": "1.0",
+            "configuration_identity": _summary(record),
+            "configuration": _configuration_from(record["configuration"]).model_dump(mode="json"),
+            "allowed_operation_configuration": metadata()["advanced"],
         }
 
     def activate(self, version: int) -> dict[str, Any]:

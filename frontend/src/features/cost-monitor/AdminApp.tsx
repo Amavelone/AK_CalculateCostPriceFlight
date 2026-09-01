@@ -10,6 +10,7 @@ import type {
   ConfigurationComparison,
   ConfigurationDraft,
   ConfigurationPreviewComparison,
+  ConfigurationPresentation,
   ConfigurationVersion,
   CostMonitorConfiguration,
   ReferenceDataComparison,
@@ -36,6 +37,7 @@ export default function AdminApp() {
   const [active, setActive] = useState<ActiveConfiguration | null>(null)
   const [versions, setVersions] = useState<ConfigurationVersion[]>([])
   const [capabilities, setCapabilities] = useState<ConfigurationCapabilities | null>(null)
+  const [presentation, setPresentation] = useState<ConfigurationPresentation | null>(null)
   const [draft, setDraft] = useState<ConfigurationDraft | null>(null)
   const [configuration, setConfiguration] = useState<CostMonitorConfiguration | null>(null)
   const [comparison, setComparison] = useState<ConfigurationComparison | null>(null)
@@ -55,16 +57,18 @@ export default function AdminApp() {
   const [referenceNotice, setReferenceNotice] = useState<string | null>(null)
 
   const refresh = async () => {
-    const [nextActive, nextVersions, nextCapabilities, nextReferenceActive, nextReferenceVersions] = await Promise.all([
+    const [nextActive, nextVersions, nextCapabilities, nextPresentation, nextReferenceActive, nextReferenceVersions] = await Promise.all([
       api.activeConfiguration(),
       api.configurationVersions(),
       api.configurationCapabilities(),
+      api.configurationPresentation(),
       api.activeReferenceData(),
       api.referenceDataVersions(),
     ])
     setActive(nextActive)
     setVersions(nextVersions)
     setCapabilities(nextCapabilities)
+    setPresentation(nextPresentation)
     setReferenceActive(nextReferenceActive)
     setReferenceVersions(nextReferenceVersions)
   }
@@ -118,14 +122,14 @@ export default function AdminApp() {
     }
   }
 
-  const createDraft = () => run('create', async () => {
-    const next = await api.createConfigurationDraft()
+  const createDraft = (base: 'default' | 'active') => run('create', async () => {
+    const next = await api.createConfigurationDraft(base)
     setDraft(next)
     setConfiguration(next.configuration)
     setPreview(null)
     setComparison(null)
     window.localStorage.setItem(ADMIN_DRAFT_KEY, String(next.version))
-    setNotice(`Создан draft v${next.version}`)
+    setNotice(`Создан draft v${next.version} на основе ${base === 'default' ? 'Default' : 'Active'}`)
   })
 
   const saveDraft = async (): Promise<ConfigurationDraft> => {
@@ -175,6 +179,28 @@ export default function AdminApp() {
 
   const compare = (left: number, right: number) => run('compare', async () => {
     setComparison(await api.compareConfigurations(left, right))
+  })
+
+  const deleteDraft = () => run('delete', async () => {
+    if (!draft) return
+    await api.deleteConfigurationDraft(draft.version)
+    window.localStorage.removeItem(ADMIN_DRAFT_KEY)
+    setDraft(null)
+    setConfiguration(null)
+    setPreview(null)
+    setComparison(null)
+    setNotice(`Draft v${draft.version} удалён`)
+  })
+
+  const exportConfiguration = (version: number) => run('export', async () => {
+    const { blob, filename } = await api.exportConfiguration(version)
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.click()
+    URL.revokeObjectURL(url)
+    setNotice(`Configuration v${version} выгружена в JSON`)
   })
 
   const runReference = async (name: string, operation: () => Promise<void>) => {
@@ -256,6 +282,7 @@ export default function AdminApp() {
         active={active}
         versions={versions}
         capabilities={capabilities}
+        presentation={presentation}
         draft={draft}
         configuration={configuration}
         comparison={comparison}
@@ -272,6 +299,8 @@ export default function AdminApp() {
         onActivate={activate}
         onRollback={rollback}
         onCompare={compare}
+        onDeleteDraft={deleteDraft}
+        onExport={exportConfiguration}
         referenceDataSection={<ReferenceDataAdmin
           active={referenceActive}
           versions={referenceVersions}

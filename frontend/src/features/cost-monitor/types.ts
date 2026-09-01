@@ -146,6 +146,7 @@ export interface ConfigurationVersion {
   created_at: string
   activated_at: string | null
   validation_status: 'valid'
+  is_default: boolean
   configuration?: CostMonitorConfiguration | null
 }
 
@@ -162,6 +163,7 @@ export interface ConfigurationReference {
   updated_at: string | null
   base_version: number | null
   validation_status: 'valid'
+  is_default: boolean
 }
 
 export interface ConfigurationComparison {
@@ -173,6 +175,7 @@ export interface ConfigurationComparison {
     after: JsonValue
     kind: 'parameter_changed' | 'operation_added' | 'operation_removed' | 'operation_changed' | 'operation_reordered' | 'override_changed'
     summary: string
+    presentation?: { label: string; group: string; unit: string | null; where_used: string[] } | null
   }>
 }
 
@@ -194,6 +197,24 @@ export interface ConfigurationCapabilities {
   operations: Array<{ name: string; value_type: null; description: string; arguments: string[] }>
   lookups: Array<{ name: string; value_type: null; description: string; arguments: string[] }>
   condition_operators: string[]
+}
+
+export interface ConfigurationPresentationParameter {
+  id: string
+  label: string
+  description: string
+  group: string
+  unit: string
+  editable: boolean
+  advanced: boolean
+  bounds: Record<string, number>
+  where_used: string[]
+}
+
+export interface ConfigurationPresentation {
+  groups: Array<{ id: string; label: string; description: string }>
+  parameters: ConfigurationPresentationParameter[]
+  advanced: { operations: { enabled: boolean; steps: string[] }; lookups: { enabled: boolean }; conditions: { enabled: boolean } }
 }
 
 export interface ConfigurationPreviewComparison {

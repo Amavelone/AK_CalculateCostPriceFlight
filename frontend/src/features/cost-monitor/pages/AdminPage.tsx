@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type {
   ActiveConfiguration,
   CalculationRequest,
@@ -6,6 +6,7 @@ import type {
   ConfigurationComparison,
   ConfigurationDraft,
   ConfigurationPreviewComparison,
+  ConfigurationPresentation,
   ConfigurationVersion,
   CostMonitorConfiguration,
   OperationAction,
@@ -18,6 +19,7 @@ interface AdminPageProps {
   active: ActiveConfiguration | null
   versions: ConfigurationVersion[]
   capabilities: ConfigurationCapabilities | null
+  presentation: ConfigurationPresentation | null
   draft: ConfigurationDraft | null
   configuration: CostMonitorConfiguration | null
   comparison: ConfigurationComparison | null
@@ -27,13 +29,15 @@ interface AdminPageProps {
   busy: string | null
   onConfigurationChange: (configuration: CostMonitorConfiguration) => void
   onCalculationChange: (calculation: CalculationRequest) => void
-  onCreateDraft: () => void
+  onCreateDraft: (base: 'default' | 'active') => void
   onSave: () => void
   onValidate: () => void
   onPreview: () => void
   onActivate: () => void
   onRollback: (version: number) => void
   onCompare: (left: number, right: number) => void
+  onDeleteDraft: () => void
+  onExport: (version: number) => void
   referenceDataSection: ReactNode
 }
 
@@ -125,28 +129,41 @@ function OperationsEditor({ title, step, capabilities, onChange }: {
   </section>
 }
 
-function JsonEditor({ value, onChange }: { value: unknown; onChange: (value: Record<string, Record<string, [number, number, number]>>) => void }) {
-  const serialized = useMemo(() => JSON.stringify(value, null, 2), [value])
-  const [text, setText] = useState(serialized)
-  useEffect(() => setText(serialized), [serialized])
-  return <textarea className="json-editor" value={text} onChange={(event) => setText(event.target.value)} onBlur={() => {
-    try { onChange(JSON.parse(text) as Record<string, Record<string, [number, number, number]>>) } catch { setText(serialized) }
-  }} />
+function BusinessParameter({ parameter, value, disabled, onChange }: {
+  parameter: ConfigurationPresentation['parameters'][number]
+  value: unknown
+  disabled: boolean
+  onChange: (value: unknown) => void
+}) {
+  const bounds = parameter.bounds
+  const numberValue = typeof value === 'number'
+  return <article className="business-parameter">
+    <div><h3>{parameter.label}</h3><p>{parameter.description}</p></div>
+    <label><span>Значение{parameter.unit ? `, ${parameter.unit}` : ''}</span>{Array.isArray(value)
+      ? <input disabled={disabled} value={value.join(', ')} onChange={(event) => onChange(event.target.value.split(',').map((item) => item.trim().toUpperCase()).filter(Boolean))} />
+      : <input disabled={disabled} type={numberValue ? 'number' : 'text'} min={bounds.min} max={bounds.max} step={parameter.unit === '%' ? 0.01 : 'any'} value={String(value)} onChange={(event) => onChange(numberValue ? Number(event.target.value) : event.target.value)} />}</label>
+    <small><b>Где используется:</b> {parameter.where_used.join(' · ')}</small>
+    <small>Допустимые границы: {bounds.exclusive_min !== undefined ? `больше ${bounds.exclusive_min}` : `от ${bounds.min ?? '—'}`} до {bounds.max ?? '—'}</small>
+  </article>
 }
 
 export function AdminPage(props: AdminPageProps) {
-  const { active, versions, capabilities, draft, configuration, comparison, preview, calculation, loading, busy, referenceDataSection } = props
+  const { active, versions, capabilities, presentation, draft, configuration, comparison, preview, calculation, loading, busy, referenceDataSection } = props
   const [leftVersion, setLeftVersion] = useState<number | null>(null)
   const [rightVersion, setRightVersion] = useState<number | null>(null)
+  const [section, setSection] = useState('overview')
+  const [advanced, setAdvanced] = useState(false)
   const orderedVersions = [...versions].sort((a, b) => b.version - a.version)
+  const defaultVersion = versions.find((version) => version.is_default)?.version
+  const selectableVersions = draft ? [draft.version, ...orderedVersions.map((version) => version.version)] : orderedVersions.map((version) => version.version)
   useEffect(() => {
-    if (orderedVersions.length) {
-      setLeftVersion((current) => current ?? orderedVersions[1]?.version ?? orderedVersions[0].version)
-      setRightVersion((current) => current ?? orderedVersions[0].version)
+    if (selectableVersions.length) {
+      setLeftVersion((current) => current ?? defaultVersion ?? selectableVersions[0])
+      setRightVersion((current) => current ?? (draft?.version ?? selectableVersions[0]))
     }
-  }, [versions.length])
+  }, [defaultVersion, draft?.version, selectableVersions.length])
   if (loading) return <div className="loading-card">Загружаем административный контур…</div>
-  if (!active || !capabilities) return <div className="information-card"><b>Configuration недоступна</b></div>
+  if (!active || !capabilities || !presentation) return <div className="information-card"><b>Configuration недоступна</b></div>
 
   const updateConfiguration = (mutate: (next: CostMonitorConfiguration) => void) => {
     if (!configuration) return
@@ -154,65 +171,64 @@ export function AdminPage(props: AdminPageProps) {
     mutate(next)
     props.onConfigurationChange(next)
   }
-  const setNumber = (group: 'fuel' | 'ano' | 'catering' | 'vat' | 'ground', key: string, value: number) => updateConfiguration((next) => {
-    const target = next[group] as unknown as Record<string, unknown>
-    target[key] = value
+  const displayConfiguration = configuration ?? active.configuration
+  const readValue = (path: string): unknown => path.split('.').reduce<unknown>((value, key) => (value as Record<string, unknown>)[key], displayConfiguration)
+  const setBusinessValue = (path: string, value: unknown) => updateConfiguration((next) => {
+    const parts = path.split('.')
+    const leaf = parts.pop() as string
+    const target = parts.reduce<Record<string, unknown>>((current, key) => current[key] as Record<string, unknown>, next as unknown as Record<string, unknown>)
+    target[leaf] = value
   })
   const firstLeg = calculation.legs[0]
   const setLeg = (key: keyof typeof firstLeg, value: string | number) => props.onCalculationChange({ ...calculation, legs: [{ ...firstLeg, [key]: value }] })
+  const editable = Boolean(draft && configuration)
+  const selectedGroup = presentation.groups.find((group) => group.id === section)
 
   return <main className="admin-main">
-    <header className="admin-route-header"><div><p className="eyebrow">Отдельный административный контур</p><h1>Конфигурация Cost Monitor</h1><p>/admin · local MVP, без authentication/RBAC</p></div><a className="button button-secondary" href="/">Открыть пользовательский монитор</a></header>
+    <header className="admin-route-header"><div><p className="eyebrow">Администрирование расчёта</p><h1>Calculation Configuration</h1><p>Параметры расчёта, а не внутренний execution graph.</p></div><a className="button button-secondary" href="/">Открыть пользовательский монитор</a></header>
     <section className="admin-summary-grid">
-      <article className="admin-summary-card"><span>Активная версия</span><b>v{active.version}</b><small>schema {active.configuration.schema_version}</small></article>
+      <article className="admin-summary-card"><span>Активная версия</span><b>v{active.version}</b><small>{active.is_default ? 'DEFAULT · ACTIVE' : 'ACTIVE'}</small></article>
+      <article className="admin-summary-card"><span>Эталон</span><b>v{defaultVersion ?? '—'}</b><small>DEFAULT · immutable</small></article>
       <article className="admin-summary-card"><span>Draft</span><b>{draft ? `v${draft.version}` : '—'}</b><small>{draft ? draft.validation_status : 'не создан'}</small></article>
-      <article className="admin-summary-card"><span>Operation parts</span><b>{Object.values((configuration ?? active.configuration).operations).reduce((sum, step) => sum + step.parts.length, 0)}</b><small>ANO / Catering / VAT</small></article>
-      <article className="admin-summary-card"><span>Capabilities</span><b>{capabilities.variables.length}</b><small>registered variables</small></article>
+      <article className="admin-summary-card"><span>Изменено</span><b>{comparison?.changes.length ?? 0}</b><small>сравнение с выбранной версией</small></article>
     </section>
 
-    <section className="admin-toolbar admin-card"><div><b>Lifecycle</b><p>Active version immutable; изменения выполняются только через draft.</p></div><div className="admin-actions">
-      <button className="button" disabled={Boolean(draft) || Boolean(busy)} onClick={props.onCreateDraft}>Create Draft</button>
+    <section className="admin-toolbar admin-card"><div><b>Жизненный цикл</b><p>DEFAULT — постоянный эталон. Изменения возможны только в Draft.</p></div><div className="admin-actions">
+      <button className="button" disabled={Boolean(draft) || Boolean(busy)} onClick={() => props.onCreateDraft('default')}>Create Draft from Default</button>
+      <button className="button button-secondary" disabled={Boolean(draft) || Boolean(busy)} onClick={() => props.onCreateDraft('active')}>From Active</button>
       <button className="button button-secondary" disabled={!draft || Boolean(busy)} onClick={props.onSave}>Save</button>
       <button className="button button-secondary" disabled={!draft || Boolean(busy)} onClick={props.onValidate}>Validate</button>
       <button className="button button-secondary" disabled={!draft || Boolean(busy)} onClick={props.onPreview}>Preview</button>
       <button className="button" disabled={!draft || Boolean(busy)} onClick={props.onActivate}>Activate</button>
+      <button className="button button-secondary" disabled={!draft || Boolean(busy)} onClick={props.onDeleteDraft}>Delete Draft</button>
     </div></section>
 
-    {configuration && <>
-      <section className="admin-card"><div className="section-heading"><div><h2>Parameters</h2><p>Validated numeric values active only after activation.</p></div><span className="admin-version-chip">draft v{draft?.version}</span></div>
-        <div className="admin-form-grid parameter-grid">
-          <label><span>Fuel, т/ч</span><input type="number" value={configuration.fuel.consumption_tons_per_hour} onChange={(event) => setNumber('fuel', 'consumption_tons_per_hour', Number(event.target.value))} /></label>
-          <label><span>ANO, ₽ / 100 км</span><input type="number" value={configuration.ano.route_rate_per_100_km} onChange={(event) => setNumber('ano', 'route_rate_per_100_km', Number(event.target.value))} /></label>
-          <label><span>Catering units</span><input type="number" value={configuration.catering.base_units} onChange={(event) => setNumber('catering', 'base_units', Number(event.target.value))} /></label>
-          <label><span>Catering base rate</span><input type="number" value={configuration.catering.base_unit_rate} onChange={(event) => setNumber('catering', 'base_unit_rate', Number(event.target.value))} /></label>
-          <label><span>Passenger surcharge</span><input type="number" value={configuration.catering.passenger_surcharge} onChange={(event) => setNumber('catering', 'passenger_surcharge', Number(event.target.value))} /></label>
-          <label><span>VAT</span><input type="number" step="0.01" value={configuration.vat.rate} onChange={(event) => setNumber('vat', 'rate', Number(event.target.value))} /></label>
-          <label><span>Ground divisor</span><input type="number" value={configuration.ground.split_divisor} onChange={(event) => setNumber('ground', 'split_divisor', Number(event.target.value))} /></label>
-          <label><span>Fire truck</span><input type="number" value={configuration.ground.fire_truck_rate} onChange={(event) => setNumber('ground', 'fire_truck_rate', Number(event.target.value))} /></label>
-        </div>
-      </section>
-      <OperationsEditor title="ANO operations" step={configuration.operations.ano} capabilities={capabilities} onChange={(step) => updateConfiguration((next) => { next.operations.ano = step })} />
-      <OperationsEditor title="Catering operations" step={configuration.operations.catering} capabilities={capabilities} onChange={(step) => updateConfiguration((next) => { next.operations.catering = step })} />
-      <OperationsEditor title="VAT operations" step={configuration.operations.vat} capabilities={capabilities} onChange={(step) => updateConfiguration((next) => { next.operations.vat = step })} />
-      <section className="admin-card"><div className="section-heading"><div><h2>Source-derived overrides</h2><p>Пустое значение означает использование source data.</p></div></div>
-        <div className="admin-grid-two"><article><h3>Aircraft multipliers</h3>{Object.entries(configuration.overrides.aircraft_multipliers).map(([aircraft, multiplier]) => <div className="override-row" key={aircraft}><input value={aircraft} readOnly /><input type="number" value={multiplier} onChange={(event) => updateConfiguration((next) => { next.overrides.aircraft_multipliers[aircraft] = Number(event.target.value) })} /><button onClick={() => updateConfiguration((next) => { delete next.overrides.aircraft_multipliers[aircraft] })}>×</button></div>)}<button className="button button-secondary" onClick={() => updateConfiguration((next) => { next.overrides.aircraft_multipliers.NEW = 1 })}>Добавить override</button></article>
-          <article><h3>Scenario rates JSON</h3><JsonEditor value={configuration.overrides.scenario_rates} onChange={(value) => updateConfiguration((next) => { next.overrides.scenario_rates = value })} /></article></div>
-      </section>
-    </>}
+    <nav className="admin-tabs" aria-label="Разделы Configuration"><button className={section === 'overview' ? 'active' : ''} onClick={() => setSection('overview')}>Обзор</button>{presentation.groups.map((group) => <button className={section === group.id ? 'active' : ''} key={group.id} onClick={() => setSection(group.id)}>{group.label}</button>)}<button className={section === 'reference' ? 'active' : ''} onClick={() => setSection('reference')}>Справочники</button><button className={section === 'versions' ? 'active' : ''} onClick={() => setSection('versions')}>Версии / Compare</button></nav>
 
-    {referenceDataSection}
+    {section === 'overview' && <section className="admin-card"><div className="section-heading"><div><h2>Обзор Configuration</h2><p>Сначала выберите предметный раздел. Тарифы SRV и Fuel Registry остаются в Sources, а ИШР и «Прочее» — в Reference Data.</p></div></div><div className="admin-grid-two"><article><h3>DEFAULT v{defaultVersion}</h3><p>Утверждённый immutable baseline release. Его значения нельзя редактировать, удалять или перезаписывать.</p></article><article><h3>{draft ? `Draft v${draft.version}` : `Active v${active.version}`}</h3><p>{draft ? `Основа: v${draft.base_version}. Сохраните, проверьте и активируйте только после Preview.` : 'Создайте Draft из Default или текущей Active Configuration.'}</p></article></div></section>}
 
-    <section className="admin-card"><div className="section-heading"><div><h2>Контрольный input и Preview</h2><p>Active и draft рассчитываются на одном input, active pointer не меняется.</p></div></div>
+    {selectedGroup && <section className="admin-card"><div className="section-heading"><div><h2>{selectedGroup.label}</h2><p>{selectedGroup.description}</p></div><span className="admin-version-chip">{editable ? `DRAFT v${draft?.version}` : active.is_default ? 'DEFAULT · ACTIVE' : `ACTIVE v${active.version}`}</span></div><div className="business-parameter-grid">{presentation.parameters.filter((parameter) => parameter.group === section).map((parameter) => <BusinessParameter key={parameter.id} parameter={parameter} value={readValue(parameter.id)} disabled={!editable || Boolean(busy)} onChange={(value) => setBusinessValue(parameter.id, value)} />)}</div></section>}
+
+    {section === 'flight_hour' && <section className="admin-card"><div className="section-heading"><div><h2>Матрица M1 / M2 / M3</h2><p>Ставки лётного часа по сценарию и типу ВС.</p></div></div>{Object.entries(displayConfiguration.overrides.scenario_rates).map(([scenario, aircraftRates]) => <div className="admin-table-wrap" key={scenario}><h3>{scenario}</h3><table className="admin-table"><thead><tr><th>Тип ВС</th><th>M1, ₽/ч</th><th>M2, ₽/ч</th><th>M3, ₽/ч</th><th>Коэффициент НО</th></tr></thead><tbody>{Object.entries(aircraftRates).map(([aircraft, rates]) => <tr key={aircraft}><td>{aircraft}</td>{rates.map((rate, index) => <td key={index}><input disabled={!editable || Boolean(busy)} type="number" value={rate} onChange={(event) => updateConfiguration((next) => { next.overrides.scenario_rates[scenario][aircraft][index] = Number(event.target.value) })} /></td>)}<td><input disabled={!editable || Boolean(busy)} type="number" value={displayConfiguration.overrides.aircraft_multipliers[aircraft] ?? 0} onChange={(event) => updateConfiguration((next) => { next.overrides.aircraft_multipliers[aircraft] = Number(event.target.value) })} /></td></tr>)}</tbody></table></div>)}</section>}
+
+    {section === 'reference' && referenceDataSection}
+
+    <section className="admin-card"><div className="section-heading"><div><h2>Контрольный input и Preview</h2><p>Показывает предметное влияние Draft; active pointer не меняется.</p></div></div>
       <div className="admin-form-grid"><label><span>DEP</span><input value={firstLeg.departure} onChange={(event) => setLeg('departure', event.target.value.toUpperCase())} /></label><label><span>ARR</span><input value={firstLeg.arrival} onChange={(event) => setLeg('arrival', event.target.value.toUpperCase())} /></label><label><span>Aircraft</span><input value={firstLeg.aircraft} onChange={(event) => setLeg('aircraft', event.target.value.toUpperCase())} /></label><label><span>Passengers</span><input type="number" value={firstLeg.passengers} onChange={(event) => setLeg('passengers', Number(event.target.value))} /></label><label><span>Scenario</span><input value={calculation.settings.scenario} onChange={(event) => props.onCalculationChange({ ...calculation, settings: { ...calculation.settings, scenario: event.target.value } })} /></label><label className="checkbox-field"><input type="checkbox" checked={calculation.settings.catering} onChange={(event) => props.onCalculationChange({ ...calculation, settings: { ...calculation.settings, catering: event.target.checked } })} /><span>Пассажирское питание</span></label></div>
-      {preview && <div className="preview-comparison"><article><span>Active v{preview.active.config_version}</span><b>M2 {number.format(preview.active.total.m2)}</b></article><article><span>Draft v{preview.draft.config_version}</span><b>M2 {number.format(preview.draft.total.m2)}</b></article><article><span>Difference</span><b>{number.format(preview.difference.total.m2)}</b></article></div>}
+      {preview && <><div className="preview-comparison"><article><span>Active v{preview.active.config_version}</span><b>M2 {number.format(preview.active.total.m2)}</b></article><article><span>Draft v{preview.draft.config_version}</span><b>M2 {number.format(preview.draft.total.m2)}</b></article><article><span>Изменение</span><b>{number.format(preview.difference.total.m2)}</b></article></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Плечо</th><th>Топливо</th><th>НО</th><th>АНО</th><th>Питание</th><th>НДС</th></tr></thead><tbody>{Object.entries(preview.difference.legs).map(([leg, components]) => <tr key={leg}><td>{leg}</td>{['fuel', 'ground', 'ano', 'catering', 'vat'].map((component) => <td key={component}>{number.format(components[component] ?? 0)}</td>)}</tr>)}</tbody></table></div></>}
     </section>
 
-    <section className="admin-card"><div className="section-heading"><div><h2>Versions, Compare и Rollback</h2><p>Immutable history и semantic operation diff.</p></div></div>
-      <div className="admin-compare-controls"><select value={leftVersion ?? ''} onChange={(event) => setLeftVersion(Number(event.target.value))}>{orderedVersions.map((version) => <option key={version.version} value={version.version}>v{version.version}</option>)}</select><span>→</span><select value={rightVersion ?? ''} onChange={(event) => setRightVersion(Number(event.target.value))}>{orderedVersions.map((version) => <option key={version.version} value={version.version}>v{version.version}</option>)}</select><button className="button button-secondary" disabled={leftVersion === null || rightVersion === null || leftVersion === rightVersion || Boolean(busy)} onClick={() => leftVersion !== null && rightVersion !== null && props.onCompare(leftVersion, rightVersion)}>Compare</button></div>
-      <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Version</th><th>State</th><th>Created</th><th>Action</th></tr></thead><tbody>{orderedVersions.map((version) => <tr key={version.version}><td>v{version.version}</td><td>{version.state}</td><td>{dateTime(version.created_at)}</td><td><button disabled={version.state === 'active' || Boolean(busy)} onClick={() => props.onRollback(version.version)}>Rollback</button></td></tr>)}</tbody></table></div>
-      {comparison && (comparison.changes.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Change</th><th>Path</th><th>Before</th><th>After</th></tr></thead><tbody>{comparison.changes.map((change, index) => <tr key={`${change.path}-${index}`}><td><b>{change.summary}</b><small>{change.kind}</small></td><td><code>{change.path}</code></td><td><pre>{valueText(change.before)}</pre></td><td><pre>{valueText(change.after)}</pre></td></tr>)}</tbody></table></div> : <div className="admin-empty">Версии семантически совпадают.</div>)}
+    {section === 'versions' && <section className="admin-card"><div className="section-heading"><div><h2>Версии, Compare и Rollback</h2><p>Сравнение открывается с DEFAULT как эталоном.</p></div></div>
+      <div className="admin-compare-controls"><select value={leftVersion ?? ''} onChange={(event) => setLeftVersion(Number(event.target.value))}>{selectableVersions.map((version) => <option key={version} value={version}>v{version}{version === defaultVersion ? ' · DEFAULT' : ''}{version === draft?.version ? ' · DRAFT' : ''}</option>)}</select><span>→</span><select value={rightVersion ?? ''} onChange={(event) => setRightVersion(Number(event.target.value))}>{selectableVersions.map((version) => <option key={version} value={version}>v{version}{version === defaultVersion ? ' · DEFAULT' : ''}{version === draft?.version ? ' · DRAFT' : ''}</option>)}</select><button className="button button-secondary" disabled={leftVersion === null || rightVersion === null || leftVersion === rightVersion || Boolean(busy)} onClick={() => leftVersion !== null && rightVersion !== null && props.onCompare(leftVersion, rightVersion)}>Compare</button></div>
+      <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Version</th><th>State</th><th>Created</th><th>Actions</th></tr></thead><tbody>{orderedVersions.map((version) => <tr key={version.version}><td>v{version.version}{version.is_default && <small> DEFAULT</small>}</td><td>{version.state}{version.version === active.version && ' · ACTIVE'}</td><td>{dateTime(version.created_at)}</td><td><button disabled={version.state === 'active' || Boolean(busy)} onClick={() => props.onRollback(version.version)}>Rollback</button><button disabled={Boolean(busy)} onClick={() => props.onExport(version.version)}>Export JSON</button></td></tr>)}</tbody></table></div>
+      {comparison && (comparison.changes.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Раздел</th><th>Изменение</th><th>Было</th><th>Стало</th></tr></thead><tbody>{comparison.changes.map((change, index) => <tr key={`${change.path}-${index}`}><td>{change.presentation?.group ?? 'Advanced'}</td><td><b>{change.presentation?.label ?? change.summary}</b><small>{change.presentation?.where_used.join(' · ') ?? `Technical: ${change.path}`}</small></td><td><pre>{valueText(change.before)}</pre></td><td><pre>{valueText(change.after)}</pre></td></tr>)}</tbody></table></div> : <div className="admin-empty">Версии семантически совпадают.</div>)}
+    </section>}
+
+    <section className="admin-card"><div className="section-heading"><div><h2>Advanced</h2><p>Только для module-approved operations, conditions и lookups. Basic mode не требует этих деталей.</p></div><label className="checkbox-field"><input type="checkbox" checked={advanced} onChange={(event) => setAdvanced(event.target.checked)} /><span>Показать technical details</span></label></div>
+      {advanced && configuration && <>{presentation.advanced.operations.enabled && <><OperationsEditor title="АНО: advanced composition" step={configuration.operations.ano} capabilities={capabilities} onChange={(step) => updateConfiguration((next) => { next.operations.ano = step })} /><OperationsEditor title="Бортовое питание: advanced composition" step={configuration.operations.catering} capabilities={capabilities} onChange={(step) => updateConfiguration((next) => { next.operations.catering = step })} /><OperationsEditor title="НДС: advanced composition" step={configuration.operations.vat} capabilities={capabilities} onChange={(step) => updateConfiguration((next) => { next.operations.vat = step })} /></>}<details><summary>Technical payload (read-only reference)</summary><pre>{JSON.stringify(configuration, null, 2)}</pre></details></>}
+      {advanced && !configuration && <div className="admin-empty">Создайте Draft для изменения advanced composition.</div>}
     </section>
 
-    <section className="admin-card"><div className="section-heading"><div><h2>Calculation trace</h2><p>Фактически выполненные configured parts и provenance.</p></div></div>{!preview ? <div className="admin-empty">Выполните Preview.</div> : preview.draft.trace.legs.map((leg) => <details className="admin-trace-leg" key={leg.leg_id} open><summary>{leg.leg_id} · config v{preview.draft.config_version}</summary><div className="admin-trace-steps">{leg.steps.map((step, index) => <article key={`${step.component}-${index}`}><span className={`trace-stage ${step.stage}`}>{step.stage}</span><div><b>{step.component}</b>{step.operation && <small>{step.operation}</small>}</div><pre>{JSON.stringify(step.values, null, 2)}</pre></article>)}</div></details>)}</section>
+    <section className="admin-card"><div className="section-heading"><div><h2>Calculation trace</h2><p>Техническая provenance-детализация сохранена отдельно от Basic mode.</p></div></div>{!preview ? <div className="admin-empty">Выполните Preview.</div> : preview.draft.trace.legs.map((leg) => <details className="admin-trace-leg" key={leg.leg_id}><summary>{leg.leg_id} · config v{preview.draft.config_version}</summary><div className="admin-trace-steps">{leg.steps.map((step, index) => <article key={`${step.component}-${index}`}><span className={`trace-stage ${step.stage}`}>{step.stage}</span><div><b>{step.component}</b>{step.operation && <small>{step.operation}</small>}</div><pre>{JSON.stringify(step.values, null, 2)}</pre></article>)}</div></details>)}</section>
   </main>
 }

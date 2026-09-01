@@ -24,6 +24,8 @@ class ConfigurationRepository(Protocol):
         updated_at: str,
     ) -> dict[str, Any]: ...
 
+    def delete_configuration_draft(self, version: int) -> None: ...
+
     def mark_configuration_draft_validated(self, version: int, validated_at: str) -> dict[str, Any]: ...
 
     def activate_configuration_draft(
@@ -48,6 +50,7 @@ class JsonConfigurationRepository:
             "configuration_versions": state["configuration_versions"],
             "configuration_drafts": state["configuration_drafts"],
             "active_configuration_version": state["active_configuration_version"],
+            "default_configuration_version": state["default_configuration_version"],
             "next_configuration_version": state["next_configuration_version"],
         }
 
@@ -92,6 +95,15 @@ class JsonConfigurationRepository:
             return draft
 
         return self._store.mutate(operation)
+
+    def delete_configuration_draft(self, version: int) -> None:
+        def operation(state: dict[str, Any]) -> None:
+            if str(version) not in state["configuration_drafts"]:
+                raise KeyError(version)
+            del state["configuration_drafts"][str(version)]
+            self._store.append_audit(state, "configuration_draft_deleted", f"v{version}")
+
+        self._store.mutate(operation)
 
     def mark_configuration_draft_validated(self, version: int, validated_at: str) -> dict[str, Any]:
         def operation(state: dict[str, Any]) -> dict[str, Any]:

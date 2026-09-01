@@ -91,6 +91,68 @@ class ConfigurationServiceTests(unittest.TestCase):
         self.assertEqual([item["state"] for item in self.service.list_versions()], ["inactive", "active"])
         self.assertEqual(self.store.state["configuration_drafts"], {})
 
+    def test_default_is_explicit_immutable_baseline_and_draft_can_start_from_it(self) -> None:
+        default = self.service.default()
+        self.assertTrue(default["is_default"])
+        self.assertEqual(default["version"], 1)
+        original = default["configuration"].model_dump(mode="json")
+
+        from_default = self.service.create_draft("default")
+        self.assertEqual(from_default["base_version"], 1)
+        from_default["configuration"]["fuel"]["consumption_tons_per_hour"] = 3.0
+        self.service.update_draft(from_default["version"], from_default["configuration"])
+        self.service.activate(from_default["version"])
+
+        self.assertEqual(self.service.active()["version"], from_default["version"])
+        self.assertEqual(self.service.default()["configuration"].model_dump(mode="json"), original)
+        self.assertTrue(self.service.default()["is_default"])
+        from_active = self.service.create_draft("active")
+        self.assertEqual(from_active["base_version"], from_default["version"])
+        self.service.rollback(1)
+        self.assertEqual(self.service.active()["version"], 1)
+        self.assertEqual(self.service.default()["configuration"].model_dump(mode="json"), original)
+
+    def test_business_facade_updates_only_registered_values_and_keeps_operations(self) -> None:
+        draft = self.service.create_draft("default")
+        before_operations = copy.deepcopy(draft["configuration"]["operations"])
+        business = self.service.business_draft(draft["version"])["business"]
+        self.assertEqual(business["metadata"]["parameters"][0]["id"], "vat.rate")
+        self.assertIn("where_used", business["metadata"]["parameters"][0])
+        self.assertEqual(business["values"]["fuel.consumption_tons_per_hour"], 2.7)
+
+        updated = self.service.update_business_draft(
+            draft["version"],
+            {"values": {"fuel.consumption_tons_per_hour": 3.0, "ground.split_divisor": 3}},
+        )
+        self.assertEqual(updated["configuration"]["fuel"]["consumption_tons_per_hour"], 3.0)
+        self.assertEqual(updated["configuration"]["ground"]["split_divisor"], 3)
+        self.assertEqual(updated["configuration"]["operations"], before_operations)
+        with self.assertRaises(ConfigurationValidationError):
+            self.service.update_business_draft(draft["version"], {"values": {"operations.ano": {}}})
+        with self.assertRaises(ConfigurationValidationError):
+            self.service.update_business_draft(
+                draft["version"],
+                {"flight_hour": {"aircraft_multipliers": {"NEW": 1}}},
+            )
+
+    def test_draft_delete_export_and_grouped_compare_are_safe(self) -> None:
+        draft = self.service.create_draft("default")
+        changed = self.service.update_business_draft(
+            draft["version"], {"values": {"fuel.consumption_tons_per_hour": 3.0}}
+        )
+        comparison = self.service.compare(1, changed["version"])
+        self.assertEqual(comparison["changes"][0]["presentation"]["label"], "Расход топлива")
+        self.assertEqual(comparison["changes"][0]["presentation"]["group"], "fuel")
+        snapshot = self.service.export_snapshot(draft["version"])
+        self.assertEqual(snapshot["export_schema_version"], "1.0")
+        self.assertEqual(snapshot["configuration_identity"]["state"], "draft")
+        self.assertNotIn("secrets", snapshot)
+        self.service.delete_draft(draft["version"])
+        with self.assertRaises(ConfigurationNotFoundError):
+            self.service.draft(draft["version"])
+        with self.assertRaises(ConfigurationNotFoundError):
+            self.service.delete_draft(1)
+
     def test_active_version_cannot_be_edited_and_invalid_candidate_is_rejected(self) -> None:
         with self.assertRaises(ConfigurationNotFoundError):
             self.service.update_draft(1, self.service.active()["configuration"].model_dump(mode="json"))

@@ -7,6 +7,7 @@ import type {
   ConfigurationComparison,
   ConfigurationDraft,
   ConfigurationPreviewComparison,
+  ConfigurationPresentation,
   ConfigurationVersion,
   DraftResponse,
   ExportFormat,
@@ -43,13 +44,15 @@ export const api = {
   activeConfiguration: () => request<ActiveConfiguration>('/configuration/active'),
   configurationVersions: () => request<ConfigurationVersion[]>('/configuration/versions'),
   configurationCapabilities: () => request<ConfigurationCapabilities>('/configuration/capabilities'),
-  createConfigurationDraft: () => request<ConfigurationDraft>('/configuration/drafts', { method: 'POST' }),
+  configurationPresentation: () => request<ConfigurationPresentation>('/configuration/presentation'),
+  createConfigurationDraft: (base: 'default' | 'active' = 'active') => request<ConfigurationDraft>('/configuration/drafts', { method: 'POST', body: JSON.stringify({ base }) }),
   configurationDraft: (version: number) => request<ConfigurationDraft>(`/configuration/drafts/${version}`),
   updateConfigurationDraft: (version: number, configuration: ConfigurationDraft['configuration']) =>
     request<ConfigurationDraft>(`/configuration/drafts/${version}`, {
       method: 'PUT',
       body: JSON.stringify({ configuration }),
     }),
+  deleteConfigurationDraft: (version: number) => request<void>(`/configuration/drafts/${version}`, { method: 'DELETE' }),
   validateConfigurationDraft: (version: number) =>
     request<ConfigurationDraft>(`/configuration/drafts/${version}/validate`, { method: 'POST' }),
   previewConfigurationDraft: (version: number, calculation: CalculationRequest) =>
@@ -63,6 +66,14 @@ export const api = {
     request<ActiveConfiguration>(`/configuration/rollback/${version}`, { method: 'POST' }),
   compareConfigurations: (leftVersion: number, rightVersion: number) =>
     request<ConfigurationComparison>(`/configuration/compare/${leftVersion}/${rightVersion}`),
+  exportConfiguration: async (version: number): Promise<{ blob: Blob; filename: string }> => {
+    const response = await fetch(`/api/configuration/exports/${version}`, { credentials: 'include' })
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Не удалось выгрузить Configuration' }))
+      throw new Error(error.detail ?? 'Не удалось выгрузить Configuration')
+    }
+    return { blob: await response.blob(), filename: `configuration_v${version}.json` }
+  },
   activeReferenceData: () => request<ActiveReferenceData>('/reference-data/active'),
   referenceDataVersions: () => request<ReferenceDataVersion[]>('/reference-data/versions'),
   createReferenceDataDraft: () => request<ReferenceDataDraft>('/reference-data/drafts', { method: 'POST' }),
