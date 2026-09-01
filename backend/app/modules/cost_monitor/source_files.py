@@ -91,7 +91,9 @@ def save_uploaded_file(source: dict[str, Any], original_name: str, source_file: 
     directory = Path(source["directory"])
     directory.mkdir(parents=True, exist_ok=True)
     target = directory / file_name
-    temporary = directory / f".{file_name}.{uuid.uuid4().hex}.uploading"
+    # openpyxl validates the filename extension before inspecting the workbook.
+    # Keep .xlsx on the temporary candidate so upload validation matches refresh.
+    temporary = directory / f".{Path(file_name).stem}.{uuid.uuid4().hex}.uploading{Path(file_name).suffix}"
     written = 0
     try:
         with temporary.open("wb") as target_file:

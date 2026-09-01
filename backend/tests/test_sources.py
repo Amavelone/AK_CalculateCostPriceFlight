@@ -259,6 +259,20 @@ class WorkbookPreviewTests(unittest.TestCase):
                 save_uploaded_file(source, "invalid.xlsx", BytesIO(b"not an xlsx workbook"))
             self.assertFalse((Path(temporary_directory) / "invalid.xlsx").exists())
 
+    def test_valid_upload_is_published_after_workbook_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            source = {"directory": temporary_directory}
+            workbook = Workbook()
+            workbook.active.append(["АП", "Услуга", "Ставка"])
+            buffer = BytesIO()
+            workbook.save(buffer)
+            buffer.seek(0)
+
+            target = save_uploaded_file(source, "7480_srv (1).xlsx", buffer)
+
+            self.assertEqual(target.name, "7480_srv (1).xlsx")
+            self.assertTrue(target.is_file())
+
 
 if __name__ == "__main__":
     unittest.main()

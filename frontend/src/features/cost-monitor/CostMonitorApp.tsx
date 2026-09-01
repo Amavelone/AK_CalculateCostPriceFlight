@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import packageInfo from '../../../package.json'
 import { api } from './api'
 import { CalculatorPage } from './pages/CalculatorPage'
 import { SettingsPage } from './pages/SettingsPage'
@@ -35,11 +36,11 @@ const initialOptions: CalculationOptions = {
   aircraft: ['733', '737', '738'],
 }
 
-const pageMeta: Record<Page, { label: string; icon: string; subtitle: string }> = {
-  calculate: { label: 'Расчет', icon: '◈', subtitle: 'Себестоимость маршрута' },
-  sources: { label: 'Источники', icon: '↻', subtitle: 'Файлы и обновление данных' },
-  tariffs: { label: 'Подключённые услуги', icon: '⊞', subtitle: 'Тарифы аэропортов' },
-  settings: { label: 'Параметры', icon: '⚙', subtitle: 'Пути и правила источников' },
+const pageMeta: Record<Page, { label: string; subtitle: string }> = {
+  calculate: { label: 'Расчет', subtitle: 'Себестоимость маршрута' },
+  sources: { label: 'Источники', subtitle: 'Файлы и обновление данных' },
+  tariffs: { label: 'Подключённые услуги', subtitle: 'Тарифы аэропортов' },
+  settings: { label: 'Параметры', subtitle: 'Пути и правила источников' },
 }
 
 function createLeg(): LegInput {
@@ -312,9 +313,12 @@ function App() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
+        <span className="app-version">v{packageInfo.version}</span>
         <div className="brand">
-          <div className="brand-mark">◌</div>
-          <div>
+          <div className="brand-lockup">
+            <div className="brand-mark" aria-label="DUSD">DUSD</div>
+          </div>
+          <div className="brand-copy">
             <strong>Себестоимость</strong>
             <span>Монитор рейсов</span>
           </div>
@@ -322,7 +326,6 @@ function App() {
         <nav className="navigation" aria-label="Основная навигация">
           {userPages.map((key) => (
             <button key={key} className={`nav-item ${page === key ? 'active' : ''}`} onClick={() => selectPage(key)}>
-              <span className="nav-icon">{pageMeta[key].icon}</span>
               {pageMeta[key].label}
             </button>
           ))}

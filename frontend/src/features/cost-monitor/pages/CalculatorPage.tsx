@@ -156,7 +156,6 @@ export function CalculatorPage({ calculation, result, options, summary, onSettin
 
         <aside className="summary-card">
           <div className="summary-title">
-            <span className="summary-icon">◈</span>
             <div><h2>Итог расчета</h2><p>По всем плечам</p></div>
           </div>
           <SummaryRow label="Итого М1" value={summary.m1} />
@@ -192,8 +191,8 @@ export function CalculatorPage({ calculation, result, options, summary, onSettin
                   return (
                     <div className="component-block" key={key}>
                       <button className={`component-row component-trigger ${isExpanded ? 'expanded' : ''}`} type="button" onClick={() => toggleComponent(leg.id, key)} aria-expanded={isExpanded}>
-                        <span className="component-label"><i className="component-chevron" aria-hidden="true">⌄</i>{label}</span>
-                        <b>{money(leg.components[key])} ₽</b>
+                        <span className="component-label">{label}</span>
+                        <span className="component-actions"><b>{money(leg.components[key])} ₽</b><span className="component-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m4 6 4 4 4-4" /></svg></span></span>
                       </button>
                       {isExpanded && <ComponentBreakdown component={key} leg={leg} />}
                     </div>

@@ -49,7 +49,7 @@ function SourceCard({ source, busySource, onRefreshOne, onUpload }: { source: So
     }
   }
   return <article className="source-card">
-    <div className="source-card-head"><div className="source-icon">{source.id === 'fuel_registry' ? '◒' : '↗'}</div><StatusBadge status={source.last_status} /></div>
+    <div className="source-card-head"><StatusBadge status={source.last_status} /></div>
     <h2>{source.label}</h2><p>{source.description}</p>
     <div className="source-details"><span>Файл</span><b>{source.last_file ?? source.mask}</b><span>Последнее обновление</span><b>{timeText(source.last_updated)}</b><span>Строк загружено</span><b>{source.rows_loaded.toLocaleString('ru-RU')}</b></div>
     {source.last_error && <div className="source-error">{source.last_error}</div>}

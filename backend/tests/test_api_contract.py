@@ -88,7 +88,7 @@ class MemoryStore:
 class ApiContractTests(unittest.TestCase):
     def test_release_version_has_one_authoritative_source(self) -> None:
         frontend_package = json.loads((VERSION_FILE.parent / "frontend" / "package.json").read_text(encoding="utf-8"))
-        self.assertEqual(APPLICATION_VERSION, "1.0.1")
+        self.assertEqual(APPLICATION_VERSION, "1.0.2")
         self.assertEqual(main.app.version, APPLICATION_VERSION)
         self.assertEqual(frontend_package["version"], APPLICATION_VERSION)
 
